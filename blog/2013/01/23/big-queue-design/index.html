@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Abstraction Builder</title>
+  <title>The Design of A Big Queue - Abstraction Builder</title>
   <meta name="author" content="Bulldog">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://bulldog2011.github.com/">
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/01/23/big-queue-design/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -73,16 +73,13 @@
 </nav>
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article class="hentry" role="article">
   
-  
-  
-    <article>
-      
   <header>
     
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/23/big-queue-design/">The Design of a Big Queue</a></h1>
+      
+        <h1 class="entry-title">The Design of a Big Queue</h1>
       
     
     
@@ -106,7 +103,7 @@
   </header>
 
 
-  <div class="entry-content"><h1>Why a Big Queue?</h1>
+<div class="entry-content"><h1>Why a Big Queue?</h1>
 
 <p>This is a big data era, we are always facing challenge to find insights in big data. Last time, I have worked on the architecture and design of a large scale logging, tracing, monitoring and analytics platform, the core of the platform is a log collecting system and the core of the collector is a big queue, see figure below:</p>
 
@@ -172,24 +169,16 @@ Compared with big disk storage, current computer system is still shortage of phy
 
 <p>Log data collecting is just use case of the big queue, I can anticipate the big queue will be used in more scenarios since big data challenges are becoming common these days.</p>
 </div>
-  
-  
 
 
-    </article>
-  
-  
-    <article>
+  <footer>
+    <p class="meta">
       
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/23/hello-world/">Hello World</a></h1>
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bulldog</span></span>
+
       
-    
-    
-      <p class="meta">
-        
 
 
 
@@ -201,27 +190,32 @@ Compared with big disk storage, current computer system is still shortage of phy
   
 
 
-<time datetime="2013-01-23T12:05:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
-        
-      </p>
+<time datetime="2013-01-23T20:55:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
+      
+
+
+    </p>
     
-  </header>
-
-
-  <div class="entry-content"><p>This is just to record the beginning of my blogging era.</p>
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/01/23/big-queue-design/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/01/23/big-queue-design/" >Tweet</a>
+  
+  
+  
 </div>
-  
-  
 
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left articlenav" href="/blog/2013/01/23/hello-world/" title="Previous Post: hello world">&laquo; hello world</a>
+      
+      
+    </p>
+  </footer>
+</article>
 
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
 </div>
+
 <aside class="sidebar">
   
     <section>
@@ -246,6 +240,7 @@ Compared with big disk storage, current computer system is still shortage of phy
 
   
 </aside>
+
 
     </div>
   </div>

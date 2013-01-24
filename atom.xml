@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-01-24T11:45:05+08:00</updated>
+  <updated>2013-01-24T16:32:21+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -69,11 +69,22 @@ Compared with big disk storage, current computer system is still shortage of phy
 
 <h1>Performance Test</h1>
 
-<p>[TODO]</p>
+<p>Below is the preformance test conclusion:</p>
+
+<ul>
+<li>In concurrent producing and consuming case, the average throughput is around <strong><em>166MBps</em></strong>.</li>
+<li>In sequential producing then consuming case, the average throughput is around <strong><em>333MBps</em></strong>.</li>
+</ul>
+
+
+<p>Suppose the average message size is 1KB, then big queue can concurrently producing and consuming<br/>
+166K message per second on a commodity machine under normal load. Basically, the throughput is only limited by disk IO bandwidth.</p>
+
+<p>The detailed performance test report is <a href="https://github.com/bulldog2011/bigqueue/wiki/Performance-Test-Report">here</a>, the corresponding test program is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/perf/BigQueuePerfTest.java">here</a>, and the full hardware spec for benchmark is <a href="http://bulldog2011.github.com/lab/">here</a>.</p>
 
 <h1>Conclusion</h1>
 
-<p>To resolve a big data challenge I designed and implemented a simple while elegant big queue that are:</p>
+<p>To resolve a big data challenge I designed and implemented a simple while elegant big queue that is:</p>
 
 <blockquote><ol>
 <li><strong>Fast</strong> : close to the speed of direct memory access, both enqueue and dequeue are close to O(1) memory access.</li>

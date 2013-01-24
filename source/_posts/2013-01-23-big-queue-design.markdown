@@ -59,10 +59,18 @@ Now, with the design in mind, I can implement these abstract structures in a bot
 
 
 #Performance Test  
-[TODO]
+Below is the preformance test conclusion:  
+
+* In concurrent producing and consuming case, the average throughput is around ***166MBps***.
+* In sequential producing then consuming case, the average throughput is around ***333MBps***.
+
+Suppose the average message size is 1KB, then big queue can concurrently producing and consuming  
+166K message per second on a commodity machine under normal load. Basically, the throughput is only limited by disk IO bandwidth.
+  
+The detailed performance test report is [here](https://github.com/bulldog2011/bigqueue/wiki/Performance-Test-Report), the corresponding test program is [here](https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/perf/BigQueuePerfTest.java), and the full hardware spec for benchmark is [here](http://bulldog2011.github.com/lab/).
 
 #Conclusion  
-To resolve a big data challenge I designed and implemented a simple while elegant big queue that are:  
+To resolve a big data challenge I designed and implemented a simple while elegant big queue that is:  
 >1. **Fast** : close to the speed of direct memory access, both enqueue and dequeue are close to O(1) memory access.  
 >2. **Big** : the total size of the queue data is only limited by the available disk space.  
 >3. **Persistent** : all data in the queue is persisted on disk, and is crash resistant.  

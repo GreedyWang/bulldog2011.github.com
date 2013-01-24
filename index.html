@@ -9,7 +9,7 @@
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="This is a tutorial to show the basic API usage of big queue, the source of this tutorial is here. The interface of big queue is here, basically, it&# &hellip;">
+  <meta name="description" content="This is a tutorial to show the basic API usage of big array, the source of this tutorial is here. Big array is a building block of big queue, since &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,6 +82,66 @@
   <header>
     
       <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
+        <h1 class="entry-title"><a href="/blog/2013/01/24/big-array-tutorial/">Big Array Tutorial</a></h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-01-24T21:37:00+08:00" pubdate data-updated="true">Jan 24<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/01/24/big-array-tutorial/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This is a tutorial to show the basic API usage of big array, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/BigArrayTutorial.java">here</a>.</p>
+
+<p>Big array is a building block of big queue, since big array is also a valuable data struture with unique feature, I decided to write a separate tutorial for it.</p>
+
+<p>The interface of big array is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IBigArray.java">here</a>, basically, it&#8217;s simple and similar to a typical indexed array except that big array is an append only array, you can&#8217;t randomly append data in big array like typical array after allocation, you can only append data on head of the array, although you can randomly read data by index in big array after you append data to it.</p>
+
+<p>You can create(initialize) a new big array in just on statement:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// create a new big array</span>
+</span><span class='line'><span class="n">IBigArray</span> <span class="n">bigArray</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigArrayImpl</span><span class="o">(</span><span class="s">&quot;d:/bigarray/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>the first parameter is a directory you want to store the array data file, the second parameter is the array name. Now you have a reference to an empty array.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2013/01/24/big-array-tutorial/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
         <h1 class="entry-title"><a href="/blog/2013/01/24/big-queue-tutorial/">Big Queue Tutorial</a></h1>
       
     
@@ -108,7 +168,7 @@
   </header>
 
 
-  <div class="entry-content"><p>This is a tutorial to show the basic API usage of big queue, the source of this tutorial is <a href="">here</a>.</p>
+  <div class="entry-content"><p>This is a tutorial to show the basic API usage of big queue, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/BigQueueTutorial.java">here</a>.</p>
 
 <p>The interface of big queue is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IBigQueue.java">here</a>, basically, it&#8217;s as simple as the queue interface we learned in data structure course in college, if you want to refresh the concept of queue ADT, <a href="http://en.wikipedia.org/wiki/Queue_%28abstract_data_type%29">here is the wikipeida link</a>.</p>
 
@@ -232,6 +292,10 @@
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/01/24/big-array-tutorial/">big array tutorial</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/01/24/big-queue-tutorial/">Big Queue Tutorial</a>

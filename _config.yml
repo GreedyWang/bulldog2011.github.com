@@ -8,6 +8,7 @@ subtitle: Building simple and elegant programming abstractions
 author: Bulldog
 simple_search: http://google.com/search
 description: this is bulldog's blog
+keywords: persisent queue, kafka, memory mapped file, mappedbytebuffer
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
@@ -98,3 +99,4 @@ google_analytics_tracking_id:
 
 # Facebook Like
 facebook_like: false
+

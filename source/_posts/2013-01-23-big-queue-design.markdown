@@ -4,11 +4,14 @@ title: "The Design of A Big Queue"
 date: 2013-01-23 20:55
 comments: true
 categories: 
+keywords:  persistent queue, memory mapped file, mappedbytebuffer, kafka  
+description: the design of a big, fast and persistent queue in Java  
 ---
 
 #Why a Big Queue?
 
 This is a big data era, we are always facing challenge to find insights in big data. Last time, I have worked on the architecture and design of a large scale logging, tracing, monitoring and analytics platform, the core of the platform is a log collecting system and the core of the collector is a big queue, see figure below:
+<!-- more -->
 
 {% img center /images/bigqueue/log_collector.png 400 400 %}
  

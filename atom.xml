@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-01-24T16:32:21+08:00</updated>
+  <updated>2013-01-24T20:33:16+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,124 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Big Queue Tutorial]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/01/24/big-queue-tutorial/"/>
+    <updated>2013-01-24T20:17:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/01/24/big-queue-tutorial</id>
+    <content type="html"><![CDATA[<p>This is a tutorial to show the basic API usage of big queue, the source of this tutorial is <a href="">here</a>.</p>
+
+<p>The interface of big queue is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IBigQueue.java">here</a>, basically, it&#8217;s as simple as the queue interface we learned in data structure course in college, if you want to refresh the concept of queue ADT, <a href="http://en.wikipedia.org/wiki/Queue_%28abstract_data_type%29">here is the wikipeida link</a>.</p>
+
+<p>You can create(initialize) a new big queue in just one statement:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// create a new big queue</span>
+</span><span class='line'><span class="n">IBigQueue</span> <span class="n">bigQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/bigqueue/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>the first parameter is a directory you want to store the queue data file, the second parameter is the queue name. Now you have a reference to an empty queue.</p>
+
+<!--more-->
+
+
+<p>To add or produce item into the queue, you just call the <strong><em>enqueue</em></strong> method on the queue reference, here we enqueue 10 numbers into the queue:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// enqueue some items</span>
+</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+</span><span class='line'>  <span class="n">bigQueue</span><span class="o">.</span><span class="na">enqueue</span><span class="o">(</span><span class="n">item</span><span class="o">.</span><span class="na">getBytes</span><span class="o">());</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong><em>Note:</em></strong> the enqueue method only accept byte array data as input, if your object is not byte array data, you are responsible to convert your object into byte array first before enqueue, this is called serialization, when you dequeue later, you are also response to de-serialize the byte array data into your object format.</p>
+
+<p>Now there are 10 items in the queue, and it&#8217;s not empty anymore, to find out the total number of items in the queue, call the <strong><em>size</em></strong> method:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// get current size of the queue</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">bigQueue</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <strong><em>peek</em></strong> method just let you peek item at the front of the queue without removing the item from the queue:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// peek the front of the queue</span>
+</span><span class='line'><span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bigQueue</span><span class="o">.</span><span class="na">peek</span><span class="o">());</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To remove or consume item from the queue, just call the <strong><em>dequeue</em></strong> method, here we dequeue 5 items from the queue:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// dequeue some items </span>
+</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bigQueue</span><span class="o">.</span><span class="na">dequeue</span><span class="o">());</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>since the queue is a FIFO queue, the number dequeued will be in FIFO order: 0, 1, 2, 3, 4.</p>
+
+<p>To remove all remaining items from the queue, just do like this:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// dequeue all remaining items</span>
+</span><span class='line'><span class="k">while</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span> <span class="o">=</span> <span class="n">bigQueue</span><span class="o">.</span><span class="na">dequeue</span><span class="o">();</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">data</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">break</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now the queue is empty again, to check it&#8217;s empty, just call <strong><em>isEmpty</em></strong> method:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kt">boolean</span> <span class="n">isEmpty</span> <span class="o">=</span> <span class="n">bigQueue</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Finally, when you finish with the queue, just call <strong><em>close</em></strong> method to release resource used by the queue, this is not mandatory, just a best practice, call close will release part of used memory immediately. Usually, you initialize big queue in a try block and close it in the finally block, here is the usage paradigm:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// typical queue initialization and closing paradigm</span>
+</span><span class='line'><span class="n">IBigQueue</span> <span class="n">bigQueue</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'><span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">bigQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/bigqueue/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">bigQueue</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now its your turn to play with the big queue, in this tutorial, I just used very small number of data, but actually the big queue can hold lage amount of data, the total size is only limit by your avaiable disk space, so just try to enqueue and dequeue as much data as you can imagine, also, please review test code of big queue to learn more advanced usage like <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/test/java/com/leansoft/bigqueue/load">multi-threads producing and consuming cases</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[The Design of A Big Queue]]></title>

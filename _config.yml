@@ -4,7 +4,7 @@
 
 url: http://bulldog2011.github.com
 title: Abstraction Builder
-subtitle: Building simple and elegant programming abstraction.
+subtitle: Building simple and elegant programming abstractions
 author: Bulldog
 simple_search: http://google.com/search
 description: this is bulldog's blog
@@ -90,8 +90,8 @@ delicious_user:
 delicious_count: 3
 
 # Disqus Comments
-disqus_short_name:
-disqus_show_comment_count: false
+disqus_short_name: bulldogtech
+disqus_show_comment_count: true
 
 # Google Analytics
 google_analytics_tracking_id:

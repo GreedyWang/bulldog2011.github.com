@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "big array tutorial"
+title: "Big Array Tutorial"
 date: 2013-01-24 21:37
 comments: true
 categories: 

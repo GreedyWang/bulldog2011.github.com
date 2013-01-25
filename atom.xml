@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-01-24T21:45:54+08:00</updated>
+  <updated>2013-01-25T18:23:03+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -14,7 +14,57 @@
 
   
   <entry>
-    <title type="html"><![CDATA[big array tutorial]]></title>
+    <title type="html"><![CDATA[Sort and Search 100GB Data on a Single Machine]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/01/25/merge-sort-using-big-queue/"/>
+    <updated>2013-01-25T18:01:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/01/25/merge-sort-using-big-queue</id>
+    <content type="html"><![CDATA[<p>How to sort 100GB or more data in effective way? You may tell me to use Hadoop, oh, I know Hadoop can definitely do that, but the cost to build and maintain Hadoop always make me headache. Can we sort 100GB or more data on a single commodity machine with less than 8GB memory? The answer is yes, use a technology called <a href="http://en.wikipedia.org/wiki/External_sorting">external sorting</a>. Since I have just build a big, fast and persistent queue, I want to show you how to use my big queue to sort huge amount of data on a single machine with limited physical memory.</p>
+
+<!--more-->
+
+
+<p>The algorithm is a typical <a href="http://en.wikipedia.org/wiki/Merge_sort">merge sort algorithm</a>, I adapted it to only use my big queue, here are the detailed steps:</p>
+
+<pre><code>1. put all your data into a queue called sourceQueue.
+2. build a queue of sorted queues by dividing and sorting the sourceQueue.
+    1. build a new queue called queueOfSortedQueues.
+    2. extract n items out of the sourceQueue, n is the max num of items that can be sorted 
+       in physical memory in one pass.
+    3. sort n items in memory using any effective in memory sorting algorithm like quick sort.
+    4. put n sorted items into a new queue and put the queue referece into the queueOfSortedQueues.
+    5. repeat 2 - 4 until all items in sourceQueue have been consumed.
+3. merge sort the queueOfSortedQueues
+    1. extract n queues out of the queueOfSortedQueues, n must be &gt;= 2 but not be too big, 
+       this is number of ways you want to merge sort in parallel.
+    2. mergesort n queues and put the result sorted queue back into the queueOfSortedQueues
+            1. build a new result queue for sorted items later.
+            2. find out the lowest item in all n input queues by peeking the front of the queue
+            3. extract the lowest item out of the queue and put the item into the result queue
+            4. repeat 2 &amp; 3 until all items in n input queues have been consumed.
+            5. put the result sorted queue back into the queueOfSortedQueues.
+    3. repeat 1 &amp; 2 until there is only one left in the queueOfSortedQueues.
+4. The last one left in the queueOfSortedQueues is the final sorted queue.
+</code></pre>
+
+<p><strong><em>Note</em></strong>: all queues mentioned above refer to my big queue except that queueOfSortedQueues is a normal in memory queue.</p>
+
+<p>Basically, this is a typical divide and conqure algorithm, in order to sort data that is too big to be put into physical memory, you need to first divide the source data into chunks such that each chunk is small enough to be sorted in physical memory in one pass, after sorting all these small chunks, you need to merge and sort these chunks into the final sorted chunk, the merge and sort operation won&#8217;t consume much memory because it only needs to sequentially read chunks on external storage and sequentially write the final sorted chunk to exertnal storagte, only limited items are kept in memory for comparing and sorting in one turn.</p>
+
+<p>Suppose you have 64GB data to sort, and your machine can only sort 2GB in one pass, then you divide 64GB data into 32 chunks with 2GB each,
+then you sort 32 chunks in memory in turn, after in memory sorting finish, if you choose 32 way merge sort, you merge and sort all 32 chunks into one final chunk,
+if you choose 4 way merge sort, then you need 8 + 2 + 1 = 11 rounds of merge sort to get the final sorted chunk.</p>
+
+<p>I was able to sort more than 100GB data in one night using my big queue structure and the algorithm above, basically, the sort speed is only limited by disk IO bandwidth,
+if you are intested, you can find my merge sort code <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/sortsearch/src/com/leansoft/bigqueue/sample">here</a>, the code of multi-thread version is also included.</p>
+
+<p>Another interesting thing is, after I sorted the big data, by leveraging my <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/main/java/com/leansoft/bigqueue">indexed big array</a> structure and the typical <a href="http://en.wikipedia.org/wiki/Binary_search_algorithm">binary search alogrithm</a> I can search more than 100GB sorted data in constant time(far less than 1 second on average), this is really amazing.</p>
+
+<p>Any feedback to further improve my big queue sturucture and the merge sort alogrithm is welcome!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Big Array Tutorial]]></title>
     <link href="http://bulldog2011.github.com/blog/2013/01/24/big-array-tutorial/"/>
     <updated>2013-01-24T21:37:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/01/24/big-array-tutorial</id>

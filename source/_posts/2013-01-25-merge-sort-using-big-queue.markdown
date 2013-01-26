@@ -40,9 +40,9 @@ Suppose you have 64GB data to sort, and your machine can only sort 2GB in one pa
 then you sort 32 chunks in memory in turn, after in memory sorting finish, if you choose 32 way merge sort, you merge and sort all 32 chunks into one final chunk,
 if you choose 4 way merge sort, then you need 8 + 2 + 1 = 11 rounds of merge sort to get the final sorted chunk.
 
-I was able to sort more than 100GB data in one night using my big queue structure and the algorithm above, basically, the sort speed is only limited by disk IO bandwidth, 
+I was able to sort 128GB data in 8.68 hours using my big queue structure and the algorithm above, basically, the sort speed is only limited by disk IO bandwidth, 
 if you are intested, you can find my merge sort code [here](https://github.com/bulldog2011/bigqueue/tree/master/samples/sortsearch/src/com/leansoft/bigqueue/sample), the code of multi-thread version is also included. 
 
-Another interesting thing is, after I sorted the big data, by leveraging my [indexed big array](https://github.com/bulldog2011/bigqueue/tree/master/src/main/java/com/leansoft/bigqueue) structure and the typical [binary search alogrithm](http://en.wikipedia.org/wiki/Binary_search_algorithm) I can search more than 100GB sorted data in constant time(far less than 1 second on average), this is really amazing.
+Another interesting thing is, after I sorted the big data, by leveraging my [indexed big array](https://github.com/bulldog2011/bigqueue/tree/master/src/main/java/com/leansoft/bigqueue) structure and the typical [binary search alogrithm](http://en.wikipedia.org/wiki/Binary_search_algorithm) I can search more than 100GB sorted data in constant time(far less than 1 second on average), this is really amazing. If you are interested, find the source in the link mentioned above.
 
 Any feedback to further improve my big queue sturucture and the merge sort alogrithm is welcome!

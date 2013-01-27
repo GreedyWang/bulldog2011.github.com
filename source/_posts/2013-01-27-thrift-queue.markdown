@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "Turn Big Queue into a Thrift Serivce"
+title: "Turn Big Queue into a Thrift based Queue Serivce"
 date: 2013-01-27 21:01
 comments: true
 categories: 
 keywords: persistent queue, thrift queue, apache thrift, light-weight RPC
-description: show how to turn big queue into a thrift service
+description: show how to turn big queue into a thrift based queue service
 ---
 
 In this post, I will show you how to add a Thrift RPC component to my [big queue](https://github.com/bulldog2011/bigqueue) library to turn it into a light-weigth queue service.
@@ -84,7 +84,7 @@ Now let's check the working of the queue service, start the server first, than r
 
 ###Final Words
 
-Cool! I turned my big queue into a Thrift service with less than 2 hours, this is agile development I am pursuing!
+Cool! I turned my big queue into a Thrift based queue service with less than 2 hours, this is agile development I am pursuing!
 
 When compared with heavy-weight enterprise level messaging products like ActiveMQ or RabbitMQ, BigQueue with Thrift support is a quite light-weight, fast and persistent messaging framework, this is the ***just enough queue*** which can slove you business problem in agile way, if you find this queue useful, don't foget to let me know by leaving feedback at this post.
 

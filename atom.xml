@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-01-27T21:02:57+08:00</updated>
+  <updated>2013-01-27T21:04:57+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -14,21 +14,30 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Turn Big Queue into Thrift Serivce]]></title>
+    <title type="html"><![CDATA[Thrift Queue]]></title>
     <link href="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/"/>
-    <updated>2013-01-27T20:58:00+08:00</updated>
+    <updated>2013-01-27T00:00:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/01/27/thrift-queue</id>
     <content type="html"><![CDATA[<p>In this post, I will show you how to add a Thrift RPC component to my <a href="https://github.com/bulldog2011/bigqueue">big queue</a> library to turn it into a light-weigth queue service.</p>
 
 <h3>Why I choose Thrift?</h3>
 
-<p>Here are the reasons why I love Thrift very much:<br/>
-1. Thrift is <strong><em>stable and mature</em></strong>, it is created by Facebook, now it&#8217;s an Apache project, it has been used by famous projects like Cassandra and HBase.<br/>
-2. Thrift is <strong><em>simple and light-weight</em></strong>, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but minimize later upgrading effort, you just need to update the IDL then re-generate.<br/>
-3. Thrift has <strong><em>high performance</em></strong>, it provides highly effective serialization protocols like TBinaryProtocol and service model like TNonBlockingServer, so you don&#8217;t need to be bothered with building your own NIO server which is very tricky.<br/>
-4. Thrift has good <strong><em>cross-language</em></strong> support, java, csharp, php, ruby, just name a few, one big factor I choose Thrift is - after I build a Thrift based queue service, clients for different language platforms are basically ready, If I need a client for languge X, I can easily generate one using its universal code generator.<br/>
-5. Thrift is <strong><em>flexible</em></strong>, Thrift has a pluggable design, transport protocols(like tcp or http), serialization protocol(like TBinaryProtocol, TJSONProtocol) and server models(like TNonBlockingServer, TThreadPoolServer) are all changable according to your real requirements.<br/>
-Basically, I think guys at Facebook have made a really cool RPC framework, greatly simplified service development.</p>
+<p>Here are the reasons why I love Thrift very much:</p>
+
+<!--more-->
+
+
+<p></p>
+
+<blockquote><ol>
+<li>Thrift is <strong><em>stable and mature</em></strong>, it is created by Facebook, now it&#8217;s an Apache project, it has been used by famous projects like Cassandra and HBase.</li>
+<li>Thrift is <strong><em>simple and light-weight</em></strong>, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but minimize later upgrading effort, you just need to update the IDL then re-generate.</li>
+<li>Thrift has <strong><em>high performance</em></strong>, it provides highly effective serialization protocols like TBinaryProtocol and service model like TNonBlockingServer, so you don&#8217;t need to be bothered with building your own NIO server which is very tricky.</li>
+<li>Thrift has good <strong><em>cross-language</em></strong> support, java, csharp, php, ruby, just name a few, one big factor I choose Thrift is - after I build a Thrift based queue service, clients for different language platforms are basically ready, If I need a client for languge X, I can easily generate one using its universal code generator.</li>
+<li>Thrift is <strong><em>flexible</em></strong>, Thrift has a pluggable design, transport protocols(like tcp or http), serialization protocol(like TBinaryProtocol, TJSONProtocol) and server models(like TNonBlockingServer, TThreadPoolServer) are all changable according to your real requirements.<br/>
+Basically, I think guys at Facebook have made a really cool RPC framework, greatly simplified service development.</li>
+</ol>
+</blockquote>
 
 <h3>The Basic Steps to Develop Thrift Serivce</h3>
 

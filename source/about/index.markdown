@@ -8,7 +8,7 @@ footer: true
 ---
 
 I am a software developer and architect living in Shanghai China, 
-I am facinated with simple while elegant programming abstractions.
+I am facinated with simple while elegant programming abstractions to solve real world business problem.
 I like to program and write stuff, making things a reality always make me excited.
 
 I love open source and I spend most of spare time studying and contributing to it, 

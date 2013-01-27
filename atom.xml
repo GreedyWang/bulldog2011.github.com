@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-01-26T10:12:54+08:00</updated>
+  <updated>2013-01-27T21:02:57+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,83 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Turn Big Queue into Thrift Serivce]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/"/>
+    <updated>2013-01-27T20:58:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/01/27/thrift-queue</id>
+    <content type="html"><![CDATA[<p>In this post, I will show you how to add a Thrift RPC component to my <a href="https://github.com/bulldog2011/bigqueue">big queue</a> library to turn it into a light-weigth queue service.</p>
+
+<h3>Why I choose Thrift?</h3>
+
+<p>Here are the reasons why I love Thrift very much:<br/>
+1. Thrift is <strong><em>stable and mature</em></strong>, it is created by Facebook, now it&#8217;s an Apache project, it has been used by famous projects like Cassandra and HBase.<br/>
+2. Thrift is <strong><em>simple and light-weight</em></strong>, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but minimize later upgrading effort, you just need to update the IDL then re-generate.<br/>
+3. Thrift has <strong><em>high performance</em></strong>, it provides highly effective serialization protocols like TBinaryProtocol and service model like TNonBlockingServer, so you don&#8217;t need to be bothered with building your own NIO server which is very tricky.<br/>
+4. Thrift has good <strong><em>cross-language</em></strong> support, java, csharp, php, ruby, just name a few, one big factor I choose Thrift is - after I build a Thrift based queue service, clients for different language platforms are basically ready, If I need a client for languge X, I can easily generate one using its universal code generator.<br/>
+5. Thrift is <strong><em>flexible</em></strong>, Thrift has a pluggable design, transport protocols(like tcp or http), serialization protocol(like TBinaryProtocol, TJSONProtocol) and server models(like TNonBlockingServer, TThreadPoolServer) are all changable according to your real requirements.<br/>
+Basically, I think guys at Facebook have made a really cool RPC framework, greatly simplified service development.</p>
+
+<h3>The Basic Steps to Develop Thrift Serivce</h3>
+
+<p>I won&#8217;t show much details about thrift and it&#8217;s development here, since there are already many references and turtorils out there, If you need more information about Thrift, visit its <a href="http://thrift.apache.org">official site</a> and <a href="http://wiki.apache.org/thrift/">wiki</a>, I just list the basic steps to turn my big queue into a Thrift service here, in case you need to do similar things later, the whole source is <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue">here</a>.</p>
+
+<ol>
+<li><p>Define serivce interface using Thrift IDL <br/>
+below is the IDL I defined for my big queue, basically, this interface mirrors the big queue interface, I just added &#8216;topic&#8217; support, in fact, topic is queue name, with topic, client can enqueue into or dequeue from different topics(queues), if a topic does not exist yet when client enqueue, then server will create a new queue for this topic before enqueue.</p>
+
+<pre><code>  namespace java com.leansoft.bigqueue.thrift
+  namespace csharp Leansoft.BigQueue.Thrift
+
+  struct QueueRequest {
+      1: required binary data
+  }
+
+  enum ResultCode
+  {
+    SUCCESS,
+    FAILURE
+  }
+
+  struct QueueResponse {
+      1: required ResultCode resultCode,
+      2: binary data
+  }
+
+  service BigQueueService {
+      QueueResponse enqueue(1:string topic, 2:QueueRequest req);
+      QueueResponse dequeue(1:string topic);
+      QueueResponse peek(1:string topic);
+      i64 getSize(1:string topic);
+      bool isEmpty(1:string topic);
+  }
+</code></pre></li>
+<li><p>Genenerate proxy code using Thrift code generator<br/>
+This is quite easy by using the command line tool, <br/>
+to generate java code, use:</p>
+
+<pre><code>  thrift-0.6.1.exe --gen java queue.idl
+</code></pre>
+
+<p>to generate csharp code, use:</p>
+
+<pre><code>  thrift-0.6.1.exe --gen csharp queue.idl
+</code></pre></li>
+<li><p>Implement serivce interface on server side.
+Still quite easy, just delage the queue operations to the real big queue, a topic to queue map is added to support topic semantics, source <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/server/ThriftQueueServiceImpl.java">here</a>.</p></li>
+<li><p>Implement server<br/>
+A server can be built with less than 20 lines of code with thrift, source <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/server/ThriftQueueServer.java">here</a>, I just choose TBinaryProtocol since it has good serialization performance, and TNonblockingServer which has good performance even with large amount of concurrent connections.</p></li>
+<li><p>Implement client
+On client side, you just need to create a thrift client which also implements the BigQueueService interface defined above, then call methods on the serivce client according to your real requirements, and close the client finally, that&#8217;s it, Java client code is <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/client/ThriftQueueClientDemo.java">here</a>. How about client for other languages, quite easy, I just built a csharp client within 30 minutes, code <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue/CSharpClient">here</a>.</p></li>
+</ol>
+
+
+<h3>Finally</h3>
+
+<p>Start the server first, than run the client demo, now the client can interact with the queue on server smoothly. Cool! I turned my big queue into a Thrift service with less than 2 hours, this is agile development I am pursuing!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Sort and Search 100GB Data on a Single Machine]]></title>
@@ -54,7 +131,7 @@
 then you sort 32 chunks in memory in turn, after in memory sorting finish, if you choose 32 way merge sort, you merge and sort all 32 chunks into one final chunk,
 if you choose 4 way merge sort, then you need 8 + 2 + 1 = 11 rounds of merge sort to get the final sorted chunk.</p>
 
-<p>I was able to sort 128GB data in 8.68 hours using my big queue structure and the algorithm above, basically, the sort speed is only limited by disk IO bandwidth,
+<p>I was able to sort 128GB data(each data item has 100 bytes) in 8.68 hours using my big queue structure and the algorithm above, basically, the sort speed is only limited by disk IO bandwidth,
 if you are intested, you can find my merge sort code <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/sortsearch/src/com/leansoft/bigqueue/sample">here</a>, the code of multi-thread version is also included.</p>
 
 <p>Another interesting thing is, after I sorted the big data, by leveraging my <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/main/java/com/leansoft/bigqueue">indexed big array</a> structure and the typical <a href="http://en.wikipedia.org/wiki/Binary_search_algorithm">binary search alogrithm</a> I can search more than 100GB sorted data in constant time(far less than 1 second on average), this is really amazing. If you are interested, find the source in the link mentioned above.</p>
@@ -289,7 +366,7 @@ Big array index is incremental, starting from 0, upon successful append, it will
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[The Design of A Big Queue]]></title>
+    <title type="html"><![CDATA[The Design of A Big, Fast, and Persistent Queue]]></title>
     <link href="http://bulldog2011.github.com/blog/2013/01/23/big-queue-design/"/>
     <updated>2013-01-23T20:55:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/01/23/big-queue-design</id>

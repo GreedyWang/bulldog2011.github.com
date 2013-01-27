@@ -141,7 +141,7 @@
 then you sort 32 chunks in memory in turn, after in memory sorting finish, if you choose 32 way merge sort, you merge and sort all 32 chunks into one final chunk,
 if you choose 4 way merge sort, then you need 8 + 2 + 1 = 11 rounds of merge sort to get the final sorted chunk.</p>
 
-<p>I was able to sort 128GB data in 8.68 hours using my big queue structure and the algorithm above, basically, the sort speed is only limited by disk IO bandwidth,
+<p>I was able to sort 128GB data(each data item has 100 bytes) in 8.68 hours using my big queue structure and the algorithm above, basically, the sort speed is only limited by disk IO bandwidth,
 if you are intested, you can find my merge sort code <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/sortsearch/src/com/leansoft/bigqueue/sample">here</a>, the code of multi-thread version is also included.</p>
 
 <p>Another interesting thing is, after I sorted the big data, by leveraging my <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/main/java/com/leansoft/bigqueue">indexed big array</a> structure and the typical <a href="http://en.wikipedia.org/wiki/Binary_search_algorithm">binary search alogrithm</a> I can search more than 100GB sorted data in constant time(far less than 1 second on average), this is really amazing. If you are interested, find the source in the link mentioned above.</p>
@@ -189,6 +189,8 @@ if you are intested, you can find my merge sort code <a href="https://github.com
         <a class="basic-alignment left articlenav" href="/blog/2013/01/24/big-array-tutorial/" title="Previous Post: Big Array Tutorial">&laquo; Big Array Tutorial</a>
       
       
+        <a class="basic-alignment right articlenav" href="/blog/2013/01/27/thrift-queue/" title="Next Post: Turn Big Queue into Thrift Serivce">Turn Big Queue into Thrift Serivce &raquo;</a>
+      
     </p>
   </footer>
 </article>
@@ -208,6 +210,10 @@ if you are intested, you can find my merge sort code <a href="https://github.com
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/01/27/thrift-queue/">Turn Big Queue into Thrift Serivce</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/01/25/merge-sort-using-big-queue/">Sort and Search 100GB Data on a Single Machine</a>
       </li>
     
@@ -220,11 +226,7 @@ if you are intested, you can find my merge sort code <a href="https://github.com
       </li>
     
       <li class="post">
-        <a href="/blog/2013/01/23/big-queue-design/">The Design of A Big Queue</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/01/23/hello-world/">hello world</a>
+        <a href="/blog/2013/01/23/big-queue-design/">The Design of A Big, Fast, and Persistent Queue</a>
       </li>
     
   </ul>

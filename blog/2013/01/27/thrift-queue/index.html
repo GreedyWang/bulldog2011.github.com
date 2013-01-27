@@ -1,0 +1,334 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Turn Big Queue into a Thrift Serivce - Abstraction Builder</title>
+  <meta name="author" content="Bulldog">
+
+  
+  <meta name="description" content="show how to turn big queue into a thrift service">
+  <meta name="keywords" content="persistent queue, thrift queue, apache thrift, light-weight RPC">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Abstraction Builder" type="application/atom+xml">
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <div id="logo">
+  	<div id="logoLeft">{</div>
+  	<div id="logoText">ab</div>
+  	<div id="logoRight">}</div>
+  	<div class="clear"></div>
+  </div>
+  <h1><a href="/">Abstraction Builder</a></h1>
+  
+    <h2>Building simple and elegant programming abstractions</h2>
+  
+  <div class="clear"></div>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:bulldog2011.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/projects">Projects</a></li>
+  <li><a href="/lab">Lab</a></li>
+  <li><a href="/about">About Me</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Turn Big Queue Into a Thrift Serivce</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-01-27T21:01:00+08:00" pubdate data-updated="true">Jan 27<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>In this post, I will show you how to add a Thrift RPC component to my <a href="https://github.com/bulldog2011/bigqueue">big queue</a> library to turn it into a light-weigth queue service.</p>
+
+<h3>Why I choose Thrift?</h3>
+
+<p>I love Thrift so much that I can&#8217;t help recommending and dumpling all of its good parts here:</p>
+
+<!--more-->
+
+
+<p></p>
+
+<blockquote><ol>
+<li>Thrift is <strong><em>stable and mature</em></strong>, it is created by Facebook, now it&#8217;s an Apache project, it has been successfully used by famous projects like Cassandra and HBase.</li>
+<li>Thrift is <strong><em>simple and light-weight</em></strong>, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but later upgrading effort - you just need to update the IDL then re-generate.</li>
+<li>Thrift has <strong><em>high performance</em></strong>, it provides highly effective serialization protocols like TBinaryProtocol and service model like TNonBlockingServer, so you won&#8217;t get troubled with building your own NIO server which is very tricky.</li>
+<li>Thrift has good <strong><em>cross-language</em></strong> support, such as java, csharp, php, ruby, just name a few. One big factor I choose Thrift is - everytime I build a Thrift service, clients for different language platforms are basically ready, If I need a client for languge X, I can easily generate one using its universal code generator.</li>
+<li>Thrift is <strong><em>flexible</em></strong>, Thrift has a pluggable architecture, transport protocols(like tcp or http), serialization protocol(like TBinaryProtocol, TJSONProtocol) and server models(like TNonBlockingServer, TThreadPoolServer) are all changeable according to your real needs.</li>
+</ol>
+</blockquote>
+
+<p>Basically, I think guys at Facebook have made a really cool RPC framework, greatly simplified service development.</p>
+
+<h3>The Basic Steps to Turn Big Queue into Thrift Serivce</h3>
+
+<p>I won&#8217;t show much details about thrift and its development here, since there are already many reference and turtorils out there, If you need more information about Thrift, visit its <a href="http://thrift.apache.org">official site</a> and <a href="http://wiki.apache.org/thrift/">wiki</a>, I just list the basic steps to turn my big queue into a Thrift service here, in case you need to do similar things later, the whole source is <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue">here</a>.</p>
+
+<ol>
+<li><p><strong><em>Define serivce interface using Thrift IDL</em></strong> <br/>
+Below is the IDL I defined for my big queue, basically, this interface mirrors the big queue interface, one new thing I added is &#8220;topic&#8221; support, with topic, client can enqueue into or dequeue from different topics(queues), just like topic semantics in messaging system, in fact, topic corresponds to queue name, if a topic does not exist when client enqueue, server will create a new queue for this topic before enqueue.</p>
+
+<pre><code>  namespace java com.leansoft.bigqueue.thrift
+  namespace csharp Leansoft.BigQueue.Thrift
+
+  struct QueueRequest {
+      1: required binary data
+  }
+
+  enum ResultCode
+  {
+    SUCCESS,
+    FAILURE
+  }
+
+  struct QueueResponse {
+      1: required ResultCode resultCode,
+      2: binary data
+  }
+
+  service BigQueueService {
+      QueueResponse enqueue(1:string topic, 2:QueueRequest req);
+      QueueResponse dequeue(1:string topic);
+      QueueResponse peek(1:string topic);
+      i64 getSize(1:string topic);
+      bool isEmpty(1:string topic);
+  }
+</code></pre></li>
+<li><p><strong><em>Genenerate proxy code using Thrift code generator</em></strong><br/>
+This is quite easy by using the command line tool, <br/>
+to generate java code, use:</p>
+
+<pre><code>  thrift-0.6.1.exe --gen java queue.idl
+</code></pre>
+
+<p>to generate csharp code, use:</p>
+
+<pre><code>  thrift-0.6.1.exe --gen csharp queue.idl
+</code></pre>
+
+<p>After generation, copy or link generated code into project as source.</p></li>
+<li><p><strong><em>Implement serivce interface on server side</em></strong>
+Still quite easy, just delegate all queue operations to the real big queue, a topic to queue map is added to support topic semantics, source <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/server/ThriftQueueServiceImpl.java">here</a>.</p></li>
+<li><p><strong><em>Implement server</em></strong>
+Using Thrift, a server can be built with less than 20 lines of code, source <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/server/ThriftQueueServer.java">here</a>, I chosed TBinaryProtocol(which has good serialization performance) as serialization protocol, and TNonblockingServer(which has good performance even with large amount of concurrent connections) as server model, you may try different ones according to your real needs.</p></li>
+<li><p><strong><em>Implement client</em></strong>
+On client side, you just need to create a thrift client which also implements the BigQueueService interface defined above, then call methods on the serivce client according to your real needs, and close the client finally. That&#8217;s it. Java client code is <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/client/ThriftQueueClientDemo.java">here</a>. How about client for other languages? quite easy, I just built a csharp client within 30 minutes, code <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue/CSharpClient">here</a>.</p></li>
+</ol>
+
+
+<p>Now let&#8217;s check the working of the queue service, start the server first, than run the client demo, if everything works fine, the client can interact with the queue on server smoothly, if not, do some troubleshooting, or ask me for help by replying this post.</p>
+
+<p><strong><em>Note:</em></strong> this is just the bare minimum queue service I introduced to you, in real world, you need to enhance and adapt it according to your real needs before putting it into production.</p>
+
+<h3>Final Words</h3>
+
+<p>Cool! I turned my big queue into a Thrift service with less than 2 hours, this is agile development I am pursuing!</p>
+
+<p>When compared with heavy-weight enterprise level messaging products like ActiveMQ or RabbitMQ, BigQueue with Thrift support is a quite light-weight, fast and persistent messaging framework, this is the <strong><em>just enough queue</em></strong> which can slove you business problem in agile way, if you find this queue useful, don&#8217;t foget to let me know by leaving feedback at this post.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bulldog</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-01-27T21:01:00+08:00" pubdate data-updated="true">Jan 27<span>th</span>, 2013</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left articlenav" href="/blog/2013/01/25/merge-sort-using-big-queue/" title="Previous Post: Sort and Search 100GB Data on a Single Machine">&laquo; Sort and Search 100GB Data on a Single Machine</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/01/27/thrift-queue/">Turn Big Queue into a Thrift Serivce</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/01/25/merge-sort-using-big-queue/">Sort and Search 100GB Data on a Single Machine</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/01/24/big-array-tutorial/">Big Array Tutorial</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/01/24/big-queue-tutorial/">Big Queue Tutorial</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/01/23/big-queue-design/">The Design of A Big, Fast, and Persistent Queue</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Bulldog -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'bulldogtech';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

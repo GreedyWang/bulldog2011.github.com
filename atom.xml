@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Abstraction Builder]]></title>
+  <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
+  <link href="http://bulldog2011.github.com/"/>
+  <updated>2013-01-28T00:04:50+08:00</updated>
+  <id>http://bulldog2011.github.com/</id>
+  <author>
+    <name><![CDATA[Bulldog]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Turn Big Queue into a Thrift Serivce]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/"/>
+    <updated>2013-01-27T21:01:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/01/27/thrift-queue</id>
+    <content type="html"><![CDATA[<p>In this post, I will show you how to add a Thrift RPC component to my <a href="https://github.com/bulldog2011/bigqueue">big queue</a> library to turn it into a light-weigth queue service.</p>
+
+<h3>Why I choose Thrift?</h3>
+
+<p>I love Thrift so much that I can&#8217;t help recommending and dumpling all of its good parts here:</p>
+
+<!--more-->
+
+
+<p></p>
+
+<blockquote><ol>
+<li>Thrift is <strong><em>stable and mature</em></strong>, it is created by Facebook, now it&#8217;s an Apache project, it has been successfully used by famous projects like Cassandra and HBase.</li>
+<li>Thrift is <strong><em>simple and light-weight</em></strong>, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but later upgrading effort - you just need to update the IDL then re-generate.</li>
+<li>Thrift has <strong><em>high performance</em></strong>, it provides highly effective serialization protocols like TBinaryProtocol and service model like TNonBlockingServer, so you won&#8217;t get troubled with building your own NIO server which is very tricky.</li>
+<li>Thrift has good <strong><em>cross-language</em></strong> support, such as java, csharp, php, ruby, just name a few. One big factor I choose Thrift is - everytime I build a Thrift service, clients for different language platforms are basically ready, If I need a client for languge X, I can easily generate one using its universal code generator.</li>
+<li>Thrift is <strong><em>flexible</em></strong>, Thrift has a pluggable architecture, transport protocols(like tcp or http), serialization protocol(like TBinaryProtocol, TJSONProtocol) and server models(like TNonBlockingServer, TThreadPoolServer) are all changeable according to your real needs.</li>
+</ol>
+</blockquote>
+
+<p>Basically, I think guys at Facebook have made a really cool RPC framework, greatly simplified service development.</p>
+
+<h3>The Basic Steps to Turn Big Queue into Thrift Serivce</h3>
+
+<p>I won&#8217;t show much details about thrift and its development here, since there are already many reference and turtorils out there, If you need more information about Thrift, visit its <a href="http://thrift.apache.org">official site</a> and <a href="http://wiki.apache.org/thrift/">wiki</a>, I just list the basic steps to turn my big queue into a Thrift service here, in case you need to do similar things later, the whole source is <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue">here</a>.</p>
+
+<ol>
+<li><p><strong><em>Define serivce interface using Thrift IDL</em></strong> <br/>
+Below is the IDL I defined for my big queue, basically, this interface mirrors the big queue interface, one new thing I added is &#8220;topic&#8221; support, with topic, client can enqueue into or dequeue from different topics(queues), just like topic semantics in messaging system, in fact, topic corresponds to queue name, if a topic does not exist when client enqueue, server will create a new queue for this topic before enqueue.</p>
+
+<pre><code>  namespace java com.leansoft.bigqueue.thrift
+  namespace csharp Leansoft.BigQueue.Thrift
+
+  struct QueueRequest {
+      1: required binary data
+  }
+
+  enum ResultCode
+  {
+    SUCCESS,
+    FAILURE
+  }
+
+  struct QueueResponse {
+      1: required ResultCode resultCode,
+      2: binary data
+  }
+
+  service BigQueueService {
+      QueueResponse enqueue(1:string topic, 2:QueueRequest req);
+      QueueResponse dequeue(1:string topic);
+      QueueResponse peek(1:string topic);
+      i64 getSize(1:string topic);
+      bool isEmpty(1:string topic);
+  }
+</code></pre></li>
+<li><p><strong><em>Genenerate proxy code using Thrift code generator</em></strong><br/>
+This is quite easy by using the command line tool, <br/>
+to generate java code, use:</p>
+
+<pre><code>  thrift-0.6.1.exe --gen java queue.idl
+</code></pre>
+
+<p>to generate csharp code, use:</p>
+
+<pre><code>  thrift-0.6.1.exe --gen csharp queue.idl
+</code></pre>
+
+<p>After generation, copy or link generated code into project as source.</p></li>
+<li><p><strong><em>Implement serivce interface on server side</em></strong>
+Still quite easy, just delegate all queue operations to the real big queue, a topic to queue map is added to support topic semantics, source <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/server/ThriftQueueServiceImpl.java">here</a>.</p></li>
+<li><p><strong><em>Implement server</em></strong>
+Using Thrift, a server can be built with less than 20 lines of code, source <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/server/ThriftQueueServer.java">here</a>, I chosed TBinaryProtocol(which has good serialization performance) as serialization protocol, and TNonblockingServer(which has good performance even with large amount of concurrent connections) as server model, you may try different ones according to your real needs.</p></li>
+<li><p><strong><em>Implement client</em></strong>
+On client side, you just need to create a thrift client which also implements the BigQueueService interface defined above, then call methods on the serivce client according to your real needs, and close the client finally. That&#8217;s it. Java client code is <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/client/ThriftQueueClientDemo.java">here</a>. How about client for other languages? quite easy, I just built a csharp client within 30 minutes, code <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue/CSharpClient">here</a>.</p></li>
+</ol>
+
+
+<p>Now let&#8217;s check the working of the queue service, start the server first, than run the client demo, if everything works fine, the client can interact with the queue on server smoothly, if not, do some troubleshooting, or ask me for help by replying this post.</p>
+
+<p><strong><em>Note:</em></strong> this is just the bare minimum queue service I introduced to you, in real world, you need to enhance and adapt it according to your real needs before putting it into production.</p>
+
+<h3>Final Words</h3>
+
+<p>Cool! I turned my big queue into a Thrift service with less than 2 hours, this is agile development I am pursuing!</p>
+
+<p>When compared with heavy-weight enterprise level messaging products like ActiveMQ or RabbitMQ, BigQueue with Thrift support is a quite light-weight, fast and persistent messaging framework, this is the <strong><em>just enough queue</em></strong> which can slove you business problem in agile way, if you find this queue useful, don&#8217;t foget to let me know by leaving feedback at this post.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Sort and Search 100GB Data on a Single Machine]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/01/25/merge-sort-using-big-queue/"/>
+    <updated>2013-01-25T18:01:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/01/25/merge-sort-using-big-queue</id>
+    <content type="html"><![CDATA[<p>How to sort 100GB or more data in effective way? You may tell me to use Hadoop, oh, I know Hadoop can definitely do that, but the cost to build and maintain Hadoop always make me headache. Can we sort 100GB or more data on a single commodity machine with less than 8GB memory? The answer is yes, use a technology called <a href="http://en.wikipedia.org/wiki/External_sorting">external sorting</a>. Since I have just build a big, fast and persistent queue, I want to show you how to use my big queue to sort huge amount of data on a single machine with limited physical memory.</p>
+
+<!--more-->
+
+
+<p>The algorithm is a typical <a href="http://en.wikipedia.org/wiki/Merge_sort">merge sort algorithm</a>, I adapted it to only use my big queue, here are the detailed steps:</p>
+
+<pre><code>1. put all your data into a queue called sourceQueue.
+2. build a queue of sorted queues by dividing and sorting the sourceQueue.
+    1. build a new queue called queueOfSortedQueues.
+    2. extract n items out of the sourceQueue, n is the max num of items that can be sorted 
+       in physical memory in one pass.
+    3. sort n items in memory using any effective in memory sorting algorithm like quick sort.
+    4. put n sorted items into a new queue and put the queue referece into the queueOfSortedQueues.
+    5. repeat 2 - 4 until all items in sourceQueue have been consumed.
+3. merge sort the queueOfSortedQueues
+    1. extract n queues out of the queueOfSortedQueues, n must be &gt;= 2 but not be too big, 
+       this is number of ways you want to merge sort in parallel.
+    2. mergesort n queues and put the result sorted queue back into the queueOfSortedQueues
+            1. build a new result queue for sorted items later.
+            2. find out the lowest item in all n input queues by peeking the front of the queue
+            3. extract the lowest item out of the queue and put the item into the result queue
+            4. repeat 2 &amp; 3 until all items in n input queues have been consumed.
+            5. put the result sorted queue back into the queueOfSortedQueues.
+    3. repeat 1 &amp; 2 until there is only one left in the queueOfSortedQueues.
+4. The last one left in the queueOfSortedQueues is the final sorted queue.
+</code></pre>
+
+<p><strong><em>Note</em></strong>: all queues mentioned above refer to my big queue except that queueOfSortedQueues is a normal in memory queue.</p>
+
+<p>Basically, this is a typical divide and conqure algorithm, in order to sort data that is too big to be put into physical memory, you need to first divide the source data into chunks such that each chunk is small enough to be sorted in physical memory in one pass, after sorting all these small chunks, you need to merge and sort these chunks into the final sorted chunk, the merge and sort operation won&#8217;t consume much memory because it only needs to sequentially read chunks on external storage and sequentially write the final sorted chunk to exertnal storagte, only limited items are kept in memory for comparing and sorting in one turn.</p>
+
+<p>Suppose you have 64GB data to sort, and your machine can only sort 2GB in one pass, then you divide 64GB data into 32 chunks with 2GB each,
+then you sort 32 chunks in memory in turn, after in memory sorting finish, if you choose 32 way merge sort, you merge and sort all 32 chunks into one final chunk,
+if you choose 4 way merge sort, then you need 8 + 2 + 1 = 11 rounds of merge sort to get the final sorted chunk.</p>
+
+<p>I was able to sort 128GB data(each data item has 100 bytes) in 8.68 hours using my big queue structure and the algorithm above, basically, the sort speed is only limited by disk IO bandwidth,
+if you are intested, you can find my merge sort code <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/sortsearch/src/com/leansoft/bigqueue/sample">here</a>, the code of multi-thread version is also included.</p>
+
+<p>Another interesting thing is, after I sorted the big data, by leveraging my <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/main/java/com/leansoft/bigqueue">indexed big array</a> structure and the typical <a href="http://en.wikipedia.org/wiki/Binary_search_algorithm">binary search alogrithm</a> I can search more than 100GB sorted data in constant time(far less than 1 second on average), this is really amazing. If you are interested, find the source in the link mentioned above.</p>
+
+<p>Any feedback to further improve my big queue sturucture and the merge sort alogrithm is welcome!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Big Array Tutorial]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/01/24/big-array-tutorial/"/>
+    <updated>2013-01-24T21:37:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/01/24/big-array-tutorial</id>
+    <content type="html"><![CDATA[<p>This is a tutorial to show the basic API usage of big array, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/BigArrayTutorial.java">here</a>.</p>
+
+<p>Big array is a building block of big queue, since big array is also a valuable data struture with unique feature, I decided to write a separate tutorial for it.</p>
+
+<p>The interface of big array is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IBigArray.java">here</a>, basically, it&#8217;s simple and similar to a typical indexed array except that big array is an append only array, you can&#8217;t randomly append data in big array like typical array after allocation, you can only append data on head of the array, although you can randomly read data by index in big array after you append data to it.</p>
+
+<p>You can create(initialize) a new big array in just on statement:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// create a new big array</span>
+</span><span class='line'><span class="n">IBigArray</span> <span class="n">bigArray</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigArrayImpl</span><span class="o">(</span><span class="s">&quot;d:/bigarray/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>the first parameter is a directory you want to store the array data file, the second parameter is the array name. Now you have a reference to an empty array.</p>
+
+<!--more-->
+
+
+<p>To append items into the array, you just call the <strong><em>append</em></strong> method on the array reference, here we append 10 numbers into the array:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// append some items into the array</span>
+</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+</span><span class='line'>  <span class="kt">long</span> <span class="n">index</span> <span class="o">=</span> <span class="n">bigArray</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="n">item</span><span class="o">.</span><span class="na">getBytes</span><span class="o">());</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The append operation will return an index of type long, this index can be used to retrive the appended data later, just like the index of normal array.<br/>
+Big array index is incremental, starting from 0, upon successful append, it will be incremented to point to the next to be appended slot, internally, big array has two pointers, one is tail pointer, pointing to the first index of the array, the other is head pointer, pointing to the next to be appended index, to learn about the current tail index and head index of array, use <strong><em>getTailIndex</em></strong> and <strong><em>getHeadIndex</em></strong> methods on the interface.</p>
+
+<p><strong><em>Note:</em></strong> the append method only accept byte array data as input, if your object is not byte array data, you are responsible to convert your object into byte array first before append, this is called serialization, when you get data later, you are also response to de-serialize the byte array data into your object format.</p>
+
+<p>Now there are 10 items in the array, it&#8217;s not empty anymore, to find out the total number of items in the array, call the <strong><em>size</em></strong> method:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// get current size of the array</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">bigArray</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Big array support random read by index, just call <strong><em>get</em></strong> method and provide the index to the data, just like normal array indexing operation, here we get 3 items from the array by index:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// randomly read items in the array</span>
+</span><span class='line'><span class="n">String</span> <span class="n">item0</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bigArray</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">));</span> <span class="c1">// item0 equals to 0</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">String</span> <span class="n">item3</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bigArray</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">3</span><span class="o">));</span> <span class="c1">// item3 equals to 3</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">String</span> <span class="n">item9</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bigArray</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">9</span><span class="o">));</span> <span class="c1">// item9 equals to 9</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note: you can only get(retrive) data which has been appended before, if you want to get an index which has no data yet, you will get ArrayIndexOutOfBoundsException, this behavior is the same as typical array.</p>
+
+<p>If you want to make empty the whole array, just call <strong><em>removeAll</em></strong> method like this:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// empty the big array</span>
+</span><span class='line'><span class="n">bigArray</span><span class="o">.</span><span class="na">removeAll</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now all items in the array are removed, array tail and head has been be reset to 0, which means you can start to append data start from index 0 again.</p>
+
+<p>When you finish with the array, just call <strong><em>close</em></strong> method to release resource used by the array, this is not mandatory, just a best practice, call close will release part of used memory immediately. Usually, you initialize big array in a try block and close it in the finally block, here is the usage paradigm:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// typical array initialization and closing paradigm</span>
+</span><span class='line'><span class="n">IBigArray</span> <span class="n">bigArray</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'><span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">bigArray</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigArrayImpl</span><span class="o">(</span><span class="s">&quot;d:/bigarray/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">bigArray</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now its your turn to play with the big array, in this tutorial, I just used very small number of data, but actually the big array can hold lage amount of data, normal array has index of type int, but big array has index of type long, the total size is only limit by your avaiable disk space, so just try to append as much data as you can imagine, then randomly read data to find out how fast big array can be used to randomly access huge amout of data on disk. Also, please review test code of big array to learn more advanced usage like <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/test/java/com/leansoft/bigqueue/load">multi-threads producing and consuming cases</a>.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Big Queue Tutorial]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/01/24/big-queue-tutorial/"/>
+    <updated>2013-01-24T20:17:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/01/24/big-queue-tutorial</id>
+    <content type="html"><![CDATA[<p>This is a tutorial to show the basic API usage of big queue, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/BigQueueTutorial.java">here</a>.</p>
+
+<p>The interface of big queue is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IBigQueue.java">here</a>, basically, it&#8217;s as simple as the queue interface we learned in data structure course in college, if you want to refresh the concept of queue ADT, <a href="http://en.wikipedia.org/wiki/Queue_%28abstract_data_type%29">here is the wikipeida link</a>.</p>
+
+<p>You can create(initialize) a new big queue in just one statement:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// create a new big queue</span>
+</span><span class='line'><span class="n">IBigQueue</span> <span class="n">bigQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/bigqueue/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>the first parameter is a directory you want to store the queue data file, the second parameter is the queue name. Now you have a reference to an empty queue.</p>
+
+<!--more-->
+
+
+<p>To add or produce item into the queue, you just call the <strong><em>enqueue</em></strong> method on the queue reference, here we enqueue 10 numbers into the queue:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// enqueue some items</span>
+</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+</span><span class='line'>  <span class="n">bigQueue</span><span class="o">.</span><span class="na">enqueue</span><span class="o">(</span><span class="n">item</span><span class="o">.</span><span class="na">getBytes</span><span class="o">());</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong><em>Note:</em></strong> the enqueue method only accept byte array data as input, if your object is not byte array data, you are responsible to convert your object into byte array first before enqueue, this is called serialization, when you dequeue later, you are also response to de-serialize the byte array data into your object format.</p>
+
+<p>Now there are 10 items in the queue, and it&#8217;s not empty anymore, to find out the total number of items in the queue, call the <strong><em>size</em></strong> method:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// get current size of the queue</span>
+</span><span class='line'><span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">bigQueue</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <strong><em>peek</em></strong> method just let you peek item at the front of the queue without removing the item from the queue:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// peek the front of the queue</span>
+</span><span class='line'><span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bigQueue</span><span class="o">.</span><span class="na">peek</span><span class="o">());</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To remove or consume item from the queue, just call the <strong><em>dequeue</em></strong> method, here we dequeue 5 items from the queue:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// dequeue some items </span>
+</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bigQueue</span><span class="o">.</span><span class="na">dequeue</span><span class="o">());</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>since the queue is a FIFO queue, the number dequeued will be in FIFO order: 0, 1, 2, 3, 4.</p>
+
+<p>To remove all remaining items from the queue, just do like this:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// dequeue all remaining items</span>
+</span><span class='line'><span class="k">while</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span> <span class="o">=</span> <span class="n">bigQueue</span><span class="o">.</span><span class="na">dequeue</span><span class="o">();</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">data</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">break</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now the queue is empty again, to check it&#8217;s empty, just call <strong><em>isEmpty</em></strong> method:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kt">boolean</span> <span class="n">isEmpty</span> <span class="o">=</span> <span class="n">bigQueue</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Finally, when you finish with the queue, just call <strong><em>close</em></strong> method to release resource used by the queue, this is not mandatory, just a best practice, call close will release part of used memory immediately. Usually, you initialize big queue in a try block and close it in the finally block, here is the usage paradigm:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// typical queue initialization and closing paradigm</span>
+</span><span class='line'><span class="n">IBigQueue</span> <span class="n">bigQueue</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'><span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">bigQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/bigqueue/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">bigQueue</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now its your turn to play with the big queue, in this tutorial, I just used very small number of data, but actually the big queue can hold lage amount of data, the total size is only limit by your avaiable disk space, so just try to enqueue and dequeue as much data as you can imagine, also, please review test code of big queue to learn more advanced usage like <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/test/java/com/leansoft/bigqueue/load">multi-threads producing and consuming cases</a>.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[The Design of A Big, Fast, and Persistent Queue]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/01/23/big-queue-design/"/>
+    <updated>2013-01-23T20:55:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/01/23/big-queue-design</id>
+    <content type="html"><![CDATA[<h1>Why a Big Queue?</h1>
+
+<p>This is a big data era, we are always facing challenge to find insights in big data. Last time, I have worked on the architecture and design of a large scale logging, tracing, monitoring and analytics platform, the core of the platform is a log collecting system and the core of the collector is a big queue, see figure below:</p>
+
+<!-- more -->
+
+
+<p><img class="center" src="http://bulldog2011.github.com/images/bigqueue/log_collector.png" width="400" height="400"></p>
+
+<p>The figure above looks like a typical producing and consuming scenario, the big queue works like a broker, at the left side of the queue, there are many agents deployed on application servers, the agents work just like producers, they continuously collect log data on application servers and push them to the big queue, on the right side of the big queue, there are several analysis systems, the analysis systems work just like consumers, they continuously pull log data from the queue, analyze  and store them into the backend. If you are interested in an industrial log collecting product built on this architecture, please refer to <a href="http://kafka.apache.org/">apache kafka</a>.</p>
+
+<p>Queue is a natural fit for log data collecting scenario, by leveraging queue, consumers and producers are decoupled, both sides can work without knowing the existing of other side, consumers and producers can be added or removed as needed without affecting existing ones.</p>
+
+<h1>The Requirements</h1>
+
+<p>Basically, we need the big queue to be:</p>
+
+<ul>
+<li><strong>FAST &amp; THREAD SAFE</strong>    <br/>
+The system needs to collect logs from more than 1000 production machines, they may produce more than 100,000 logs per second(average size is 1KB), this is equal to more than 100MB per second, if the big queue can’t keep up, logs will be lost. To further improve the throughout, we want all producers and consumers to work concurrently, so the queue needs to work in a thread safe manner, otherwise, there will be data lose or corruption.</li>
+<li><strong>BIG &amp; PERSISTENT</strong> <br/>
+Daily logs will be at TB level, the queue should have the capacity to store up to one week’s logs,
+In case any of the analysis system is down(for example, periodical maintenance or even crash), the queue should continue to store logs for backend system to consume later when they are up again. Also, if the big queue itself is down, the logs already stored should survive since they are persistent, when the queue is up again, it should continue to serve the consumers.</li>
+<li><strong>MEMORY EFFICIENT</strong><br/>
+Compared with big disk storage, current computer system is still shortage of physical memory, usually, memory will be less than 32GB on a commodity machine. We need the queue to use memory efficiently though it needs to handle logs more than 100MB per second and at TB level daily.</li>
+</ul>
+
+
+<h1>The Design Thinking Flow</h1>
+
+<p>Below is a simple and elegant design of the big queue I come up with to meet the requirements and challenges above:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/bigqueue/bigqueue_abstraction_layers.png" width="300" height="300"></p>
+
+<p>Usually, when I design something, I follow a top-down abstract thinking flow: as I learned in data structure course in college long ago, a queue data structure is usually built on an array data structure, so before I can build a queue I need to build an array first, the array I need should have following characters: first, it should be as fast as in memory access; second, it should be disk backed(hence it will be big and persistent). Seems there is contradiction between these two characters: if you need something fast, you need to put it in memory which is volatile and only has limited capacity, if you need something big and persistent, you need to put it on disk which has much slower access speed than physical memory, is there a technology to resolve these two contradictions? After an intensive research, I finally found memory mapped file which seems a natural bridge between psychical memory and disk, if you need background about memory mapped file, <a href="http://www.kdgregory.com/index.php?page=java.byteBuffer">here</a> and <a href="http://vanillajava.blogspot.co.uk/2012/03/presentation-on-using-shared-memory-in.html">here</a> are two good references. Now let’s continue the top-down thinking flow, before I can build a big array, I need to build a data structure called memory mapped page which can bridge the gap between speed and capacity, at the same time, I need some auxiliary structures to manage mapped pages in a memory efficient way, in the design figure above, these auxiliary structures are called mapped page factory and LRU cache. Whenever big array needs a mapped page, it requests one from the mapped page factory and returns it to the factory when it has done with the page. Mapped page factory encapsulates algorithm to allocate, cache and recycle mapped pages in a memory efficient and thread safe way by leveraging LUR cache structure.</p>
+
+<p>Now, with the design in mind, I can implement these abstract structures in a bottom up, layer by layer approach, you can find the implementation details by studying the open source java code on <a href="https://github.com/bulldog2011/bigqueue">github</a> if you are interested.</p>
+
+<h1>Additional Design Notes:</h1>
+
+<ul>
+<li><p>Although I learned some people used to map a single big file into memory, like <a href="http://kdgcommons.svn.sourceforge.net/viewvc/kdgcommons/trunk/src/main/java/net/sf/kdgcommons/buffer/MappedFileBuffer.java?revision=HEAD&amp;view=markup">here</a> and <a href="http://vanillajava.blogspot.com/2011/12/using-memory-mapped-file-for-huge.html">here</a>, I have memory leak concern with such approach(though I am not sure), instead, I came with up a novel pagging and swapping algorithm which only map fixed size(for example, 128M) page file into memory on demand and unmap it when it is not accessed within a fixed time to live(TTL) period. Which such design, I can not only use memory safer and more efficient, but can delete some used pages files to save disk space whenever necessary.</p></li>
+<li><p>As we know, queue is a rear append and front read structure, so as long as the queue front page and rear page(technically, this is called working set) are in memory, read and append operations can always happen in memory, that means the enqueue and dequeue operations are always close to O(1) memory access.</p></li>
+<li><p>The big queue is based on a <strong>big array</strong> structure, the big array itself is an interesting data structure with some unique features(I plan to write some use cases of this structure in the near future), the big array supports sequential append(called append only array), sequential and random read. Sequential append and read are both O(1) memory access, while random read is O(1) memory access if the corresponding page is in cache, and is O(1) disk access if the corresponding page is not in cache. The big array is index based, just like normal indexed array, starting with index 0, when a new item is appended, the head index will be incremented, index is the pointer to the appended data, later you can use the index to read back the data. The index is of type long, this is a really very big range, I guess the big array won’t be used up before the world is end:).</p></li>
+<li><p>Internally, two logical files(phycially one logical file consists of many fixed size page files) are used by one big array, one is index file, the other is data file, when data is read by index, the index will be first mapped to an index page file, then into an item in the index page file, the index item has pointer and length information to the actual data in data file, data can be retrieved by just inspecting index item, load corresponding data page file and read data in it. New data can be appended just by finding out next to be appended data page file and offset, then put the data and update corresponding index item.</p></li>
+<li><p>Serialization is outside of the consideration of the big queue framework, the enqueue operation only accepts byte array as input(the dequeue operation only returns byte array), I left out serialization deliberately since I think it should not be the responsibility of the big queue framework, there are many existing and well known serialization frameworks(like protobuf, thrift, etc) which can do serialization work better.</p></li>
+<li><p>To ensure thread safe, some multi-threading technologies like read-write lock and thread local buffer are leveraged, the queue can work in read/write separation way – consumer and producer can work concurrently, this tremendously improved the throughput of the queue.</p></li>
+<li><p>The queue has interface to delete used page files(for example, if data in these page files have been consumed by consumers) to save disk space, this is called garbage collection on disk files, much like GC in memory.</p></li>
+<li><p>Abstractly, the whole queue looks like a huge FIFO circle buffer, disk backed and memory mapped.</p></li>
+</ul>
+
+
+<h1>Performance Test</h1>
+
+<p>Below is the preformance test conclusion:</p>
+
+<ul>
+<li>In concurrent producing and consuming case, the average throughput is around <strong><em>166MBps</em></strong>.</li>
+<li>In sequential producing then consuming case, the average throughput is around <strong><em>333MBps</em></strong>.</li>
+</ul>
+
+
+<p>Suppose the average message size is 1KB, then big queue can concurrently producing and consuming<br/>
+166K message per second on a commodity machine under normal load. Basically, the throughput is only limited by disk IO bandwidth.</p>
+
+<p>The detailed performance test report is <a href="https://github.com/bulldog2011/bigqueue/wiki/Performance-Test-Report">here</a>, the corresponding test program is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/perf/BigQueuePerfTest.java">here</a>, and the full hardware spec for benchmark is <a href="http://bulldog2011.github.com/lab/">here</a>.</p>
+
+<h1>Conclusion</h1>
+
+<p>To resolve a big data challenge I designed and implemented a simple while elegant big queue that is:</p>
+
+<blockquote><ol>
+<li><strong>Fast</strong> : close to the speed of direct memory access, both enqueue and dequeue are close to O(1) memory access.</li>
+<li><strong>Big</strong> : the total size of the queue data is only limited by the available disk space.</li>
+<li><strong>Persistent</strong> : all data in the queue is persisted on disk, and is crash resistant.</li>
+<li><strong>Memory-efficient</strong> : automatic paging &amp; swapping algorithm, only most-recently accessed data is kept in memory.</li>
+<li><strong>Thread-safe</strong>: multiple threads can concurrently enqueue and dequeue without data corruption.</li>
+<li><strong>Simple and Light-weight</strong>: current number of source files is 12 and the library jar is less than 20K.</li>
+</ol>
+</blockquote>
+
+<p>Log data collecting is just use case of the big queue, I can anticipate the big queue will be used in more scenarios since big data challenges are becoming common these days.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[hello world]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/01/23/hello-world/"/>
+    <updated>2013-01-23T12:05:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/01/23/hello-world</id>
+    <content type="html"><![CDATA[<p>This is just to record the beginning of my blogging era.</p>
+]]></content>
+  </entry>
+  
+</feed>

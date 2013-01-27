@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-01-27T21:04:57+08:00</updated>
+  <updated>2013-01-27T21:13:06+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -14,9 +14,9 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Thrift Queue]]></title>
+    <title type="html"><![CDATA[Turn big queue into a Thrift Serivce]]></title>
     <link href="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/"/>
-    <updated>2013-01-27T00:00:00+08:00</updated>
+    <updated>2013-01-27T21:01:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/01/27/thrift-queue</id>
     <content type="html"><![CDATA[<p>In this post, I will show you how to add a Thrift RPC component to my <a href="https://github.com/bulldog2011/bigqueue">big queue</a> library to turn it into a light-weigth queue service.</p>
 

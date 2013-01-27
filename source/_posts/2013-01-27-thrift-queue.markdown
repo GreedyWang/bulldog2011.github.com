@@ -1,19 +1,9 @@
----
-layout: post
-title: "Turn Big Queue into Thrift Serivce"
-date: 2013-01-27 20:58
-comments: true
-categories: 
-keywords: persistent queue, fifo queue, thrift queue
-description: a tutorial show how to turn my big queue into thrift service
----
-
-
 In this post, I will show you how to add a Thrift RPC component to my [big queue](https://github.com/bulldog2011/bigqueue) library to turn it into a light-weigth queue service.
 
 ###Why I choose Thrift?
-Here are the reasons why I love Thrift very much:  
-1. Thrift is ***stable and mature***, it is created by Facebook, now it's an Apache project, it has been used by famous projects like Cassandra and HBase.  
+Here are the reasons why I love Thrift very much:
+<!--more-->  
+>1. Thrift is ***stable and mature***, it is created by Facebook, now it's an Apache project, it has been used by famous projects like Cassandra and HBase.  
 2. Thrift is ***simple and light-weight***, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but minimize later upgrading effort, you just need to update the IDL then re-generate.  
 3. Thrift has ***high performance***, it provides highly effective serialization protocols like TBinaryProtocol and service model like TNonBlockingServer, so you don't need to be bothered with building your own NIO server which is very tricky.  
 4. Thrift has good ***cross-language*** support, java, csharp, php, ruby, just name a few, one big factor I choose Thrift is - after I build a Thrift based queue service, clients for different language platforms are basically ready, If I need a client for languge X, I can easily generate one using its universal code generator.  
@@ -75,3 +65,8 @@ On client side, you just need to create a thrift client which also implements th
 
 ###Finally
 Start the server first, than run the client demo, now the client can interact with the queue on server smoothly. Cool! I turned my big queue into a Thrift service with less than 2 hours, this is agile development I am pursuing!
+
+
+
+
+

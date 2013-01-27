@@ -86,7 +86,7 @@ Now let's check the working of the queue service, start the server first, than r
 
 Cool! I turned my big queue into a Thrift based queue service with less than 2 hours, this is agile development I am pursuing!
 
-When compared with heavy-weight enterprise level messaging products like ActiveMQ or RabbitMQ, BigQueue with Thrift support is a quite light-weight, fast and persistent messaging framework, this is the ***just enough queue*** which can slove you business problem in agile way, if you find this queue useful, don't foget to let me know by leaving feedback at this post.
+When compared with heavy-weight enterprise level messaging products like ActiveMQ or RabbitMQ, BigQueue with Thrift support is a quite light-weight, fast and persistent messaging framework, this is the ***just enough queue*** which can slove your business problem in agile and effective way, if you find this queue useful, don't foget to let me know by leaving feedback at this post.
 
 
 

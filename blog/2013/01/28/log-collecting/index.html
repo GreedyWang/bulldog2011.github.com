@@ -111,17 +111,22 @@
 
 <p>Big queue was originally designed for log collecting and analysis scenarion, it&#8217;s very simple to collecting logs using big queue, all you need to do are:</p>
 
-<ol>
-<li><p>At producing/collecting side:</p>
+<!--more-->
 
-<pre><code> Generate Log accoding to your app logic --&gt; Serialize it into binary data --&gt; Put the data into big queue through Thrift RPC call. 
-</code></pre></li>
-<li><p>At consuming/analysis side:</p>
 
-<pre><code> Pull data from big queue through Thrift RPC call --&gt; deserialize data into log object --&gt; Analyze log according your real needs.
-</code></pre></li>
-</ol>
+<blockquote><p>At producing/collecting side:</p></blockquote>
 
+<pre><code>    1. Generate Log accoding to your app logic  
+    2. Serialize it into binary data  
+    3. Put the data into big queue through Thrift RPC call. 
+</code></pre>
+
+<blockquote><p>At consuming/analysis side:</p></blockquote>
+
+<pre><code>    1. Pull data from big queue through Thrift RPC call  
+    2. Deserialize data into log object  
+    3. Analyze log according your real needs.
+</code></pre>
 
 <p>That&#8217;s it.</p>
 

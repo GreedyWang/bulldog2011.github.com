@@ -5,11 +5,19 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
+<<<<<<< HEAD
   <title>Turn Big Queue into a Thrift based Queue Serivce - Abstraction Builder</title>
   <meta name="author" content="Bulldog">
 
   
   <meta name="description" content="show how to turn big queue into a thrift based queue service">
+=======
+  <title>Turn big queue into a Thrift Serivce - Abstraction Builder</title>
+  <meta name="author" content="Bulldog">
+
+  
+  <meta name="description" content="show how to turn big queue into a thrift service">
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
   <meta name="keywords" content="persistent queue, thrift queue, apache thrift, light-weight RPC">
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,7 +87,11 @@
   <header>
     
       
+<<<<<<< HEAD
         <h1 class="entry-title">Turn Big Queue Into a Thrift Based Queue Serivce</h1>
+=======
+        <h1 class="entry-title">Turn Big Queue Into a Thrift Serivce</h1>
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
       
     
     
@@ -109,7 +121,11 @@
 
 <h3>Why I choose Thrift?</h3>
 
+<<<<<<< HEAD
 <p>I love Thrift so much that I can&#8217;t help recommending and dumpling all of its good parts here:</p>
+=======
+<p>Here are the reasons why I love Thrift very much:</p>
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
 
 <!--more-->
 
@@ -117,6 +133,7 @@
 <p></p>
 
 <blockquote><ol>
+<<<<<<< HEAD
 <li>Thrift is <strong><em>stable and mature</em></strong>, it is created by Facebook, now it&#8217;s an Apache project, it has been successfully used by famous projects like Cassandra and HBase.</li>
 <li>Thrift is <strong><em>simple and light-weight</em></strong>, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but later upgrading effort - you just need to update the IDL then re-generate.</li>
 <li>Thrift has <strong><em>high performance</em></strong>, it provides highly effective serialization protocols like TBinaryProtocol and service model like TNonBlockingServer, so you won&#8217;t get troubled with building your own NIO server which is very tricky.</li>
@@ -134,6 +151,24 @@
 <ol>
 <li><p><strong><em>Define serivce interface using Thrift IDL</em></strong> <br/>
 Below is the IDL I defined for my big queue, basically, this interface mirrors the big queue interface, one new thing I added is &#8220;topic&#8221; support, with topic, client can enqueue into or dequeue from different topics(queues), just like topic semantics in messaging system, in fact, topic corresponds to queue name, if a topic does not exist when client enqueue, server will create a new queue for this topic before enqueue.</p>
+=======
+<li>Thrift is <strong><em>stable and mature</em></strong>, it is created by Facebook, now it&#8217;s an Apache project, it has been used by famous projects like Cassandra and HBase.</li>
+<li>Thrift is <strong><em>simple and light-weight</em></strong>, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but minimize later upgrading effort, you just need to update the IDL then re-generate.</li>
+<li>Thrift has <strong><em>high performance</em></strong>, it provides highly effective serialization protocols like TBinaryProtocol and service model like TNonBlockingServer, so you don&#8217;t need to be bothered with building your own NIO server which is very tricky.</li>
+<li>Thrift has good <strong><em>cross-language</em></strong> support, java, csharp, php, ruby, just name a few, one big factor I choose Thrift is - after I build a Thrift based queue service, clients for different language platforms are basically ready, If I need a client for languge X, I can easily generate one using its universal code generator.</li>
+<li>Thrift is <strong><em>flexible</em></strong>, Thrift has a pluggable design, transport protocols(like tcp or http), serialization protocol(like TBinaryProtocol, TJSONProtocol) and server models(like TNonBlockingServer, TThreadPoolServer) are all changable according to your real requirements.<br/>
+Basically, I think guys at Facebook have made a really cool RPC framework, greatly simplified service development.</li>
+</ol>
+</blockquote>
+
+<h3>The Basic Steps to Develop Thrift Serivce</h3>
+
+<p>I won&#8217;t show much details about thrift and it&#8217;s development here, since there are already many references and turtorils out there, If you need more information about Thrift, visit its <a href="http://thrift.apache.org">official site</a> and <a href="http://wiki.apache.org/thrift/">wiki</a>, I just list the basic steps to turn my big queue into a Thrift service here, in case you need to do similar things later, the whole source is <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue">here</a>.</p>
+
+<ol>
+<li><p>Define serivce interface using Thrift IDL <br/>
+below is the IDL I defined for my big queue, basically, this interface mirrors the big queue interface, I just added &#8216;topic&#8217; support, in fact, topic is queue name, with topic, client can enqueue into or dequeue from different topics(queues), if a topic does not exist yet when client enqueue, then server will create a new queue for this topic before enqueue.</p>
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
 
 <pre><code>  namespace java com.leansoft.bigqueue.thrift
   namespace csharp Leansoft.BigQueue.Thrift
@@ -161,7 +196,11 @@ Below is the IDL I defined for my big queue, basically, this interface mirrors t
       bool isEmpty(1:string topic);
   }
 </code></pre></li>
+<<<<<<< HEAD
 <li><p><strong><em>Genenerate proxy code using Thrift code generator</em></strong><br/>
+=======
+<li><p>Genenerate proxy code using Thrift code generator<br/>
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
 This is quite easy by using the command line tool, <br/>
 to generate java code, use:</p>
 
@@ -171,6 +210,7 @@ to generate java code, use:</p>
 <p>to generate csharp code, use:</p>
 
 <pre><code>  thrift-0.6.1.exe --gen csharp queue.idl
+<<<<<<< HEAD
 </code></pre>
 
 <p>After generation, copy or link generated code into project as source.</p></li>
@@ -192,6 +232,21 @@ On client side, you just need to create a thrift client which also implements th
 <p>Cool! I turned my big queue into a Thrift based queue service with less than 2 hours, this is agile development I am pursuing!</p>
 
 <p>When compared with heavy-weight enterprise level messaging products like ActiveMQ or RabbitMQ, BigQueue with Thrift support is a quite light-weight, fast and persistent messaging framework, this is the <strong><em>just enough queue</em></strong> which can slove your business problem in agile and effective way, if you find this queue useful, don&#8217;t foget to let me know by leaving feedback at this post.</p>
+=======
+</code></pre></li>
+<li><p>Implement serivce interface on server side.
+Still quite easy, just delage the queue operations to the real big queue, a topic to queue map is added to support topic semantics, source <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/server/ThriftQueueServiceImpl.java">here</a>.</p></li>
+<li><p>Implement server<br/>
+A server can be built with less than 20 lines of code with thrift, source <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/server/ThriftQueueServer.java">here</a>, I just choose TBinaryProtocol since it has good serialization performance, and TNonblockingServer which has good performance even with large amount of concurrent connections.</p></li>
+<li><p>Implement client
+On client side, you just need to create a thrift client which also implements the BigQueueService interface defined above, then call methods on the serivce client according to your real requirements, and close the client finally, that&#8217;s it, Java client code is <a href="https://github.com/bulldog2011/bigqueue/blob/master/samples/thriftqueue/src/com/leansoft/thriftqueue/client/ThriftQueueClientDemo.java">here</a>. How about client for other languages, quite easy, I just built a csharp client within 30 minutes, code <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue/CSharpClient">here</a>.</p></li>
+</ol>
+
+
+<h3>Finally</h3>
+
+<p>Start the server first, than run the client demo, now the client can interact with the queue on server smoothly. Cool! I turned my big queue into a Thrift service with less than 2 hours, this is agile development I am pursuing!</p>
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
 </div>
 
 
@@ -234,6 +289,11 @@ On client side, you just need to create a thrift client which also implements th
         <a class="basic-alignment left articlenav" href="/blog/2013/01/25/merge-sort-using-big-queue/" title="Previous Post: Sort and Search 100GB Data on a Single Machine">&laquo; Sort and Search 100GB Data on a Single Machine</a>
       
       
+<<<<<<< HEAD
+=======
+        <a class="basic-alignment right articlenav" href="/blog/2013/01/28/log-collecting/" title="Next Post: Producing and consuming 4TB log daily on one commodity machine">Producing and consuming 4TB log daily on one commodity machine &raquo;</a>
+      
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
     </p>
   </footer>
 </article>
@@ -253,6 +313,7 @@ On client side, you just need to create a thrift client which also implements th
   <ul id="recent_posts">
     
       <li class="post">
+<<<<<<< HEAD
         <a href="/blog/2013/01/27/thrift-queue/">Turn Big Queue into a Thrift based Queue Serivce</a>
       </li>
     
@@ -270,6 +331,25 @@ On client side, you just need to create a thrift client which also implements th
     
       <li class="post">
         <a href="/blog/2013/01/23/big-queue-design/">The Design of A Big, Fast, and Persistent Queue</a>
+=======
+        <a href="/blog/2013/01/28/log-collecting/">Producing and consuming 4TB log daily on one commodity machine</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/01/27/thrift-queue/">Turn big queue into a Thrift Serivce</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/01/25/merge-sort-using-big-queue/">Sort and Search 100GB Data on a Single Machine</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/01/24/big-array-tutorial/">Big Array Tutorial</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/01/24/big-queue-tutorial/">Big Queue Tutorial</a>
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
       </li>
     
   </ul>

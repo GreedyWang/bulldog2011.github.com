@@ -2,6 +2,7 @@
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
         <loc>http://bulldog2011.github.com/blog/2013/01/23/hello-world/</loc>
+<<<<<<< HEAD
         <lastmod>2013-01-27T22:42:10+08:00</lastmod>
     </url>
     <url>
@@ -47,5 +48,56 @@
     <url>
         <loc>http://bulldog2011.github.com/robots.txt</loc>
         <lastmod>2013-01-27T22:42:10+08:00</lastmod>
+=======
+        <lastmod>2013-01-23T12:31:38+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/blog/2013/01/23/big-queue-design/</loc>
+        <lastmod>2013-01-27T10:51:04+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/blog/2013/01/24/big-queue-tutorial/</loc>
+        <lastmod>2013-01-24T20:37:46+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/blog/2013/01/24/big-array-tutorial/</loc>
+        <lastmod>2013-01-25T18:12:24+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/blog/2013/01/25/merge-sort-using-big-queue/</loc>
+        <lastmod>2013-01-27T18:33:02+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/</loc>
+        <lastmod>2013-01-27T21:09:24+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/blog/2013/01/28/log-collecting/</loc>
+        <lastmod>2013-01-28T17:26:15+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/about/</loc>
+        <lastmod>2013-01-27T10:52:13+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/blog/archives/</loc>
+        <lastmod>2013-01-28T17:26:15+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/</loc>
+        <lastmod>2013-01-28T17:26:15+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/lab/</loc>
+        <lastmod>2013-01-24T10:54:10+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/projects/</loc>
+        <lastmod>2013-01-24T10:49:18+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/robots.txt</loc>
+        <lastmod>2013-01-23T11:20:00+08:00</lastmod>
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
     </url>
 </urlset>

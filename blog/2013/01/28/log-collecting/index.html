@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Abstraction Builder</title>
+  <title>Producing and consuming 4TB log daily on one commodity machine - Abstraction Builder</title>
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="I have built a big queue, and I have turned it into a Thrift based queue service, in this post, I will show you how to collect logs using this queue &hellip;">
-  
+  <meta name="description" content="show how to collect logs using big queue service and show performance test numbers.">
+  <meta name="keywords" content="log collector, log collecting, persistent queue">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://bulldog2011.github.com/">
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/01/28/log-collecting/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -73,16 +73,13 @@
 </nav>
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article class="hentry" role="article">
   
-  
-  
-    <article>
-      
   <header>
     
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/28/log-collecting/">Producing and Consuming 4TB Log Daily on One Commodity Machine</a></h1>
+      
+        <h1 class="entry-title">Producing and Consuming 4TB Log Daily on One Commodity Machine</h1>
       
     
     
@@ -101,14 +98,14 @@
 
 <time datetime="2013-01-28T13:10:00+08:00" pubdate data-updated="true">Jan 28<span>th</span>, 2013</time>
         
-         | <a href="/blog/2013/01/28/log-collecting/#disqus_thread">Comments</a>
+         | <a href="#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><p>I have built a <a href="https://github.com/bulldog2011/bigqueue">big queue</a>, and I have <a href="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/">turned it into a Thrift based queue service</a>, in this post, I will show you how to collect logs using this queue service, also, I will show some performance number to let you know the capability of big queue as a log collecting tool.</p>
+<div class="entry-content"><p>I have built a <a href="https://github.com/bulldog2011/bigqueue">big queue</a>, and I have <a href="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/">turned it into a Thrift based queue service</a>, in this post, I will show you how to collect logs using this queue service, also, I will show some performance number to let you know the capability of big queue as a log collecting tool.</p>
 
 <h3>Collecting and Consuming Logs using Thrift based Queue Serivce</h3>
 
@@ -237,24 +234,16 @@ According to my observation, big queue is extremely fast, only limited by networ
 
 <p>Big queue is extremely fast, only limited by network and disk IO bandwidth, while at the same time it&#8217;s persistent and reliable, this makes big queue a nature fit for log data collecting and analysis, I would recommend you to try big queue as a log collecting tool and let me know your real world experience with big queue by leaving feedback on this post.</p>
 </div>
-  
-  
 
 
-    </article>
-  
-  
-    <article>
+  <footer>
+    <p class="meta">
       
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/27/thrift-queue/">Turn Big Queue Into a Thrift Serivce</a></h1>
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bulldog</span></span>
+
       
-    
-    
-      <p class="meta">
-        
 
 
 
@@ -266,288 +255,38 @@ According to my observation, big queue is extremely fast, only limited by networ
   
 
 
-<time datetime="2013-01-27T21:01:00+08:00" pubdate data-updated="true">Jan 27<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/01/27/thrift-queue/#disqus_thread">Comments</a>
-        
-      </p>
+<time datetime="2013-01-28T13:10:00+08:00" pubdate data-updated="true">Jan 28<span>th</span>, 2013</time>
+      
+
+
+    </p>
     
-  </header>
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/01/28/log-collecting/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/01/28/log-collecting/" >Tweet</a>
+  
+  
+  
+</div>
 
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left articlenav" href="/blog/2013/01/27/thrift-queue/" title="Previous Post: Turn big queue into a Thrift Serivce">&laquo; Turn big queue into a Thrift Serivce</a>
+      
+      
+    </p>
+  </footer>
+</article>
 
-  <div class="entry-content"><p>In this post, I will show you how to add a Thrift RPC component to my <a href="https://github.com/bulldog2011/bigqueue">big queue</a> library to turn it into a light-weigth queue service.</p>
-
-<h3>Why I choose Thrift?</h3>
-
-<p>Here are the reasons why I love Thrift very much:</p>
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
 
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/01/27/thrift-queue/">Read on &rarr;</a>
-    </footer>
-  
 
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/25/merge-sort-using-big-queue/">Sort and Search 100GB Data on a Single Machine</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-01-25T18:01:00+08:00" pubdate data-updated="true">Jan 25<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/01/25/merge-sort-using-big-queue/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>How to sort 100GB or more data in effective way? You may tell me to use Hadoop, oh, I know Hadoop can definitely do that, but the cost to build and maintain Hadoop always make me headache. Can we sort 100GB or more data on a single commodity machine with less than 8GB memory? The answer is yes, use a technology called <a href="http://en.wikipedia.org/wiki/External_sorting">external sorting</a>. Since I have just build a big, fast and persistent queue, I want to show you how to use my big queue to sort huge amount of data on a single machine with limited physical memory.</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/01/25/merge-sort-using-big-queue/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/24/big-array-tutorial/">Big Array Tutorial</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-01-24T21:37:00+08:00" pubdate data-updated="true">Jan 24<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/01/24/big-array-tutorial/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This is a tutorial to show the basic API usage of big array, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/BigArrayTutorial.java">here</a>.</p>
-
-<p>Big array is a building block of big queue, since big array is also a valuable data struture with unique feature, I decided to write a separate tutorial for it.</p>
-
-<p>The interface of big array is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IBigArray.java">here</a>, basically, it&#8217;s simple and similar to a typical indexed array except that big array is an append only array, you can&#8217;t randomly append data in big array like typical array after allocation, you can only append data on head of the array, although you can randomly read data by index in big array after you append data to it.</p>
-
-<p>You can create(initialize) a new big array in just on statement:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// create a new big array</span>
-</span><span class='line'><span class="n">IBigArray</span> <span class="n">bigArray</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigArrayImpl</span><span class="o">(</span><span class="s">&quot;d:/bigarray/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>the first parameter is a directory you want to store the array data file, the second parameter is the array name. Now you have a reference to an empty array.</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/01/24/big-array-tutorial/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/24/big-queue-tutorial/">Big Queue Tutorial</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-01-24T20:17:00+08:00" pubdate data-updated="true">Jan 24<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/01/24/big-queue-tutorial/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This is a tutorial to show the basic API usage of big queue, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/BigQueueTutorial.java">here</a>.</p>
-
-<p>The interface of big queue is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IBigQueue.java">here</a>, basically, it&#8217;s as simple as the queue interface we learned in data structure course in college, if you want to refresh the concept of queue ADT, <a href="http://en.wikipedia.org/wiki/Queue_%28abstract_data_type%29">here is the wikipeida link</a>.</p>
-
-<p>You can create(initialize) a new big queue in just one statement:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// create a new big queue</span>
-</span><span class='line'><span class="n">IBigQueue</span> <span class="n">bigQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/bigqueue/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>the first parameter is a directory you want to store the queue data file, the second parameter is the queue name. Now you have a reference to an empty queue.</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/01/24/big-queue-tutorial/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/23/big-queue-design/">The Design of a Big, Fast, and Persistent Queue</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-01-23T20:55:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
-        
-         | <a href="/blog/2013/01/23/big-queue-design/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h1>Why a Big Queue?</h1>
-
-<p>This is a big data era, we are always facing challenge to find insights in big data. Last time, I have worked on the architecture and design of a large scale logging, tracing, monitoring and analytics platform, the core of the platform is a log collecting system and the core of the collector is a big queue, see figure below:</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/01/23/big-queue-design/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/23/hello-world/">Hello World</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-01-23T12:05:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
-        
-         | <a href="/blog/2013/01/23/hello-world/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This is just to record the beginning of my blogging era.</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
 <aside class="sidebar">
   
     <section>
@@ -585,6 +324,7 @@ According to my observation, big queue is extremely fast, only limited by networ
   
 </aside>
 
+
     </div>
   </div>
   <footer role="contentinfo"><p>
@@ -599,7 +339,10 @@ According to my observation, big queue is extremely fast, only limited by networ
       var disqus_shortname = 'bulldogtech';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/01/28/log-collecting/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/01/28/log-collecting/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

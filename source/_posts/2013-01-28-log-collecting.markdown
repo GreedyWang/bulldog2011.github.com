@@ -64,68 +64,68 @@ By the way, this is just the bare minimum, in real world, you may build 'Agent' 
 I've did some basic performance test to validate the performance of my Thrift based queue service, the full hardware spec for server is [here](http://bulldog2011.github.com/lab/), on the client side, I just used my ordinary notebook(Intel i5 2.5GHz CPU, 10G memory and Win7 OS) to simulate multiple clients producing and consuming scenario, full source is [here](https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue/src/com/leansoft/thriftqueue/load), I used a cheap 1Gbps switch between server and clients to simulate reald world scenarion, below are the performance numbers:
 
 1. Sequential Test - Producing then Consuming
+{% codeblock %}
+*******************************************************
+Producer Report:
+*******************************************************
+Log producer thread number : 50
+Test duration(s) : 279.144
+Total logs sent : 10000000
+Log sending success count : 10000000
+Log sending failure count : 0
+Log sending exception count : 0
+Total byes produced : 20105400000
+Average log size(byte) : 2010.54
+Throughput(MB/s) : 68.68857507621235
+Average log sending delay(ms) : 1.2961799
 
-	-------------------------------------------------------
-	Producer Report:
-	-------------------------------------------------------
-	Log producer thread number : 50
-	Test duration(s) : 279.144
-	Total logs sent : 10000000
-	Log sending success count : 10000000
-	Log sending failure count : 0
-	Log sending exception count : 0
-	Total byes produced : 20105400000
-	Average log size(byte) : 2010.54
-	Throughput(MB/s) : 68.68857507621235
-	Average log sending delay(ms) : 1.2961799
-
-
-	-------------------------------------------------------
-	Consumer Report:
-	-------------------------------------------------------
-	Log consumer thread number : 50
-	Test duration(s) : 274.157
-	Total logs received : 10000000
-	Log receiving success count : 10000000
-	Log receiving failure count : 0
-	Log receiving exception count : 0
-	Total byes received : 20105400000
-	Average log size(byte) : 2010.54
-	Throughput(MB/s) : 69.93804134519353
-	Average log receiving delay(ms) : 1.3691828
-
+*******************************************************
+Consumer Report:
+*******************************************************
+Log consumer thread number : 50
+Test duration(s) : 274.157
+Total logs received : 10000000
+Log receiving success count : 10000000
+Log receiving failure count : 0
+Log receiving exception count : 0
+Total byes received : 20105400000
+Average log size(byte) : 2010.54
+Throughput(MB/s) : 69.93804134519353
+Average log receiving delay(ms) : 1.3691828
+{% endcodeblock %}
 
 2. Concurrent Test - Producing and Consuming currently
-	
-	-------------------------------------------------------
-	Concurrency Test Report:
-	-------------------------------------------------------
-	Producer Report:
-	-------------------------------------------------------
-	Log producer thread number : 50
-	Test duration(s) : 395.692
-	Total logs sent : 10000000
-	Log sending success count : 10000000
-	Log sending failure count : 0
-	Log sending exception count : 0
-	Total byes produced : 21588200000
-	Average log size(byte) : 2158.82
-	Throughput(MB/s) : 52.03064979186187
-	Average log sending delay(ms) : 1.8724801
-	-------------------------------------------------------
-	Consumer Report:
-	-------------------------------------------------------
-	Log consumer thread number : 50
-	Test duration(s) : 395.692
-	Total logs received : 10000000
-	Log receiving success count : 10000000
-	Log receiving failure count : 0
-	Log receiving exception count : 0
-	Total byes received : 21588200000
-	Average log size(byte) : 2158.82
-	Throughput(MB/s) : 52.03064979186187
-	Average log receiving delay(ms) : 1.8693821
-	
+{% codeblock %}
+*******************************************************
+Concurrency Test Report:
+*******************************************************
+Producer Report:
+*******************************************************
+Log producer thread number : 50
+Test duration(s) : 395.692
+Total logs sent : 10000000
+Log sending success count : 10000000
+Log sending failure count : 0
+Log sending exception count : 0
+Total byes produced : 21588200000
+Average log size(byte) : 2158.82
+Throughput(MB/s) : 52.03064979186187
+Average log sending delay(ms) : 1.8724801
+
+*******************************************************
+Consumer Report:
+*******************************************************
+Log consumer thread number : 50
+Test duration(s) : 395.692
+Total logs received : 10000000
+Log receiving success count : 10000000
+Log receiving failure count : 0
+Log receiving exception count : 0
+Total byes received : 21588200000
+Average log size(byte) : 2158.82
+Throughput(MB/s) : 52.03064979186187
+Average log receiving delay(ms) : 1.8693821
+{% endcodeblock %}
 
 Even in concurrent scenario, big queue can concurrently producing and consuming around 50MBbs log data, this is equal to 50 * 3600 * 24 / (1024 * 1024) = 4.11 TB daily, amazing!
 

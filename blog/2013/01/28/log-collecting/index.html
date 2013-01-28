@@ -109,7 +109,7 @@
 
 <h3>Collecting and Consuming Logs using Thrift based Queue Serivce</h3>
 
-<p>Big queue was originally designed for log collecting and analysis scenarion, it&#8217;s very simple to collecting logs using big queue, all you need to do are:</p>
+<p>Big queue was originally designed for log collecting and analysis scenario, it&#8217;s very simple to collecting logs using big queue, all you need to do are:</p>
 
 <!--more-->
 
@@ -167,10 +167,13 @@
 <ol>
 <li><p>Sequential Test - Producing then Consuming</p>
 
-<pre><code> -------------------------------------------------------
+<hr />
+
  Producer Report:
- -------------------------------------------------------
- Log producer thread number : 50
+
+<hr />
+
+<p> Log producer thread number : 50
  Test duration(s) : 279.144
  Total logs sent : 10000000
  Log sending success count : 10000000
@@ -179,13 +182,15 @@
  Total byes produced : 20105400000
  Average log size(byte) : 2010.54
  Throughput(MB/s) : 68.68857507621235
- Average log sending delay(ms) : 1.2961799
+ Average log sending delay(ms) : 1.2961799</p>
 
+<hr />
 
- -------------------------------------------------------
  Consumer Report:
- -------------------------------------------------------
- Log consumer thread number : 50
+
+<hr />
+
+<p> Log consumer thread number : 50
  Test duration(s) : 274.157
  Total logs received : 10000000
  Log receiving success count : 10000000
@@ -194,15 +199,19 @@
  Total byes received : 20105400000
  Average log size(byte) : 2010.54
  Throughput(MB/s) : 69.93804134519353
- Average log receiving delay(ms) : 1.3691828
-</code></pre></li>
+ Average log receiving delay(ms) : 1.3691828</p></li>
 <li><p>Concurrent Test - Producing and Consuming currently</p>
 
-<pre><code> -------------------------------------------------------
+<hr />
+
  Concurrency Test Report:
- -------------------------------------------------------
+
+<hr />
+
  Producer Report:
- -------------------------------------------------------
+
+<hr />
+
  Log producer thread number : 50
  Test duration(s) : 395.692
  Total logs sent : 10000000
@@ -213,10 +222,14 @@
  Average log size(byte) : 2158.82
  Throughput(MB/s) : 52.03064979186187
  Average log sending delay(ms) : 1.8724801
- -------------------------------------------------------
+
+<hr />
+
  Consumer Report:
- -------------------------------------------------------
- Log consumer thread number : 50
+
+<hr />
+
+<p> Log consumer thread number : 50
  Test duration(s) : 395.692
  Total logs received : 10000000
  Log receiving success count : 10000000
@@ -225,8 +238,7 @@
  Total byes received : 21588200000
  Average log size(byte) : 2158.82
  Throughput(MB/s) : 52.03064979186187
- Average log receiving delay(ms) : 1.8693821
-</code></pre></li>
+ Average log receiving delay(ms) : 1.8693821</p></li>
 </ol>
 
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-01-28T17:14:56+08:00</updated>
+  <updated>2013-01-28T17:26:33+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -78,81 +78,129 @@
 <p>I&#8217;ve did some basic performance test to validate the performance of my Thrift based queue service, the full hardware spec for server is <a href="http://bulldog2011.github.com/lab/">here</a>, on the client side, I just used my ordinary notebook(Intel i5 2.5GHz CPU, 10G memory and Win7 OS) to simulate multiple clients producing and consuming scenario, full source is <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue/src/com/leansoft/thriftqueue/load">here</a>, I used a cheap 1Gbps switch between server and clients to simulate reald world scenarion, below are the performance numbers:</p>
 
 <ol>
-<li><p>Sequential Test - Producing then Consuming</p>
-
-<hr />
-
- Producer Report:
-
-<hr />
-
-<p> Log producer thread number : 50
- Test duration(s) : 279.144
- Total logs sent : 10000000
- Log sending success count : 10000000
- Log sending failure count : 0
- Log sending exception count : 0
- Total byes produced : 20105400000
- Average log size(byte) : 2010.54
- Throughput(MB/s) : 68.68857507621235
- Average log sending delay(ms) : 1.2961799</p>
-
-<hr />
-
- Consumer Report:
-
-<hr />
-
-<p> Log consumer thread number : 50
- Test duration(s) : 274.157
- Total logs received : 10000000
- Log receiving success count : 10000000
- Log receiving failure count : 0
- Log receiving exception count : 0
- Total byes received : 20105400000
- Average log size(byte) : 2010.54
- Throughput(MB/s) : 69.93804134519353
- Average log receiving delay(ms) : 1.3691828</p></li>
-<li><p>Concurrent Test - Producing and Consuming currently</p>
-
-<hr />
-
- Concurrency Test Report:
-
-<hr />
-
- Producer Report:
-
-<hr />
-
- Log producer thread number : 50
- Test duration(s) : 395.692
- Total logs sent : 10000000
- Log sending success count : 10000000
- Log sending failure count : 0
- Log sending exception count : 0
- Total byes produced : 21588200000
- Average log size(byte) : 2158.82
- Throughput(MB/s) : 52.03064979186187
- Average log sending delay(ms) : 1.8724801
-
-<hr />
-
- Consumer Report:
-
-<hr />
-
-<p> Log consumer thread number : 50
- Test duration(s) : 395.692
- Total logs received : 10000000
- Log receiving success count : 10000000
- Log receiving failure count : 0
- Log receiving exception count : 0
- Total byes received : 21588200000
- Average log size(byte) : 2158.82
- Throughput(MB/s) : 52.03064979186187
- Average log receiving delay(ms) : 1.8693821</p></li>
+<li>Sequential Test - Producing then Consuming</li>
 </ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>*******************************************************
+</span><span class='line'>Producer Report:
+</span><span class='line'>*******************************************************
+</span><span class='line'>Log producer thread number : 50
+</span><span class='line'>Test duration(s) : 279.144
+</span><span class='line'>Total logs sent : 10000000
+</span><span class='line'>Log sending success count : 10000000
+</span><span class='line'>Log sending failure count : 0
+</span><span class='line'>Log sending exception count : 0
+</span><span class='line'>Total byes produced : 20105400000
+</span><span class='line'>Average log size(byte) : 2010.54
+</span><span class='line'>Throughput(MB/s) : 68.68857507621235
+</span><span class='line'>Average log sending delay(ms) : 1.2961799
+</span><span class='line'>
+</span><span class='line'>*******************************************************
+</span><span class='line'>Consumer Report:
+</span><span class='line'>*******************************************************
+</span><span class='line'>Log consumer thread number : 50
+</span><span class='line'>Test duration(s) : 274.157
+</span><span class='line'>Total logs received : 10000000
+</span><span class='line'>Log receiving success count : 10000000
+</span><span class='line'>Log receiving failure count : 0
+</span><span class='line'>Log receiving exception count : 0
+</span><span class='line'>Total byes received : 20105400000
+</span><span class='line'>Average log size(byte) : 2010.54
+</span><span class='line'>Throughput(MB/s) : 69.93804134519353
+</span><span class='line'>Average log receiving delay(ms) : 1.3691828</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Concurrent Test - Producing and Consuming currently</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>*******************************************************
+</span><span class='line'>Concurrency Test Report:
+</span><span class='line'>*******************************************************
+</span><span class='line'>Producer Report:
+</span><span class='line'>*******************************************************
+</span><span class='line'>Log producer thread number : 50
+</span><span class='line'>Test duration(s) : 395.692
+</span><span class='line'>Total logs sent : 10000000
+</span><span class='line'>Log sending success count : 10000000
+</span><span class='line'>Log sending failure count : 0
+</span><span class='line'>Log sending exception count : 0
+</span><span class='line'>Total byes produced : 21588200000
+</span><span class='line'>Average log size(byte) : 2158.82
+</span><span class='line'>Throughput(MB/s) : 52.03064979186187
+</span><span class='line'>Average log sending delay(ms) : 1.8724801
+</span><span class='line'>
+</span><span class='line'>*******************************************************
+</span><span class='line'>Consumer Report:
+</span><span class='line'>*******************************************************
+</span><span class='line'>Log consumer thread number : 50
+</span><span class='line'>Test duration(s) : 395.692
+</span><span class='line'>Total logs received : 10000000
+</span><span class='line'>Log receiving success count : 10000000
+</span><span class='line'>Log receiving failure count : 0
+</span><span class='line'>Log receiving exception count : 0
+</span><span class='line'>Total byes received : 21588200000
+</span><span class='line'>Average log size(byte) : 2158.82
+</span><span class='line'>Throughput(MB/s) : 52.03064979186187
+</span><span class='line'>Average log receiving delay(ms) : 1.8693821</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Even in concurrent scenario, big queue can concurrently producing and consuming around 50MBbs log data, this is equal to 50 * 3600 * 24 / (1024 * 1024) = 4.11 TB daily, amazing!</p>

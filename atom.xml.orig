@@ -4,8 +4,19 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-03T12:33:10+08:00</updated>
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  <updated>2013-01-28T00:16:37+08:00</updated>
+=======
+  <updated>2013-01-28T17:26:33+08:00</updated>
+>>>>>>> bc360ba32446fbd5352b199608eef001efa79ed9
+=======
+  <updated>2013-01-28T17:33:14+08:00</updated>
 >>>>>>> b4b6c0af24924712999a9502a2a986d4b51af020
+=======
+  <updated>2013-02-03T12:33:10+08:00</updated>
+>>>>>>> 6ce9e74e8111ee205cb591b220f0d6e4f2f240a3
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>

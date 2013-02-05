@@ -3,7 +3,7 @@ layout: post
 title: "Big Array Tutorial"
 date: 2013-01-24 21:37
 comments: true
-categories: 
+categories: [big queue]
 keywords: memory mapped array
 description: This is a tutorial to show the basic API usage of big array.
 ---

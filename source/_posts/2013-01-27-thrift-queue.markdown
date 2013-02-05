@@ -3,7 +3,7 @@ layout: post
 title: "Turn Big Queue into a Thrift based Queue Serivce"
 date: 2013-01-27 21:01
 comments: true
-categories: 
+categories: [big queue]
 keywords: persistent queue, thrift queue, apache thrift, light-weight RPC
 description: show how to turn big queue into a thrift based queue service
 ---

@@ -3,7 +3,7 @@ layout: post
 title: "Producing and consuming 4TB log daily on one commodity machine"
 date: 2013-01-28 13:10
 comments: true
-categories: 
+categories: [big queue]
 keywords: log collector, log collecting, persistent queue
 description: show how to collect logs using big queue service and show performance test numbers.
 ---

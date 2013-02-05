@@ -3,7 +3,7 @@ layout: post
 title: "Sort and Search 100GB Data on a Single Machine"
 date: 2013-01-25 18:01
 comments: true
-categories: 
+categories: [big queue]
 keywords: external sorting, merge sort, binary search, big data sort and search, persistent queue, algorithm and data structure
 description: show effective algorithm and data structure to sort and search big data on commodity machine with limited memory.
 ---

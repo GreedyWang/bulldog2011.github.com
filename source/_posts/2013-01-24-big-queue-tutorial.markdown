@@ -3,7 +3,7 @@ layout: post
 title: "Big Queue Tutorial"
 date: 2013-01-24 20:17
 comments: true
-categories: 
+categories: [big queue]
 keywords: memory mapped queue
 description: a tutorial to show the basic API usage of big queue.
 ---

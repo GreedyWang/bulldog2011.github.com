@@ -3,7 +3,7 @@ layout: post
 title: "The Design of A Big, Fast, and Persistent Queue"
 date: 2013-01-23 20:55
 comments: true
-categories: 
+categories: [design, big queue]
 keywords:  persistent queue, memory mapped file, mappedbytebuffer, kafka  
 description: the design of a big, fast and persistent queue in Java  
 ---

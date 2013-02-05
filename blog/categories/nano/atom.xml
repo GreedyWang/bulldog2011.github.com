@@ -4,7 +4,7 @@
   <title><![CDATA[Category: nano | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/nano/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-05T21:43:51+08:00</updated>
+  <updated>2013-02-05T21:52:13+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -19,6 +19,9 @@
     <updated>2013-02-05T21:12:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/02/05/nano-list-tutorial</id>
     <content type="html"><![CDATA[<p>In this tutorial, I will show you how to marshall and unmarshall list of objects using Nano binding framework.</p>
+
+<!--more-->
+
 
 <h3>1. Create Bean Class</h3>
 
@@ -85,6 +88,9 @@
 <span class='line-number'>59</span>
 <span class='line-number'>60</span>
 <span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
@@ -97,10 +103,13 @@
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@Element</span>
 </span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>
 </span><span class='line'><span class="nd">@Element</span>
 </span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">author</span><span class="o">;</span>
+</span><span class='line'>
 </span><span class='line'><span class="nd">@Element</span>
 </span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">publisher</span><span class="o">;</span>
+</span><span class='line'>
 </span><span class='line'><span class="nd">@Element</span>
 </span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">isbn</span><span class="o">;</span>
 </span><span class='line'>
@@ -148,7 +157,7 @@
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
-<p>This is simple bean class containing Nano annotations, indicating this is a Nano bindable class. When a top level class is annotated with @RootElement, then its instance maps to XML element, in our case <book> tag. At field level, all fields of Book are annotated with @Element, indicating these fileds map to XML elements.</p>
+<p>This is simple bean class containing Nano annotations, indicating this is a Nano bindable class. When a top level class is annotated with @RootElement, then its instance maps to XML element, in our case &lt;book&gt; tag. At field level, all fields of Book are annotated with @Element, indicating these fileds map to XML elements.</p>
 
 <h3>2. Create Container Class to Hold List of Objects</h3>
 

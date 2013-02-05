@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-05T21:43:51+08:00</updated>
+  <updated>2013-02-05T21:52:13+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -19,6 +19,9 @@
     <updated>2013-02-05T21:12:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/02/05/nano-list-tutorial</id>
     <content type="html"><![CDATA[<p>In this tutorial, I will show you how to marshall and unmarshall list of objects using Nano binding framework.</p>
+
+<!--more-->
+
 
 <h3>1. Create Bean Class</h3>
 
@@ -78,6 +81,10 @@
 <span class='line-number'>52</span>
 <span class='line-number'>53</span>
 <span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
@@ -85,57 +92,61 @@
 </span><span class='line'>
 </span><span class='line'><span class="nd">@RootElement</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;book&quot;</span><span class="o">)</span>
 </span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Book</span> <span class="o">{</span>
+</span><span class='line'>
 </span><span class='line'>  <span class="nd">@Element</span>
-</span><span class='line'>    <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>
 </span><span class='line'>  <span class="nd">@Element</span>
-</span><span class='line'>    <span class="kd">private</span> <span class="n">String</span> <span class="n">author</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">author</span><span class="o">;</span>
+</span><span class='line'>
 </span><span class='line'>  <span class="nd">@Element</span>
-</span><span class='line'>    <span class="kd">private</span> <span class="n">String</span> <span class="n">publisher</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">publisher</span><span class="o">;</span>
+</span><span class='line'>
 </span><span class='line'>  <span class="nd">@Element</span>
-</span><span class='line'>    <span class="kd">private</span> <span class="n">String</span> <span class="n">isbn</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getName</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">name</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setName</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getAuthor</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">author</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setAuthor</span><span class="o">(</span><span class="n">String</span> <span class="n">author</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">author</span> <span class="o">=</span> <span class="n">author</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getPublisher</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">publisher</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setPublisher</span><span class="o">(</span><span class="n">String</span> <span class="n">publisher</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">publisher</span> <span class="o">=</span> <span class="n">publisher</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getIsbn</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">isbn</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setIsbn</span><span class="o">(</span><span class="n">String</span> <span class="n">isbn</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">isbn</span> <span class="o">=</span> <span class="n">isbn</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="nd">@Override</span>
-</span><span class='line'>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="s">&quot;Book [name=&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;, author=&quot;</span> <span class="o">+</span> <span class="n">author</span> <span class="o">+</span> <span class="s">&quot;, publisher=&quot;</span>
-</span><span class='line'>                <span class="o">+</span> <span class="n">publisher</span> <span class="o">+</span> <span class="s">&quot;, isbn=&quot;</span> <span class="o">+</span> <span class="n">isbn</span>  <span class="o">+</span> <span class="s">&quot;]&quot;</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">isbn</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getName</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setName</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getAuthor</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">author</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setAuthor</span><span class="o">(</span><span class="n">String</span> <span class="n">author</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">author</span> <span class="o">=</span> <span class="n">author</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getPublisher</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">publisher</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setPublisher</span><span class="o">(</span><span class="n">String</span> <span class="n">publisher</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">publisher</span> <span class="o">=</span> <span class="n">publisher</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getIsbn</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">isbn</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setIsbn</span><span class="o">(</span><span class="n">String</span> <span class="n">isbn</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">isbn</span> <span class="o">=</span> <span class="n">isbn</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="s">&quot;Book [name=&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;, author=&quot;</span> <span class="o">+</span> <span class="n">author</span> <span class="o">+</span> <span class="s">&quot;, publisher=&quot;</span>
+</span><span class='line'>              <span class="o">+</span> <span class="n">publisher</span> <span class="o">+</span> <span class="s">&quot;, isbn=&quot;</span> <span class="o">+</span> <span class="n">isbn</span>  <span class="o">+</span> <span class="s">&quot;]&quot;</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
 </span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>This is simple bean class containing Nano annotations, indicating this is a Nano bindable class. When a top level class is annotated with @RootElement, then its instance maps to XML element, in our case <book> tag. At field level, all fields of Book are annotated with @Element, indicating these fileds map to XML elements.</p>
+<p>This is simple bean class containing Nano annotations, indicating this is a Nano bindable class. When a top level class is annotated with @RootElement, then its instance maps to XML element, in our case &lt;book&gt; tag. At field level, all fields of Book are annotated with @Element, indicating these fileds map to XML elements.</p>
 
 <h3>2. Create Container Class to Hold List of Objects</h3>
 
@@ -283,35 +294,35 @@
 </span><span class='line'>      <span class="n">bookOne</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">&quot;SCJP&quot;</span><span class="o">);</span>
 </span><span class='line'>      <span class="n">bookOne</span><span class="o">.</span><span class="na">setPublisher</span><span class="o">(</span><span class="s">&quot;Tata McGraw Hill&quot;</span><span class="o">);</span>
 </span><span class='line'>      <span class="n">bookOne</span><span class="o">.</span><span class="na">setIsbn</span><span class="o">(</span><span class="s">&quot;856-545456736&quot;</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">Book</span> <span class="n">bookTwo</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Book</span><span class="o">();</span>
-</span><span class='line'>        <span class="n">bookTwo</span><span class="o">.</span><span class="na">setAuthor</span><span class="o">(</span><span class="s">&quot;Christian Bauer&quot;</span><span class="o">);</span>
-</span><span class='line'>        <span class="n">bookTwo</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">&quot;Java Persistence with Hibernate&quot;</span><span class="o">);</span>
-</span><span class='line'>        <span class="n">bookTwo</span><span class="o">.</span><span class="na">setPublisher</span><span class="o">(</span><span class="s">&quot;Manning&quot;</span><span class="o">);</span>
-</span><span class='line'>        <span class="n">bookTwo</span><span class="o">.</span><span class="na">setIsbn</span><span class="o">(</span><span class="s">&quot;978-3832180577&quot;</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">List</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;</span> <span class="n">bookList</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;();</span>
-</span><span class='line'>        <span class="n">bookList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">bookOne</span><span class="o">);</span>
-</span><span class='line'>        <span class="n">bookList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">bookTwo</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">Books</span> <span class="n">books</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Books</span><span class="o">();</span>
-</span><span class='line'>        <span class="n">books</span><span class="o">.</span><span class="na">setBooks</span><span class="o">(</span><span class="n">bookList</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">IWriter</span> <span class="n">xmlWriter</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLWriter</span><span class="o">();</span>
-</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">Book</span> <span class="n">bookTwo</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Book</span><span class="o">();</span>
+</span><span class='line'>      <span class="n">bookTwo</span><span class="o">.</span><span class="na">setAuthor</span><span class="o">(</span><span class="s">&quot;Christian Bauer&quot;</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">bookTwo</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">&quot;Java Persistence with Hibernate&quot;</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">bookTwo</span><span class="o">.</span><span class="na">setPublisher</span><span class="o">(</span><span class="s">&quot;Manning&quot;</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">bookTwo</span><span class="o">.</span><span class="na">setIsbn</span><span class="o">(</span><span class="s">&quot;978-3832180577&quot;</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">List</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;</span> <span class="n">bookList</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;();</span>
+</span><span class='line'>      <span class="n">bookList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">bookOne</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">bookList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">bookTwo</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">Books</span> <span class="n">books</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Books</span><span class="o">();</span>
+</span><span class='line'>      <span class="n">books</span><span class="o">.</span><span class="na">setBooks</span><span class="o">(</span><span class="n">bookList</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">IWriter</span> <span class="n">xmlWriter</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLWriter</span><span class="o">();</span>
+</span><span class='line'>      <span class="k">try</span> <span class="o">{</span>
 </span><span class='line'>          <span class="n">xmlWriter</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">books</span><span class="o">,</span> <span class="k">new</span> <span class="n">FileOutputStream</span><span class="o">(</span><span class="s">&quot;books.xml&quot;</span><span class="o">));</span>
 </span><span class='line'>      <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>          <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
 </span><span class='line'>      <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">IReader</span> <span class="n">xmlReader</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLReader</span><span class="o">();</span>
-</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">IReader</span> <span class="n">xmlReader</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLReader</span><span class="o">();</span>
+</span><span class='line'>      <span class="k">try</span> <span class="o">{</span>
 </span><span class='line'>          <span class="n">books</span> <span class="o">=</span> <span class="n">xmlReader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">Books</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="s">&quot;books.xml&quot;</span><span class="o">));</span>
 </span><span class='line'>      <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>          <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
 </span><span class='line'>      <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">books</span><span class="o">.</span><span class="na">getBooks</span><span class="o">());</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">books</span><span class="o">.</span><span class="na">getBooks</span><span class="o">());</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="o">}</span>
 </span><span class='line'>

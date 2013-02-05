@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-05T18:30:41+08:00</updated>
+  <updated>2013-02-05T18:34:27+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -679,7 +679,7 @@ Compared with big disk storage, current computer system is still shortage of phy
     <link href="http://bulldog2011.github.com/blog/2013/01/23/hello-world/"/>
     <updated>2013-01-23T12:05:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/01/23/hello-world</id>
-    <content type="html"><![CDATA[<p>This is just to record the beginning of my blogging era.</p>
+    <content type="html"><![CDATA[<p>This is just to log the beginning of my blogging era.</p>
 ]]></content>
   </entry>
   

@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-05T19:53:44+08:00</updated>
+  <updated>2013-02-05T19:58:01+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -144,11 +144,12 @@ On normal Java platform, Nano depends on Kxml and org.json library, however, on 
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>On class level, RootElement(optional) annotation indicates that this class is Nano bindable, on field level, Element annotation indicates that this field maps to an Xml element, Attribute annotation indicates that this filed maps to an Xml attribute.</p>
+<p>On class level, RootElement(optional) annotation indicates that this class is Nano bindable, on field level, Element annotation indicates that this field maps to an Xml element, Attribute annotation indicates that this filed maps to an Xml attribute.<br/>
+<strong><em>Note</em></strong> field level annotations can only be used on fields(private is ok), not on getter or setter methods.</p>
 
 <h3>3. Convert Object to Xml or Json</h3>
 
-<p>Instantiate an object, get an Xml or Json writer instance from NanoFactory class, then write the object to output.</p>
+<p>Instantiate an object, get an Xml or Json writer instance from NanoFactory class, then write the object to output(file, console or plain string).</p>
 
 <figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -237,7 +238,7 @@ On normal Java platform, Nano depends on Kxml and org.json library, however, on 
 
 <h3>4. Convert XML or JSON back to Object</h3>
 
-<p>get an Xml or Json reader instance from NanoFactory class, then read content(has just been written above) back into object instance.<br/>
+<p>Get an Xml or Json reader instance from NanoFactory class, then read content(has just been written above) back into object instance.<br/>
 Note that when you read back, you need to explictly tell Nano the target class name.</p>
 
 <figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>

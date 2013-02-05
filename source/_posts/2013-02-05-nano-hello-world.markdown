@@ -82,7 +82,8 @@ public class Customer {
 
 
 On class level, RootElement(optional) annotation indicates that this class is Nano bindable, on field level, Element annotation indicates that this field maps to an Xml element, Attribute annotation indicates that this filed maps to an Xml attribute.  
-***Note*** field level annotations can only be used on fields(private is ok), not on getter or setter methods.
+***Note***  
+field level annotations can only be used on fields(private is ok), not on getter or setter methods.
 
 ###3. Convert Object to Xml or Json
 Instantiate an object, get an Xml or Json writer instance from NanoFactory class, then write the object to output(file, console or plain string). 

@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-05T19:45:16+08:00</updated>
+  <updated>2013-02-05T19:49:03+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -22,10 +22,11 @@
 
 <blockquote><ol>
 <li>Tailored for Android platform.</li>
-<li>Support both xml and json binding.<br/>
-In this tutorial, I will show you simple usage of Nano in normal Java environment, in later posts, I will show you how to use Nano on Androd platform.</li>
+<li>Support both xml and json binding.</li>
 </ol>
 </blockquote>
+
+<p>In this tutorial, I will show you simple usage of Nano in normal Java environment, in later posts, I will show you how to use Nano on Androd platform.</p>
 
 <!--more-->
 

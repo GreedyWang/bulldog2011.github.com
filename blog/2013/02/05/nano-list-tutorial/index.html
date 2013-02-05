@@ -407,10 +407,10 @@
 
 
 <blockquote><ol>
-<li>In the main method, we create two book objects and store them in an ArrayList, then we create a Books container object and put the books list into it.</li>
-<li>We get an xml writer from NanoFactory class and write the books object to a xml file.</li>
-<li>We getn an xml reader from NanoFactory class and read the xml file back into books object.</li>
-<li>Finally, we print the list of books(which will call toString() on Book class).</li>
+<li>In the main method, we create two Book objects and store them in an ArrayList, then we create a Books container object and put the book list into it.</li>
+<li>We use a Nano xml writer instance to write the Books object to an xml file.</li>
+<li>We use a Nano xml reader instance to read the xml file back into Books object.</li>
+<li>Finally, we print the list of books(which will eventually call toString() on Book object).</li>
 </ol>
 </blockquote>
 
@@ -420,7 +420,7 @@
 </pre></td><td class='code'><pre><code class=''><span class='line'>[Book [name=SCJP, author=Kathy Sierra, publisher=Tata McGraw Hill, isbn=856-545456736], Book [name=Java Persistence with Hibernate, author=Christian Bauer, publisher=Manning, isbn=978-3832180577]]</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Refesh your project in IDE(eclise in my case) to see the generated XML file:</p>
+<p>Refesh your project in IDE(eclipse in my case) to see the generated XML file:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>

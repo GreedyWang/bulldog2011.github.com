@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-05T21:53:49+08:00</updated>
+  <updated>2013-02-06T19:56:49+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -422,7 +422,7 @@
 
 <h3>1. Nano Dependency</h3>
 
-<p>Nano 0.6.1 can be downloaded <a href="https://github.com/bulldog2011/bulldog-repo/raw/master/repo/releases/com/leansoft/nano/0.6.1/nano-0.6.1-all.zip">here</a>, extract the zip file, and put all 3 jars in lib folder on your project classpath.<br/>
+<p>Nano 0.6.2 can be downloaded <a href="https://github.com/bulldog2011/bulldog-repo/raw/master/repo/releases/com/leansoft/nano/0.6.2/nano-0.6.2-all.zip">here</a>, extract the zip file, and put all 3 jars in lib folder on your project classpath.<br/>
 <strong><em>Note</em></strong>:<br/>
 On normal Java platform, Nano depends on Kxml and org.json library, however, on Android, Nano has no such dependency, since Kxml and org.json are built in Android Platform.</p>
 

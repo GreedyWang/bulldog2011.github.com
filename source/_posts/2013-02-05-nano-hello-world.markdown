@@ -27,7 +27,7 @@ In this tutorial, I will show you simple usage of Nano in normal Java environmen
 Working with Nano is easy, just annotate your domain class with Nano annotations, later use nanoWriter.write() or nanoReader.read() to do the object / Xml(or Json) conversion.
 
 ###1. Nano Dependency
-Nano 0.6.1 can be downloaded [here](https://github.com/bulldog2011/bulldog-repo/raw/master/repo/releases/com/leansoft/nano/0.6.1/nano-0.6.1-all.zip), extract the zip file, and put all 3 jars in lib folder on your project classpath.  
+Nano 0.6.2 can be downloaded [here](https://github.com/bulldog2011/bulldog-repo/raw/master/repo/releases/com/leansoft/nano/0.6.2/nano-0.6.2-all.zip), extract the zip file, and put all 3 jars in lib folder on your project classpath.  
 ***Note***:  
 On normal Java platform, Nano depends on Kxml and org.json library, however, on Android, Nano has no such dependency, since Kxml and org.json are built in Android Platform.
 

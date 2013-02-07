@@ -4,7 +4,7 @@
   <title><![CDATA[Category: nano | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/nano/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-06T22:25:10+08:00</updated>
+  <updated>2013-02-07T10:55:04+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -18,7 +18,7 @@
     <link href="http://bulldog2011.github.com/blog/2013/02/06/nano-compare-to-jaxb/"/>
     <updated>2013-02-06T20:44:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/02/06/nano-compare-to-jaxb</id>
-    <content type="html"><![CDATA[<p>I just read an interesting post <a href="http://blog.bdoughan.com/2010/10/how-does-jaxb-compare-to-simple.html">How Does JAXB Compare to Simple</a>, since I have just built a leight-weight xml and json binding framework called <a href="http://github.com/bulldog2011/nano">Nano</a>, in this post I'll run a similar comparison between Nano and JAXB.</p>
+    <content type="html"><![CDATA[<p>I just read an interesting post <a href="http://blog.bdoughan.com/2010/10/how-does-jaxb-compare-to-simple.html">How Does JAXB Compare to Simple</a>, since I have just built a leight-weight xml and json binding framework called <a href="http://github.com/bulldog2011/nano">Nano</a>, in this post I'll run a similar comparison between Nano and JAXB. By the way, since I am a lazy developer, I shamelessly copied much content from that post:), anyway, part of the content of this post should be contributed to the original author of that post.</p>
 
 <!--more-->
 
@@ -27,189 +27,99 @@
 
 <p>We will use the following model for this example. The classes represent customer data. The get/set methods have been omitted to save space.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Customer</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">private</span> <span class="kt">long</span> <span class="n">id</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">private</span> <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">PhoneNumber</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">phoneNumbers</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">Customer</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">phoneNumbers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">PhoneNumber</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;();</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Address</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">private</span> <span class="n">String</span> <span class="n">city</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">street</span><span class="o">;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>package com.leansoft.domain.nano;</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">PhoneNumber</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">private</span> <span class="n">String</span> <span class="n">type</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">number</span><span class="o">;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>import java.util.ArrayList;
+import java.util.List;</p>
+
+<p>public class Customer {</p>
+
+<pre><code>private long id;
+
+private String name;
+
+private Address address;
+
+private List&lt;PhoneNumber&gt; phoneNumbers;
+
+public Customer() {
+    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
+
+<p>``` java</p>
+
+<p>package com.leansoft.domain.nano;</p>
+
+<p>public class Address {</p>
+
+<pre><code>private String city;
+
+private String street;
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
+
+<p>``` java</p>
+
+<p>package com.leansoft.domain.nano;</p>
+
+<p>public class PhoneNumber {</p>
+
+<pre><code>private String type;
+
+private String number;
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h3>Customer Data</h3>
 
 <p>The following instance of Customer will be marshalled to XML using both Nano and JAXB.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Data</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">static</span> <span class="n">Customer</span> <span class="n">CUSTOMER</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">static</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">CUSTOMER</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Customer</span><span class="o">();</span>
-</span><span class='line'>    <span class="n">CUSTOMER</span><span class="o">.</span><span class="na">setId</span><span class="o">(</span><span class="mi">123</span><span class="o">);</span>
-</span><span class='line'>    <span class="n">CUSTOMER</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">&quot;Jane Doe&quot;</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Address</span> <span class="n">address</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Address</span><span class="o">();</span>
-</span><span class='line'>    <span class="n">address</span><span class="o">.</span><span class="na">setStreet</span><span class="o">(</span><span class="s">&quot;1 A Street&quot;</span><span class="o">);</span>
-</span><span class='line'>    <span class="n">address</span><span class="o">.</span><span class="na">setCity</span><span class="o">(</span><span class="s">&quot;Any Town&quot;</span><span class="o">);</span>
-</span><span class='line'>    <span class="n">CUSTOMER</span><span class="o">.</span><span class="na">setAddress</span><span class="o">(</span><span class="n">address</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">PhoneNumber</span> <span class="n">workPhoneNumber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">PhoneNumber</span><span class="o">();</span>
-</span><span class='line'>    <span class="n">workPhoneNumber</span><span class="o">.</span><span class="na">setType</span><span class="o">(</span><span class="s">&quot;work&quot;</span><span class="o">);</span>
-</span><span class='line'>    <span class="n">workPhoneNumber</span><span class="o">.</span><span class="na">setNumber</span><span class="o">(</span><span class="s">&quot;555-WORK&quot;</span><span class="o">);</span>
-</span><span class='line'>    <span class="n">CUSTOMER</span><span class="o">.</span><span class="na">getPhoneNumbers</span><span class="o">().</span><span class="na">add</span><span class="o">(</span><span class="n">workPhoneNumber</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">PhoneNumber</span> <span class="n">cellPhoneNumber</span> <span class="o">=</span> <span class="k">new</span> <span class="n">PhoneNumber</span><span class="o">();</span>
-</span><span class='line'>    <span class="n">cellPhoneNumber</span><span class="o">.</span><span class="na">setType</span><span class="o">(</span><span class="s">&quot;cell&quot;</span><span class="o">);</span>
-</span><span class='line'>    <span class="n">cellPhoneNumber</span><span class="o">.</span><span class="na">setNumber</span><span class="o">(</span><span class="s">&quot;555-CELL&quot;</span><span class="o">);</span>
-</span><span class='line'>    <span class="n">CUSTOMER</span><span class="o">.</span><span class="na">getPhoneNumbers</span><span class="o">().</span><span class="na">add</span><span class="o">(</span><span class="n">cellPhoneNumber</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.domain.nano;</p>
+
+<p>public class Data {</p>
+
+<pre><code>public static Customer CUSTOMER;
+
+static {
+    CUSTOMER = new Customer();
+    CUSTOMER.setId(123);
+    CUSTOMER.setName("Jane Doe");
+
+    Address address = new Address();
+    address.setStreet("1 A Street");
+    address.setCity("Any Town");
+    CUSTOMER.setAddress(address);
+
+    PhoneNumber workPhoneNumber = new PhoneNumber();
+    workPhoneNumber.setType("work");
+    workPhoneNumber.setNumber("555-WORK");
+    CUSTOMER.getPhoneNumbers().add(workPhoneNumber);
+
+    PhoneNumber cellPhoneNumber = new PhoneNumber();
+    cellPhoneNumber.setType("cell");
+    cellPhoneNumber.setNumber("555-CELL");
+    CUSTOMER.getPhoneNumbers().add(cellPhoneNumber);
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h3>Marshall Code</h3>
 
@@ -218,114 +128,66 @@
 <h4>Nano</h4>
 
 <p>The following code will be used to marshall the instance of Customer to an OutputStream.
-The Nano code is quite compact.A little technial details here, the xmlWriter instance got from NanoFactory is thread safe, and unlike JAXB, Nano internally uses an on-demand strategy to scan mapping metadata before real marshalling (and unmarshalling), metadata scan happens once per class, and then the mapping metadata will be cached.</p>
+The Nano code is quite compact. A little technical details here, the xmlWriter instance got from NanoFactory is thread safe, and unlike JAXB, Nano internally uses an on-demand strategy to scan mapping metadata before real marshalling (and unmarshalling), metadata scan happens once per class, and then the mapping metadata will be cached.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.leansoft.domain.nano.NanoData</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.IWriter</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.NanoFactory</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">NanoDemo</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="n">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">IWriter</span> <span class="n">xmlWriter</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLWriter</span><span class="o">();</span>
-</span><span class='line'>    <span class="n">xmlWriter</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">NanoData</span><span class="o">.</span><span class="na">CUSTOMER</span><span class="o">,</span> <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.nano.sample;</p>
+
+<p>import com.leansoft.domain.nano.NanoData;
+import com.leansoft.nano.IWriter;
+import com.leansoft.nano.NanoFactory;</p>
+
+<p>public class NanoDemo {</p>
+
+<pre><code>public static void main(String[] args) throws Exception {
+    IWriter xmlWriter = NanoFactory.getXMLWriter();
+    xmlWriter.write(NanoData.CUSTOMER, System.out);
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>JAXB</h4>
 
 <p>The following code will be used to marshall the instance of Customer to an OutputStream. A couple of differences are already apparent:</p>
 
-<ol>
+<blockquote><ol>
 <li>A JAXBContext needs to be initialized on the binding metadata before the marshal operation can occur. This initialization enables JAXB to optimize how the convertion will be done. The JAXB Context is thread safe and only needs to be created once.</li>
 <li>Unlike Nano, JAXB does not format the XML by default, so we will enable this feature.</li>
 <li>With no metadata specified we need to supply JAXB with a root element name (and namespace).</li>
 </ol>
+</blockquote>
 
+<p>``` java</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">javax.xml.bind.JAXBContext</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">javax.xml.bind.JAXBElement</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">javax.xml.bind.Marshaller</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">javax.xml.namespace.QName</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.leansoft.domain.jaxb.Customer</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.domain.jaxb.JaxbData</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">JaxbDemo</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="n">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">JAXBContext</span> <span class="n">jc</span> <span class="o">=</span> <span class="n">JAXBContext</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">Customer</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">Marshaller</span> <span class="n">marshaller</span> <span class="o">=</span> <span class="n">jc</span><span class="o">.</span><span class="na">createMarshaller</span><span class="o">();</span>
-</span><span class='line'>    <span class="n">marshaller</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="n">Marshaller</span><span class="o">.</span><span class="na">JAXB_FORMATTED_OUTPUT</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
-</span><span class='line'>    <span class="n">JAXBElement</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">Customer</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">jaxbElement</span> <span class="o">=</span> <span class="k">new</span> <span class="n">JAXBElement</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">Customer</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;(</span><span class="k">new</span> <span class="n">QName</span><span class="o">(</span><span class="s">&quot;customer&quot;</span><span class="o">),</span> <span class="n">Customer</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">JaxbData</span><span class="o">.</span><span class="na">CUSTOMER</span><span class="o">);</span>
-</span><span class='line'>    <span class="n">marshaller</span><span class="o">.</span><span class="na">marshal</span><span class="o">(</span><span class="n">jaxbElement</span><span class="o">,</span> <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>package com.leansoft.nano.sample;</p>
+
+<p>import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Marshaller;
+import javax.xml.namespace.QName;</p>
+
+<p>import com.leansoft.domain.jaxb.Customer;
+import com.leansoft.domain.jaxb.JaxbData;</p>
+
+<p>public class JaxbDemo {</p>
+
+<pre><code>public static void main(String[] args) throws Exception {
+    JAXBContext jc = JAXBContext.newInstance(Customer.class);
+
+    Marshaller marshaller = jc.createMarshaller();
+    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+    JAXBElement&lt;Customer&gt; jaxbElement = new JAXBElement&lt;Customer&gt;(new QName("customer"), Customer.class, JaxbData.CUSTOMER);
+    marshaller.marshal(jaxbElement, System.out);
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h3>Default XML Output</h3>
 
@@ -333,276 +195,146 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <h4>Nano</h4>
 
-<p>Nano will only output a root tag if no metadata has been defined
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language=xml </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;?xml version='1.0' encoding='utf-8' ?>
-</span><span class='line'>&lt;customer />&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>Nano will only output a root tag if no metadata has been defined</p>
+
+<p>``` xml</p>
+
+<p>&lt;?xml version='1.0' encoding='utf-8' ?>
+<customer /></p>
+
+<p>```</p>
 
 <p>We will instruct Nano to marshall fileds by adding @Element annotations on all fields that needs to be marshalled(just as the annotation name implies, @Element indicates that the field will map to xml element):</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Customer</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@Element</span>
-</span><span class='line'><span class="kd">private</span> <span class="kt">long</span> <span class="n">id</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nd">@Element</span>
-</span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nd">@Element</span>
-</span><span class='line'><span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nd">@Element</span>
-</span><span class='line'><span class="kd">private</span> <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">PhoneNumber</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">phoneNumbers</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">Customer</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">phoneNumbers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">PhoneNumber</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;();</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Address</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@Element</span>
-</span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">city</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nd">@Element</span>
-</span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">street</span><span class="o">;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>package com.leansoft.domain.nano;</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">PhoneNumber</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@Element</span>
-</span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">type</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nd">@Element</span>
-</span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">number</span><span class="o">;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>import java.util.ArrayList;
+import java.util.List;</p>
+
+<p>import com.leansoft.nano.annotation.Element;</p>
+
+<p>public class Customer {</p>
+
+<pre><code>@Element
+private long id;
+
+@Element
+private String name;
+
+@Element
+private Address address;
+
+@Element
+private List&lt;PhoneNumber&gt; phoneNumbers;
+
+public Customer() {
+    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
+
+<p>``` java</p>
+
+<p>package com.leansoft.domain.nano;</p>
+
+<p>import com.leansoft.nano.annotation.Element;</p>
+
+<p>public class Address {</p>
+
+<pre><code>@Element
+private String city;
+
+@Element
+private String street;
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
+
+<p>``` java</p>
+
+<p>package com.leansoft.domain.nano;</p>
+
+<p>import com.leansoft.nano.annotation.Element;</p>
+
+<p>public class PhoneNumber {</p>
+
+<pre><code>@Element
+private String type;
+
+@Element
+private String number;
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <p>Now Nano will produce following XML:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:xml </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;customer>
-</span><span class='line'>  &lt;id>123&lt;/id>
-</span><span class='line'>  &lt;address>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;street&gt;1 A Street&lt;/street&gt;
-</span><span class='line'>&lt;city&gt;Any Town&lt;/city&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>  &lt;/address>
-</span><span class='line'>  &lt;name>Jane Doe&lt;/name>
-</span><span class='line'>  &lt;phoneNumbers>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;number&gt;555-WORK&lt;/number&gt;
-</span><span class='line'>&lt;type&gt;work&lt;/type&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>  &lt;/phoneNumbers>
-</span><span class='line'>  &lt;phoneNumbers>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;number&gt;555-CELL&lt;/number&gt;
-</span><span class='line'>&lt;type&gt;cell&lt;/type&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>  &lt;/phoneNumbers>
-</span><span class='line'>&lt;/customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` xml</p>
+
+<p><customer>
+  <id>123</id>
+  <address></p>
+
+<pre><code>&lt;street&gt;1 A Street&lt;/street&gt;
+&lt;city&gt;Any Town&lt;/city&gt;
+</code></pre>
+
+<p>  </address>
+  <name>Jane Doe</name>
+  <phoneNumbers></p>
+
+<pre><code>&lt;number&gt;555-WORK&lt;/number&gt;
+&lt;type&gt;work&lt;/type&gt;
+</code></pre>
+
+<p>  </phoneNumbers>
+  <phoneNumbers></p>
+
+<pre><code>&lt;number&gt;555-CELL&lt;/number&gt;
+&lt;type&gt;cell&lt;/type&gt;
+</code></pre>
+
+<p>  </phoneNumbers>
+</customer></p>
+
+<p>```</p>
 
 <h4>JAXB</h4>
 
 <p>JAXB will produces the followinig XML.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:xml </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;address&gt;
-</span><span class='line'>    &lt;city&gt;Any Town&lt;/city&gt;
-</span><span class='line'>    &lt;street&gt;1 A Street&lt;/street&gt;
-</span><span class='line'>&lt;/address&gt;
-</span><span class='line'>&lt;id&gt;123&lt;/id&gt;
-</span><span class='line'>&lt;name&gt;Jane Doe&lt;/name&gt;
-</span><span class='line'>&lt;phoneNumbers&gt;
-</span><span class='line'>    &lt;number&gt;555-WORK&lt;/number&gt;
-</span><span class='line'>    &lt;type&gt;work&lt;/type&gt;
-</span><span class='line'>&lt;/phoneNumbers&gt;
-</span><span class='line'>&lt;phoneNumbers&gt;
-</span><span class='line'>    &lt;number&gt;555-CELL&lt;/number&gt;
-</span><span class='line'>    &lt;type&gt;cell&lt;/type&gt;
-</span><span class='line'>&lt;/phoneNumbers&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;/customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` xml</p>
+
+<p><customer></p>
+
+<pre><code>&lt;address&gt;
+    &lt;city&gt;Any Town&lt;/city&gt;
+    &lt;street&gt;1 A Street&lt;/street&gt;
+&lt;/address&gt;
+&lt;id&gt;123&lt;/id&gt;
+&lt;name&gt;Jane Doe&lt;/name&gt;
+&lt;phoneNumbers&gt;
+    &lt;number&gt;555-WORK&lt;/number&gt;
+    &lt;type&gt;work&lt;/type&gt;
+&lt;/phoneNumbers&gt;
+&lt;phoneNumbers&gt;
+    &lt;number&gt;555-CELL&lt;/number&gt;
+    &lt;type&gt;cell&lt;/type&gt;
+&lt;/phoneNumbers&gt;
+</code></pre>
+
+<p></customer></p>
+
+<p>```</p>
 
 <h3>Field Access</h3>
 
@@ -616,25 +348,15 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <p>By default JAXB will access public fields and properties. We can configure JAXB to use field access with the following package level annotation:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>@XmlAccessorType(XmlAccessType.FIELD)
-</span><span class='line'>package comparison;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import javax.xml.bind.annotation.XmlAccessType;
-</span><span class='line'>import javax.xml.bind.annotation.XmlAccessorType;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>@XmlAccessorType(XmlAccessType.FIELD)
+package com.leansoft.domain.jaxb;</p>
+
+<p>import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;</p>
+
+<p>```</p>
 
 <h3>Renaming Elements</h3>
 
@@ -644,187 +366,100 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <p>For Nano, we will use @Element with a name parameter to configure the phoneNumbers property.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package com.leansoft.domain.nano;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import java.util.ArrayList;
-</span><span class='line'>import java.util.List;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import com.leansoft.nano.annotation.Element;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>public class Customer {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>@Element
-</span><span class='line'>private long id;
-</span><span class='line'>
-</span><span class='line'>@Element
-</span><span class='line'>private String name;
-</span><span class='line'>
-</span><span class='line'>@Element
-</span><span class='line'>private Address address;
-</span><span class='line'>
-</span><span class='line'>@Element(name="phone-number")
-</span><span class='line'>private List&lt;PhoneNumber&gt; phoneNumbers;
-</span><span class='line'>
-</span><span class='line'>public Customer() {
-</span><span class='line'>    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
-</span><span class='line'>}
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.domain.nano;</p>
+
+<p>import java.util.ArrayList;
+import java.util.List;</p>
+
+<p>import com.leansoft.nano.annotation.Element;</p>
+
+<p>public class Customer {</p>
+
+<pre><code>@Element
+private long id;
+
+@Element
+private String name;
+
+@Element
+private Address address;
+
+@Element(name="phone-number")
+private List&lt;PhoneNumber&gt; phoneNumbers;
+
+public Customer() {
+    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>JAXB</h4>
 
 <p>For JAXB we will use @XmlRootElement to configure the root element, and @XmlElement to configure the phoneNumbers property.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package com.leansoft.domain.jaxb;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import java.util.ArrayList;
-</span><span class='line'>import java.util.List;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import javax.xml.bind.annotation.XmlElement;
-</span><span class='line'>import javax.xml.bind.annotation.XmlRootElement;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>@XmlRootElement
-</span><span class='line'>public class Customer {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>private long id;
-</span><span class='line'>
-</span><span class='line'>private String name;
-</span><span class='line'>
-</span><span class='line'>private Address address;
-</span><span class='line'>
-</span><span class='line'>@XmlElement(name="phone-number")
-</span><span class='line'>private List&lt;PhoneNumber&gt; phoneNumbers;
-</span><span class='line'>
-</span><span class='line'>public Customer() {
-</span><span class='line'>    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
-</span><span class='line'>}
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.domain.jaxb;</p>
+
+<p>import java.util.ArrayList;
+import java.util.List;</p>
+
+<p>import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;</p>
+
+<p>@XmlRootElement
+public class Customer {</p>
+
+<pre><code>private long id;
+
+private String name;
+
+private Address address;
+
+@XmlElement(name="phone-number")
+private List&lt;PhoneNumber&gt; phoneNumbers;
+
+public Customer() {
+    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>XML Output</h4>
 
 <p>At this point the same XML is being produced by Nano and JAXB.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:xml </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;id&gt;123&lt;/id&gt;
-</span><span class='line'>&lt;name&gt;Jane Doe&lt;/name&gt;
-</span><span class='line'>&lt;address&gt;
-</span><span class='line'>    &lt;city&gt;Any Town&lt;/city&gt;
-</span><span class='line'>    &lt;street&gt;1 A Street&lt;/street&gt;
-</span><span class='line'>&lt;/address&gt;
-</span><span class='line'>&lt;phone-number&gt;
-</span><span class='line'>    &lt;type&gt;work&lt;/type&gt;
-</span><span class='line'>    &lt;number&gt;555-WORK&lt;/number&gt;
-</span><span class='line'>&lt;/phone-number&gt;
-</span><span class='line'>&lt;phone-number&gt;
-</span><span class='line'>    &lt;type&gt;cell&lt;/type&gt;
-</span><span class='line'>    &lt;number&gt;555-CELL&lt;/number&gt;
-</span><span class='line'>&lt;/phone-number&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;/customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` xml</p>
+
+<p><customer></p>
+
+<pre><code>&lt;id&gt;123&lt;/id&gt;
+&lt;name&gt;Jane Doe&lt;/name&gt;
+&lt;address&gt;
+    &lt;city&gt;Any Town&lt;/city&gt;
+    &lt;street&gt;1 A Street&lt;/street&gt;
+&lt;/address&gt;
+&lt;phone-number&gt;
+    &lt;type&gt;work&lt;/type&gt;
+    &lt;number&gt;555-WORK&lt;/number&gt;
+&lt;/phone-number&gt;
+&lt;phone-number&gt;
+    &lt;type&gt;cell&lt;/type&gt;
+    &lt;number&gt;555-CELL&lt;/number&gt;
+&lt;/phone-number&gt;
+</code></pre>
+
+<p></customer></p>
+
+<p>```</p>
 
 <h3>Change the Order of Elements</h3>
 
@@ -838,93 +473,51 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <p>For JAXB we will use @XmlType to configure the ordering of elements.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package com.leansoft.domain.jaxb;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import javax.xml.bind.annotation.XmlType;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>@XmlType(propOrder={"street", "city"})
-</span><span class='line'>public class Address {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>private String city;
-</span><span class='line'>
-</span><span class='line'>private String street;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.domain.jaxb;</p>
+
+<p>import javax.xml.bind.annotation.XmlType;</p>
+
+<p>@XmlType(propOrder={"street", "city"})
+public class Address {</p>
+
+<pre><code>private String city;
+
+private String street;
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>XML Output</h4>
 
 <p>The XML output by JAXB.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:xml </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;id&gt;123&lt;/id&gt;
-</span><span class='line'>&lt;name&gt;Jane Doe&lt;/name&gt;
-</span><span class='line'>&lt;address&gt;
-</span><span class='line'>    &lt;street&gt;1 A Street&lt;/street&gt;
-</span><span class='line'>    &lt;city&gt;Any Town&lt;/city&gt;
-</span><span class='line'>&lt;/address&gt;
-</span><span class='line'>&lt;phone-number&gt;
-</span><span class='line'>    &lt;type&gt;work&lt;/type&gt;
-</span><span class='line'>    &lt;number&gt;555-WORK&lt;/number&gt;
-</span><span class='line'>&lt;/phone-number&gt;
-</span><span class='line'>&lt;phone-number&gt;
-</span><span class='line'>    &lt;type&gt;cell&lt;/type&gt;
-</span><span class='line'>    &lt;number&gt;555-CELL&lt;/number&gt;
-</span><span class='line'>&lt;/phone-number&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;/customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` xml</p>
+
+<p><customer></p>
+
+<pre><code>&lt;id&gt;123&lt;/id&gt;
+&lt;name&gt;Jane Doe&lt;/name&gt;
+&lt;address&gt;
+    &lt;street&gt;1 A Street&lt;/street&gt;
+    &lt;city&gt;Any Town&lt;/city&gt;
+&lt;/address&gt;
+&lt;phone-number&gt;
+    &lt;type&gt;work&lt;/type&gt;
+    &lt;number&gt;555-WORK&lt;/number&gt;
+&lt;/phone-number&gt;
+&lt;phone-number&gt;
+    &lt;type&gt;cell&lt;/type&gt;
+    &lt;number&gt;555-CELL&lt;/number&gt;
+&lt;/phone-number&gt;
+</code></pre>
+
+<p></customer></p>
+
+<p>```</p>
 
 <h3>Mapping to an Attribute</h3>
 
@@ -934,191 +527,102 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <p>For Nano we will use @Attribute to configure the id property to be represented as an XML attribute.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package com.leansoft.domain.nano;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import java.util.ArrayList;
-</span><span class='line'>import java.util.List;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import com.leansoft.nano.annotation.Attribute;
-</span><span class='line'>import com.leansoft.nano.annotation.Element;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>public class Customer {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>@Attribute
-</span><span class='line'>private long id;
-</span><span class='line'>
-</span><span class='line'>@Element
-</span><span class='line'>private String name;
-</span><span class='line'>
-</span><span class='line'>@Element
-</span><span class='line'>private Address address;
-</span><span class='line'>
-</span><span class='line'>@Element(name="phone-number")
-</span><span class='line'>private List&lt;PhoneNumber&gt; phoneNumbers;
-</span><span class='line'>
-</span><span class='line'>public Customer() {
-</span><span class='line'>    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
-</span><span class='line'>}
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.domain.nano;</p>
+
+<p>import java.util.ArrayList;
+import java.util.List;</p>
+
+<p>import com.leansoft.nano.annotation.Attribute;
+import com.leansoft.nano.annotation.Element;</p>
+
+<p>public class Customer {</p>
+
+<pre><code>@Attribute
+private long id;
+
+@Element
+private String name;
+
+@Element
+private Address address;
+
+@Element(name="phone-number")
+private List&lt;PhoneNumber&gt; phoneNumbers;
+
+public Customer() {
+    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>JAXB</h4>
 
 <p>For JAXB we will use @XmlAttribute to configure the id property to be represented as an XML attribute.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package com.leansoft.domain.jaxb;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import java.util.ArrayList;
-</span><span class='line'>import java.util.List;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import javax.xml.bind.annotation.XmlAttribute;
-</span><span class='line'>import javax.xml.bind.annotation.XmlElement;
-</span><span class='line'>import javax.xml.bind.annotation.XmlRootElement;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>@XmlRootElement
-</span><span class='line'>public class Customer {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>@XmlAttribute
-</span><span class='line'>private long id;
-</span><span class='line'>
-</span><span class='line'>private String name;
-</span><span class='line'>
-</span><span class='line'>private Address address;
-</span><span class='line'>
-</span><span class='line'>@XmlElement(name="phone-number")
-</span><span class='line'>private List&lt;PhoneNumber&gt; phoneNumbers;
-</span><span class='line'>
-</span><span class='line'>public Customer() {
-</span><span class='line'>    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
-</span><span class='line'>}
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.domain.jaxb;</p>
+
+<p>import java.util.ArrayList;
+import java.util.List;</p>
+
+<p>import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;</p>
+
+<p>@XmlRootElement
+public class Customer {</p>
+
+<pre><code>@XmlAttribute
+private long id;
+
+private String name;
+
+private Address address;
+
+@XmlElement(name="phone-number")
+private List&lt;PhoneNumber&gt; phoneNumbers;
+
+public Customer() {
+    phoneNumbers = new ArrayList&lt;PhoneNumber&gt;();
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>XML Output</h4>
 
 <p>The XML output is the same for both JAXB and Nano.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:xml </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;customer id="123">&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;name&gt;Jane Doe&lt;/name&gt;
-</span><span class='line'>&lt;address&gt;
-</span><span class='line'>    &lt;street&gt;1 A Street&lt;/street&gt;
-</span><span class='line'>    &lt;city&gt;Any Town&lt;/city&gt;
-</span><span class='line'>&lt;/address&gt;
-</span><span class='line'>&lt;phone-number&gt;
-</span><span class='line'>    &lt;type&gt;work&lt;/type&gt;
-</span><span class='line'>    &lt;number&gt;555-WORK&lt;/number&gt;
-</span><span class='line'>&lt;/phone-number&gt;
-</span><span class='line'>&lt;phone-number&gt;
-</span><span class='line'>    &lt;type&gt;cell&lt;/type&gt;
-</span><span class='line'>    &lt;number&gt;555-CELL&lt;/number&gt;
-</span><span class='line'>&lt;/phone-number&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;/customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` xml</p>
+
+<p><customer id="123"></p>
+
+<pre><code>&lt;name&gt;Jane Doe&lt;/name&gt;
+&lt;address&gt;
+    &lt;street&gt;1 A Street&lt;/street&gt;
+    &lt;city&gt;Any Town&lt;/city&gt;
+&lt;/address&gt;
+&lt;phone-number&gt;
+    &lt;type&gt;work&lt;/type&gt;
+    &lt;number&gt;555-WORK&lt;/number&gt;
+&lt;/phone-number&gt;
+&lt;phone-number&gt;
+    &lt;type&gt;cell&lt;/type&gt;
+    &lt;number&gt;555-CELL&lt;/number&gt;
+&lt;/phone-number&gt;
+</code></pre>
+
+<p></customer></p>
+
+<p>```</p>
 
 <h3>Mapping Objects to Simple Content</h3>
 
@@ -1128,127 +632,70 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <p>With Nano we will use the @Attribute and @Value annotations on the PhoneNumber class.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package com.leansoft.domain.nano;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import com.leansoft.nano.annotation.Attribute;
-</span><span class='line'>import com.leansoft.nano.annotation.Value;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>public class PhoneNumber {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>@Attribute
-</span><span class='line'>private String type;
-</span><span class='line'>
-</span><span class='line'>@Value
-</span><span class='line'>private String number;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.domain.nano;</p>
+
+<p>import com.leansoft.nano.annotation.Attribute;
+import com.leansoft.nano.annotation.Value;</p>
+
+<p>public class PhoneNumber {</p>
+
+<pre><code>@Attribute
+private String type;
+
+@Value
+private String number;
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>JAXB</h4>
 
 <p>For JAXB we will use the @XmlAttribute and @XmlValue annotations on the PhoneNumber class.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package com.leansoft.domain.jaxb;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import javax.xml.bind.annotation.XmlAttribute;
-</span><span class='line'>import javax.xml.bind.annotation.XmlValue;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>public class PhoneNumber {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>@XmlAttribute
-</span><span class='line'>private String type;
-</span><span class='line'>
-</span><span class='line'>@XmlValue
-</span><span class='line'>private String number;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.domain.jaxb;</p>
+
+<p>import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlValue;</p>
+
+<p>public class PhoneNumber {</p>
+
+<pre><code>@XmlAttribute
+private String type;
+
+@XmlValue
+private String number;
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>XML Output</h4>
 
 <p>The XML output is the same for both JAXB and Nano.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:xml </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;customer id="123">&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;name&gt;Jane Doe&lt;/name&gt;
-</span><span class='line'>&lt;address&gt;
-</span><span class='line'>    &lt;street&gt;1 A Street&lt;/street&gt;
-</span><span class='line'>    &lt;city&gt;Any Town&lt;/city&gt;
-</span><span class='line'>&lt;/address&gt;
-</span><span class='line'>&lt;phone-number type="work"&gt;555-WORK&lt;/phone-number&gt;
-</span><span class='line'>&lt;phone-number type="cell"&gt;555-CELL&lt;/phone-number&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;/customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` xml</p>
+
+<p><customer id="123"></p>
+
+<pre><code>&lt;name&gt;Jane Doe&lt;/name&gt;
+&lt;address&gt;
+    &lt;street&gt;1 A Street&lt;/street&gt;
+    &lt;city&gt;Any Town&lt;/city&gt;
+&lt;/address&gt;
+&lt;phone-number type="work"&gt;555-WORK&lt;/phone-number&gt;
+&lt;phone-number type="cell"&gt;555-CELL&lt;/phone-number&gt;
+</code></pre>
+
+<p></customer></p>
+
+<p>```</p>
 
 <h3>Applying Namespaces</h3>
 
@@ -1258,173 +705,93 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <p>We will use the @RootElement with a namespace parameter to specify a namespace for the Customer class.</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package com.leansoft.domain.nano;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import java.util.ArrayList;
-</span><span class='line'>import java.util.List;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import com.leansoft.nano.annotation.Attribute;
-</span><span class='line'>import com.leansoft.nano.annotation.Element;
-</span><span class='line'>import com.leansoft.nano.annotation.RootElement;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>@RootElement(namespace="http://www.example.com")
-</span><span class='line'>public class Customer {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>@Attribute
-</span><span class='line'>private long id;
-</span><span class='line'>
-</span><span class='line'>@Element
-</span><span class='line'>private String name;
-</span><span class='line'>
-</span><span class='line'>@Element
-</span><span class='line'>private Address address;
-</span><span class='line'>
-</span><span class='line'>@Element(name="phone-number")
-</span><span class='line'>private List&lt;PhoneNumber&gt; phoneNumbers;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.domain.nano;</p>
+
+<p>import java.util.ArrayList;
+import java.util.List;</p>
+
+<p>import com.leansoft.nano.annotation.Attribute;
+import com.leansoft.nano.annotation.Element;
+import com.leansoft.nano.annotation.RootElement;</p>
+
+<p>@RootElement(namespace="http://www.example.com")
+public class Customer {</p>
+
+<pre><code>@Attribute
+private long id;
+
+@Element
+private String name;
+
+@Element
+private Address address;
+
+@Element(name="phone-number")
+private List&lt;PhoneNumber&gt; phoneNumbers;
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>JAXB</h4>
 
 <p>We can configure the namespace information using the @XmlScheam package level annotation:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>@XmlAccessorType(XmlAccessType.FIELD)
-</span><span class='line'>@XmlSchema(namespace="http://www.example.com",
-</span><span class='line'>elementFormDefault=XmlNsForm.QUALIFIED)
-</span><span class='line'>package com.leansoft.domain.jaxb;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import javax.xml.bind.annotation.XmlAccessType;
-</span><span class='line'>import javax.xml.bind.annotation.XmlAccessorType;
-</span><span class='line'>import javax.xml.bind.annotation.XmlNsForm;
-</span><span class='line'>import javax.xml.bind.annotation.XmlSchema;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>@XmlAccessorType(XmlAccessType.FIELD)
+@XmlSchema(namespace="http://www.example.com",
+elementFormDefault=XmlNsForm.QUALIFIED)
+package com.leansoft.domain.jaxb;</p>
+
+<p>import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlNsForm;
+import javax.xml.bind.annotation.XmlSchema;</p>
+
+<p>```</p>
 
 <h4>XML Output</h4>
 
 <h4>Nano</h4>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:xml </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;n0:customer id="123" xmlns:n0="http://www.example.com">
-</span><span class='line'>  &lt;n0:address>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;n0:street&gt;1 A Street&lt;/n0:street&gt;
-</span><span class='line'>&lt;n0:city&gt;Any Town&lt;/n0:city&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>  &lt;/n0:address>
-</span><span class='line'>  &lt;n0:name>Jane Doe&lt;/n0:name>
-</span><span class='line'>  &lt;n0:phone-number type="work">555-WORK&lt;/n0:phone-number>
-</span><span class='line'>  &lt;n0:phone-number type="cell">555-CELL&lt;/n0:phone-number>
-</span><span class='line'>&lt;/n0:customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` xml</p>
+
+<p><customer id="123" xmlns="http://www.example.com">
+  <address></p>
+
+<pre><code>&lt;street&gt;1 A Street&lt;/street&gt;
+&lt;city&gt;Any Town&lt;/city&gt;
+</code></pre>
+
+<p>  </address>
+  <name>Jane Doe</name>
+  <phone-number type="work">555-WORK</phone-number>
+  <phone-number type="cell">555-CELL</phone-number></p>
+
+<p>```</p>
 
 <h4>JAXB</h4>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:xml </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;customer xmlns:ns2="http://www.example.com" id="123">&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>&lt;ns2:name&gt;Jane Doe&lt;/ns2:name&gt;
-</span><span class='line'>&lt;ns2:address&gt;
-</span><span class='line'>    &lt;ns2:street&gt;1 A Street&lt;/ns2:street&gt;
-</span><span class='line'>    &lt;ns2:city&gt;Any Town&lt;/ns2:city&gt;
-</span><span class='line'>&lt;/ns2:address&gt;
-</span><span class='line'>&lt;ns2:phone-number type="work"&gt;555-WORK&lt;/ns2:phone-number&gt;
-</span><span class='line'>&lt;ns2:phone-number type="cell"&gt;555-CELL&lt;/ns2:phone-number&gt;
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>&lt;/customer>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` xml</p>
+
+<p><customer xmlns:ns2="http://www.example.com" id="123"></p>
+
+<pre><code>&lt;ns2:name&gt;Jane Doe&lt;/ns2:name&gt;
+&lt;ns2:address&gt;
+    &lt;ns2:street&gt;1 A Street&lt;/ns2:street&gt;
+    &lt;ns2:city&gt;Any Town&lt;/ns2:city&gt;
+&lt;/ns2:address&gt;
+&lt;ns2:phone-number type="work"&gt;555-WORK&lt;/ns2:phone-number&gt;
+&lt;ns2:phone-number type="cell"&gt;555-CELL&lt;/ns2:phone-number&gt;
+</code></pre>
+
+<p></customer></p>
+
+<p>```</p>
 
 <h3>JSON Support</h3>
 
@@ -1434,51 +801,28 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <p>Nano supports this feature, we only need to get a jsonWriter from Nanofactory then do marshalling:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:java </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>package com.leansoft.nano.sample;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>import com.leansoft.domain.nano.NanoData;
-</span><span class='line'>import com.leansoft.nano.IWriter;
-</span><span class='line'>import com.leansoft.nano.NanoFactory;&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>public class NanoDemo {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>public static void main(String[] args) throws Exception {
-</span><span class='line'>    IWriter xmlWriter = NanoFactory.getXMLWriter();
-</span><span class='line'>    xmlWriter.write(NanoData.CUSTOMER, System.out);
-</span><span class='line'>
-</span><span class='line'>    IWriter jsonWriter = NanoFactory.getJSONWriter();
-</span><span class='line'>    jsonWriter.write(NanoData.CUSTOMER, System.out);
-</span><span class='line'>}
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` java</p>
+
+<p>package com.leansoft.nano.sample;</p>
+
+<p>import com.leansoft.domain.nano.NanoData;
+import com.leansoft.nano.IWriter;
+import com.leansoft.nano.NanoFactory;</p>
+
+<p>public class NanoDemo {</p>
+
+<pre><code>public static void main(String[] args) throws Exception {
+    IWriter xmlWriter = NanoFactory.getXMLWriter();
+    xmlWriter.write(NanoData.CUSTOMER, System.out);
+
+    IWriter jsonWriter = NanoFactory.getJSONWriter();
+    jsonWriter.write(NanoData.CUSTOMER, System.out);
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
 
 <h4>JAXB</h4>
 
@@ -1488,57 +832,31 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <p>Below is the json produced by Nano:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>language:json </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p>{"customer": {&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;pre>&lt;code>"@id": 123,
-</span><span class='line'>"address": {
-</span><span class='line'>    "city": "Any Town",
-</span><span class='line'>    "street": "1 A Street"
-</span><span class='line'>},
-</span><span class='line'>"name": "Jane Doe",
-</span><span class='line'>"phone-number": [
-</span><span class='line'>    {
-</span><span class='line'>        "@type": "work",
-</span><span class='line'>        "__value__": "555-WORK"
-</span><span class='line'>    },
-</span><span class='line'>    {
-</span><span class='line'>        "@type": "cell",
-</span><span class='line'>        "__value__": "555-CELL"
-</span><span class='line'>    }
-</span><span class='line'>]
-</span><span class='line'>&lt;/code>&lt;/pre>
-</span><span class='line'>
-</span><span class='line'>&lt;p>}}&lt;/p>
-</span><span class='line'>
-</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+<p>``` json</p>
+
+<p>{"customer": {</p>
+
+<pre><code>"@id": 123,
+"address": {
+    "city": "Any Town",
+    "street": "1 A Street"
+},
+"name": "Jane Doe",
+"phone-number": [
+    {
+        "@type": "work",
+        "__value__": "555-WORK"
+    },
+    {
+        "@type": "cell",
+        "__value__": "555-CELL"
+    }
+]
+</code></pre>
+
+<p>}}</p>
+
+<p>```</p>
 
 <h3>Android Support</h3>
 
@@ -1550,7 +868,7 @@ The Nano code is quite compact.A little technial details here, the xmlWriter ins
 
 <h4>JAXB</h4>
 
-<p>JAXB does not support Android platform, even if some people make it to run on Android, the performance will be very bad since JAXB a heavy weight enterprise library targeting desktop and server side development, not mobile development.</p>
+<p>JAXB does not support Android platform, even if some people made it run on Android, the performance will be very bad since JAXB a heavy weight enterprise library targeting desktop and server side development, not mobile development.</p>
 
 <h3>Summary</h3>
 

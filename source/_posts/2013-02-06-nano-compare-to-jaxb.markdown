@@ -8,14 +8,14 @@ keywords: nano binding framework, xml json data binding, jaxb, android
 description: a simple comparison between nano and jaxb
 ---
 
-I just read an interesting post [How Does JAXB Compare to Simple](http://blog.bdoughan.com/2010/10/how-does-jaxb-compare-to-simple.html), since I have just built a leight-weight xml and json binding framework called [Nano](http://github.com/bulldog2011/nano), in this post I'll run a similar comparison between Nano and JAXB.
+I just read an interesting post [How Does JAXB Compare to Simple](http://blog.bdoughan.com/2010/10/how-does-jaxb-compare-to-simple.html), since I have just built a leight-weight xml and json binding framework called [Nano](http://github.com/bulldog2011/nano), in this post I'll run a similar comparison between Nano and JAXB. By the way, since I am a lazy developer, I shamelessly copied much content from that post:), anyway, part of the content of this post should be contributed to the original author of that post.
 
 <!--more-->
 
 ###Java Model
 We will use the following model for this example. The classes represent customer data. The get/set methods have been omitted to save space.
 
-{% codeblock lang:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -37,9 +37,9 @@ public class Customer {
 	}
 }
 
-{% endcodeblock %}
+```
 
-{% codeblock lang:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -51,9 +51,9 @@ public class Address {
 
 }
 
-{% endcodeblock %}
+```
 
-{% codeblock lang:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -65,12 +65,12 @@ public class PhoneNumber {
 
 }
 
-{% endcodeblock %}
+```
 
 ###Customer Data
 The following instance of Customer will be marshalled to XML using both Nano and JAXB.
 
-{% codeblock lang:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -101,7 +101,7 @@ public class Data {
 
 }
 
-{% endcodeblock %}
+```
 
 
 ###Marshall Code
@@ -109,9 +109,9 @@ This is the code we will use to convert the objects to XML.
 
 ####Nano
 The following code will be used to marshall the instance of Customer to an OutputStream.
-The Nano code is quite compact.A little technial details here, the xmlWriter instance got from NanoFactory is thread safe, and unlike JAXB, Nano internally uses an on-demand strategy to scan mapping metadata before real marshalling (and unmarshalling), metadata scan happens once per class, and then the mapping metadata will be cached.
+The Nano code is quite compact. A little technical details here, the xmlWriter instance got from NanoFactory is thread safe, and unlike JAXB, Nano internally uses an on-demand strategy to scan mapping metadata before real marshalling (and unmarshalling), metadata scan happens once per class, and then the mapping metadata will be cached.
 
-{% codeblock lang:java %}
+``` java
 
 package com.leansoft.nano.sample;
 
@@ -128,16 +128,16 @@ public class NanoDemo {
 
 }
 
-{% endcodeblock %}
+```
 
 ####JAXB
 The following code will be used to marshall the instance of Customer to an OutputStream. A couple of differences are already apparent:
 
-1. A JAXBContext needs to be initialized on the binding metadata before the marshal operation can occur. This initialization enables JAXB to optimize how the convertion will be done. The JAXB Context is thread safe and only needs to be created once.
+>1. A JAXBContext needs to be initialized on the binding metadata before the marshal operation can occur. This initialization enables JAXB to optimize how the convertion will be done. The JAXB Context is thread safe and only needs to be created once.
 2. Unlike Nano, JAXB does not format the XML by default, so we will enable this feature.
 3. With no metadata specified we need to supply JAXB with a root element name (and namespace).
 
-{% codeblock lang:java %}
+``` java
 
 package com.leansoft.nano.sample;
 
@@ -162,7 +162,7 @@ public class JaxbDemo {
 
 }
 
-{% endcodeblock %}
+```
 
 
 ###Default XML Output
@@ -170,16 +170,17 @@ First we will examine the XML output produced by both Nano and JAXB if no metada
 
 ####Nano
 Nano will only output a root tag if no metadata has been defined
-{% codeblock language=xml %}
+
+``` xml
 
 <?xml version='1.0' encoding='utf-8' ?>
 <customer />
 
-{% endcodeblock %}
+```
 
 We will instruct Nano to marshall fileds by adding @Element annotations on all fields that needs to be marshalled(just as the annotation name implies, @Element indicates that the field will map to xml element):
 
-{% codeblock lang:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -207,11 +208,11 @@ public class Customer {
 	}
 }
 
-{% endcodeblock %}
+```
 
 
 
-{% codeblock lang:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -228,10 +229,9 @@ public class Address {
 }
 
 
-{% endcodeblock %}
+```
 
-
-{% codeblock lang:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -247,11 +247,11 @@ public class PhoneNumber {
 
 }
 
-{% endcodeblock %}
+```
 
 Now Nano will produce following XML:
 
-{% codeblock language:xml %}
+``` xml
 
 <customer>
   <id>123</id>
@@ -270,14 +270,14 @@ Now Nano will produce following XML:
   </phoneNumbers>
 </customer>
 
-{% endcodeblock %}
+```
 
 
 ####JAXB
 JAXB will produces the followinig XML.
 
 
-{% codeblock language:xml %}
+``` xml
 
 <customer>
     <address>
@@ -296,7 +296,7 @@ JAXB will produces the followinig XML.
     </phoneNumbers>
 </customer>
 
-{% endcodeblock %}
+```
 
 
 ###Field Access
@@ -310,15 +310,15 @@ Nano uses field access by default and only supports field access.
 By default JAXB will access public fields and properties. We can configure JAXB to use field access with the following package level annotation:
 
 
-{% codeblock language:java %}
+``` java
 
 @XmlAccessorType(XmlAccessType.FIELD)
-package comparison;
+package com.leansoft.domain.jaxb;
  
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-{% endcodeblock %}
+```
 
 
 ###Renaming Elements
@@ -328,7 +328,7 @@ Next we will look at how to tweak the XML output using the appropriate mapping m
 
 For Nano, we will use @Element with a name parameter to configure the phoneNumbers property.
 
-{% codeblock language:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -356,14 +356,14 @@ public class Customer {
 	}
 }
 
-{% endcodeblock %}
+```
 
 
 ####JAXB
 
 For JAXB we will use @XmlRootElement to configure the root element, and @XmlElement to configure the phoneNumbers property.
 
-{% codeblock language:java %}
+``` java
 
 package com.leansoft.domain.jaxb;
 
@@ -390,12 +390,12 @@ public class Customer {
 	}
 }
 
-{% endcodeblock %}
+```
 
 ####XML Output
 At this point the same XML is being produced by Nano and JAXB.
 
-{% codeblock language:xml %}
+``` xml
 
 <customer>
     <id>123</id>
@@ -414,7 +414,7 @@ At this point the same XML is being produced by Nano and JAXB.
     </phone-number>
 </customer>
 
-{% endcodeblock %}
+```
 
 ###Change the Order of Elements
 We will tweak the document again to make sure that when marshalling an Address object the "street" element will always appear before the "city" element.
@@ -427,7 +427,7 @@ Current Nano framework does not support this feature.
 
 For JAXB we will use @XmlType to configure the ordering of elements.
 
-{% codeblock language:java %}
+``` java
 
 package com.leansoft.domain.jaxb;
 
@@ -442,13 +442,14 @@ public class Address {
 
 }
 
-{% endcodeblock %}
+```
 
 ####XML Output
 
 The XML output by JAXB.
 
-{% codeblock language:xml %}
+
+``` xml
 
 <customer>
     <id>123</id>
@@ -467,7 +468,7 @@ The XML output by JAXB.
     </phone-number>
 </customer>
 
-{% endcodeblock %}
+```
 
 
 ###Mapping to an Attribute
@@ -479,7 +480,7 @@ Now we will look at how to tweak the XML output using the appropriate mapping me
 For Nano we will use @Attribute to configure the id property to be represented as an XML attribute.
 
 
-{% codeblock language:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -508,13 +509,13 @@ public class Customer {
 	}
 }
 
-{% endcodeblock %}
+```
 
 ####JAXB
 
 For JAXB we will use @XmlAttribute to configure the id property to be represented as an XML attribute.
 
-{% codeblock language:java %}
+``` java
 
 package com.leansoft.domain.jaxb;
 
@@ -544,13 +545,13 @@ public class Customer {
 
 }
 
-{% endcodeblock %}
+```
 
 ####XML Output
 
 The XML output is the same for both JAXB and Nano.
 
-{% codeblock language:xml %}
+``` xml
 
 <customer id="123">
     <name>Jane Doe</name>
@@ -568,7 +569,7 @@ The XML output is the same for both JAXB and Nano.
     </phone-number>
 </customer>
 
-{% endcodeblock %}
+```
 
 ###Mapping Objects to Simple Content
 
@@ -578,7 +579,7 @@ To compact our document even further we will map the PhoneNumber class to a comp
 
 With Nano we will use the @Attribute and @Value annotations on the PhoneNumber class.
 
-{% codeblock language:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -595,14 +596,14 @@ public class PhoneNumber {
 
 }
 
-{% endcodeblock %}
+```
 
 
 ####JAXB
 
 For JAXB we will use the @XmlAttribute and @XmlValue annotations on the PhoneNumber class.
 
-{% codeblock language:java %}
+``` java
 
 package com.leansoft.domain.jaxb;
 
@@ -619,13 +620,13 @@ public class PhoneNumber {
 
 }
 
-{% endcodeblock %}
+```
 
 ####XML Output
 
 The XML output is the same for both JAXB and Nano.
 
-{% codeblock language:xml %}
+``` xml
 
 <customer id="123">
     <name>Jane Doe</name>
@@ -637,7 +638,7 @@ The XML output is the same for both JAXB and Nano.
     <phone-number type="cell">555-CELL</phone-number>
 </customer>
 
-{% endcodeblock %}
+```
 
 
 ###Applying Namespaces
@@ -647,7 +648,7 @@ We will now namespace qualify the XML document.
 ####Nano
 We will use the @RootElement with a namespace parameter to specify a namespace for the Customer class.
 
-{% codeblock language:java %}
+``` java
 
 package com.leansoft.domain.nano;
 
@@ -675,13 +676,13 @@ public class Customer {
 
 }
 
-{% endcodeblock %}
+```
 
 ####JAXB
 
 We can configure the namespace information using the @XmlScheam package level annotation:
 
-{% codeblock language:java %}
+``` java
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSchema(namespace="http://www.example.com",
@@ -693,29 +694,28 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlNsForm;
 import javax.xml.bind.annotation.XmlSchema;
 
-{% endcodeblock %}
+```
 
 ####XML Output
 
 ####Nano
 
-{% codeblock language:xml %}
+``` xml
 
-<n0:customer id="123" xmlns:n0="http://www.example.com">
-  <n0:address>
-    <n0:street>1 A Street</n0:street>
-    <n0:city>Any Town</n0:city>
-  </n0:address>
-  <n0:name>Jane Doe</n0:name>
-  <n0:phone-number type="work">555-WORK</n0:phone-number>
-  <n0:phone-number type="cell">555-CELL</n0:phone-number>
-</n0:customer>
+<customer id="123" xmlns="http://www.example.com">
+  <address>
+    <street>1 A Street</street>
+    <city>Any Town</city>
+  </address>
+  <name>Jane Doe</name>
+  <phone-number type="work">555-WORK</phone-number>
+  <phone-number type="cell">555-CELL</phone-number>
 
-{% endcodeblock %}
+```
 
 ####JAXB
 
-{% codeblock language:xml %}
+``` xml
 
 <customer xmlns:ns2="http://www.example.com" id="123">
     <ns2:name>Jane Doe</ns2:name>
@@ -727,7 +727,7 @@ import javax.xml.bind.annotation.XmlSchema;
     <ns2:phone-number type="cell">555-CELL</ns2:phone-number>
 </customer>
 
-{% endcodeblock %}
+```
 
 
 ###JSON Support
@@ -737,7 +737,7 @@ It is perferred that a binding framework can produce not only XML but also JSON.
 ####Nano
 Nano supports this feature, we only need to get a jsonWriter from Nanofactory then do marshalling:
 
-{% codeblock language:java %}
+``` java
 
 package com.leansoft.nano.sample;
 
@@ -757,7 +757,7 @@ public class NanoDemo {
 
 }
 
-{% endcodeblock %}
+```
 
 
 ####JAXB
@@ -767,7 +767,7 @@ As I know, without external library support, JAXB does not support json binding 
 
 Below is the json produced by Nano:
 
-{% codeblock language:json %}
+``` json
 
 {"customer": {
     "@id": 123,
@@ -788,7 +788,7 @@ Below is the json produced by Nano:
     ]
 }}
 
-{% endcodeblock %}
+```
 
 
 
@@ -800,7 +800,7 @@ Android mobile platfrom is quite popular these days, it would be nice if a bindi
 Nano is tailored for Android platform, I will show you how to use Nano on Android platform in my later posts.
 
 ####JAXB
-JAXB does not support Android platform, even if some people make it to run on Android, the performance will be very bad since JAXB a heavy weight enterprise library targeting desktop and server side development, not mobile development.
+JAXB does not support Android platform, even if some people made it run on Android, the performance will be very bad since JAXB a heavy weight enterprise library targeting desktop and server side development, not mobile development.
 
 ###Summary
 Both Nano and JAXB are quite easy to do simple binding stuff. If you need a mature binding framework for enterprise development, JAXB is the way to go; If you just need a light-weight alternative, or you need to do binding work on Android platform, Nano is definitely the way to go.

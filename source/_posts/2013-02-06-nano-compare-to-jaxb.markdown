@@ -178,7 +178,7 @@ Nano will only output a root tag if no metadata has been defined
 
 ```
 
-We will instruct Nano to marshall fileds by adding @Element annotations on all fields that needs to be marshalled(just as the annotation name implies, @Element indicates that the field will map to xml element):
+We will instract Nano to marshall all fields to default Xml Elements by adding @Default annotation on all classes.
 
 ``` java
 
@@ -187,20 +187,17 @@ package com.leansoft.domain.nano;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.leansoft.nano.annotation.Element;
+import com.leansoft.nano.annotation.Default;
 
+@Default
 public class Customer {
 
-	@Element
 	private long id;
 	
-	@Element
 	private String name;
 	
-	@Element
 	private Address address;
 	
-	@Element
 	private List<PhoneNumber> phoneNumbers;
 	
 	public Customer() {
@@ -216,14 +213,13 @@ public class Customer {
 
 package com.leansoft.domain.nano;
 
-import com.leansoft.nano.annotation.Element;
+import com.leansoft.nano.annotation.Default;
 
+@Default
 public class Address {
 	
-	@Element
 	private String city;
 
-	@Element
 	private String street;
 	
 }
@@ -235,14 +231,13 @@ public class Address {
 
 package com.leansoft.domain.nano;
 
-import com.leansoft.nano.annotation.Element;
+import com.leansoft.nano.annotation.Default;
 
+@Default
 public class PhoneNumber {
 	
-	@Element
 	private String type;
 
-	@Element
 	private String number;
 
 }
@@ -335,17 +330,16 @@ package com.leansoft.domain.nano;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.leansoft.nano.annotation.Default;
 import com.leansoft.nano.annotation.Element;
 
+@Default
 public class Customer {
 
-	@Element
 	private long id;
 	
-	@Element
 	private String name;
-	
-	@Element
+
 	private Address address;
 	
 	@Element(name="phone-number")
@@ -488,17 +482,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.leansoft.nano.annotation.Attribute;
+import com.leansoft.nano.annotation.Default;
 import com.leansoft.nano.annotation.Element;
 
+@Default
 public class Customer {
 
 	@Attribute
 	private long id;
 	
-	@Element
 	private String name;
 	
-	@Element
 	private Address address;
 	
 	@Element(name="phone-number")
@@ -656,19 +650,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.leansoft.nano.annotation.Attribute;
+import com.leansoft.nano.annotation.Default;
 import com.leansoft.nano.annotation.Element;
 import com.leansoft.nano.annotation.RootElement;
 
+@Default
 @RootElement(namespace="http://www.example.com")
 public class Customer {
 
 	@Attribute
 	private long id;
 	
-	@Element
 	private String name;
 	
-	@Element
 	private Address address;
 	
 	@Element(name="phone-number")

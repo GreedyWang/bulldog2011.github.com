@@ -8,7 +8,9 @@ keywords: xml benchmark on android, xml data binding, nano binding framework, do
 description: xml parser and Nano benchmark on android
 ---
 
-Since I have built a leight-weight XML/JSON binding framework tailored for Android platform, I want to test its performance on Android when compared with typical xml parsers on Android like SAX, DOM and Xml Pull, I will show you detailed test results in this post.
+Since I have built a light-weight XML/JSON binding framework tailored for Android platform, I want to test its performance on Android when compared with typical xml parsers on Android like SAX, DOM and Xml Pull, I will show you detailed test results in this post.
+
+<!--more-->
 
 I did the benchmark on my own mobile phone(it was quite cheap when I bought it:)), below is the spec of my mobile phone:
 >1. Brand : Samsung SCH-i559(Galaxy Mini)
@@ -17,15 +19,19 @@ I did the benchmark on my own mobile phone(it was quite cheap when I bought it:)
 4. OS : Android 2.2.1
 
 The payload I used is a faked person list, you can find the scheam [here](https://github.com/bulldog2011/nano/blob/master/performance/nano-vs-jaxb/src/main/resources/person.xsd) and all payloads [here](https://github.com/bulldog2011/nano/tree/master/performance/nano-on-android/assets), I created these payloads with Nano and an auto-fake data generator called [podam](http://www.jemos.eu/projects/podam/). I tested 3 kinds of payload size :
->1. 10 records - 4K xml, 2K json
-2. 50 records - 17K xml, 9K json
-3. 300 records - 100K xml, 50K json
+>1. 10 records - 4KB xml, 2KB json
+2. 50 records - 17KB xml, 9KB json
+3. 300 records - 100KB xml, 50KB json
 
 Basically, the size of json payload is almost half of the size of xml, this is because json has a more compact messsage format, the 300 records case is used for testing performance when dealing with big payload size.
 
 The benchmark program itself is a typcial Android application, I adaped the test project from [this](http://www.developer.com/ws/android/development-tools/Android-XML-Parser-Performance-3824221.htm) post, I added Nano cases and SAX, DOM, XML pull parsing cases in the benchmark program, you can download the whole benchmark program [here](https://github.com/bulldog2011/nano/tree/master/performance/nano-on-android).
 
-Below is the UI of the benchmark application on PC emulator, following choices are avaliable for combined benchmark:
+Below is the UI of the benchmark application on PC emulator, 
+
+{% img /images/nano/nano-benchmark-app1.png 300 600 %}  {% img /images/nano/nano-benchmark-app2.png 300 600 %}
+
+following choices are avaliable for combined benchmark:
 >1. Thread Number - 1, 3, 5 threads
 2. Payload Size - 10, 50, 300 records
 3. Test Type - Nano Xml Read, Nano Json Read, SAX Read, DOM Read, XML Pull Read, Nano Xml Write, Nano Json Write

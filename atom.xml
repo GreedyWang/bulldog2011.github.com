@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-07T21:39:36+08:00</updated>
+  <updated>2013-02-18T13:16:38+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,1564 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Schema Driven Web API Client Development on Android, Part 1: Hello eBay Finding]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/"/>
+    <updated>2013-02-17T12:48:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding</id>
+    <content type="html"><![CDATA[<p>Scheam driven web service development is quite popular in Java world, JAXB and JAX-WS are both mature standard, and frameworks like CXF, Axis are famous amount many developers for fast service development. It&#8217;s common to do scheam driven developent on server side, can scheam driven client development be done on Android? Yes, you can. Today I will show you how do do scheam driven development on Android by leveraging following light-weight frameworks:</p>
+
+<!--more-->
+
+
+<blockquote><ol>
+<li><a href="https://github.com/bulldog2011/nano-rest">Nano-rest</a> restful client framework for Android, with Nano xml binding support.</li>
+<li><a href="https://github.com/bulldog2011/mxjc">mxjc</a> scheam to Android java binding compiler.</li>
+</ol>
+</blockquote>
+
+<p>The serivce I choose for demo is <a href="https://www.x.com/developers/ebay/products/finding-api">eBay Finding service</a>, here are why I choose this service:</p>
+
+<blockquote><ol>
+<li>I have some direct experience with this service.</li>
+<li>eBay Finding serivce supports schema driven development since it provides a wsdl, at the same time, it also supports RESTful style service call.</li>
+</ol>
+</blockquote>
+
+<p>If you are not familar with this serivce, please visit its <a href="https://www.x.com/developers/ebay/products/finding-api">official site</a>.</p>
+
+<h3>The Big Picture</h3>
+
+<p>TODO</p>
+
+<h3>Step 1 : Generate service classes from schema</h3>
+
+<p>The first step of scheam driven development is to generate service classes from schema or wsdl, let&#8217;s download eBay Finding serivce wsdl <a href="http://developer.ebay.com/webservices/finding/latest/FindingService.wsdl">here</a>, also, let&#8217;s download <a href="https://github.com/bulldog2011/mxjc">mxjc binding compiler</a> zip package by following links on the github site, extract the zip package, suppose we put the wsdl in the same folder as the extracted zip package, then we execute command(suppose we are in Windows environment, Unix environment will be similar).</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin\mxjc.bat -wsdl FindingService.wsdl</span></code></pre></td></tr></table></div></figure>
+
+
+<p>When we execute this command, the schema inside the wsdl will be parsed by the binding compiler and Nano bindable classes will be generated, by default, the binding compiler will derive package name from wsdl, but you can override this by providing custom package name directly as command line options.
+&#8216;-wsdl&#8217; option is needed since we are generating from wsdl, not default xsd. <br/>
+By default, the service classes will be generated in the current directory.</p>
+
+<h3>Step 2: Create a New Android Project</h3>
+
+<p>Now let&#8217;s create a new Android project in IDE like Eclipse with ADT installed, to use Nano-rest client framework, the Android API version must be equal to or newer than 7(Androdi 2.1 or above), this is required since Nano-rest leverages Android Service mechanism for asynchronous service invocation.</p>
+
+<p>With new Android project created, let&#8217;s add Nano-rest jar in the <strong><em>libs</em></strong> folder of the project, the Nano-rest jar can be downloaded by following link on the <a href="https://github.com/bulldog2011/nano-rest">Nano-rest github site</a>, the shaded jar is preferred since it already includes Nano xml binding framework dependency, otherwise, you have to add Nano xml binding framework jar separately.
+Now, let&#8217;s copy the above generated service classes into the <strong><em>src</em></strong> folder the project, if we refresh the project, there should be no compiling error since all imports in the generated classes can be resolved by the Nano-rest shaded jar reference.</p>
+
+<p>To let Nano-rest framework work correctly at runtime, we <strong><em>must</em></strong> added following declarations in the manifest file of the project:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'>  <span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">&quot;android.permission.INTERNET&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;uses-sdk</span> <span class="na">android:minSdkVersion=</span><span class="s">&quot;7&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;application&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;service</span> <span class="na">android:name=</span><span class="s">&quot;com.leansoft.nanorest.service.HTTPRequestExecutorService&quot;</span> <span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/service&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/application&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The uses-permission declaration is needed for internet access, the minSdkVersion declaration has be explained above, and the HTTPRequestExecutorService class is required for asynchronous service invocation, synchronous service invocation may block Android main UI, leading to process crash, this is not expected, so as a best practice, we should always invoke service asynchronously on Android.</p>
+
+<h3>Step 3 : Create eBay Finding API Proxy</h3>
+
+<p>Web service client proxy can simplify service invocation code, usually, web serivce framework like CXF or JAX-WS has tool to auto-generate service proxy from wsdl, however, current mxjc binding compiler does not support proxy generation yet(it can only generate service classes from schema), but it&#8217;s not hard for us to write proxy class manually since Nano-rest has already encapsulated generic service invocation logic for us, we only need to extend it and add a few service specific logic, let&#8217;s just do it:</p>
+
+<p>First, let&#8217;s definite some constants which will be used later:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">ebay</span><span class="o">.</span><span class="na">finding</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">FindingConstants</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">PRODUCTION_ENDPOINT</span> <span class="o">=</span> <span class="s">&quot;http://svcs.ebay.com/services/search/FindingService/v1&quot;</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">SANDBOX_ENDPOINT</span> <span class="o">=</span> <span class="s">&quot;http://svcs.sandbox.ebay.com/services/search/FindingService/v1&quot;</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">X_EBAY_SOA_OPERATION_NAME</span> <span class="o">=</span> <span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">X_EBAY_SOA_SECURITY_APPNAME</span> <span class="o">=</span> <span class="s">&quot;X-EBAY-SOA-SECURITY-APPNAME&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>These constants are quite self explanatory, so I won&#8217;t give more comments.</p>
+
+<p>Then we build a simple authentication class, eBay Finding serivce need a <strong><em>APP NAME</em></strong> as one of http request headers, so we just add it,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">ebay</span><span class="o">.</span><span class="na">finding</span><span class="o">.</span><span class="na">auth</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.finding.FindingConstants</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.auth.AuthenticationProvider</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.client.BaseRestClient</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">AppNameAuthenticationProvider</span> <span class="kd">implements</span> <span class="n">AuthenticationProvider</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">authenticateRequest</span><span class="o">(</span><span class="n">BaseRestClient</span> <span class="n">client</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">client</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="n">FindingConstants</span><span class="o">.</span><span class="na">X_EBAY_SOA_SECURITY_APPNAME</span><span class="o">,</span> <span class="s">&quot;YOUR_APPNAME_HERE&quot;</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong><em>Note</em></strong>, before you can run the final finished application, you mush replace the APP NAME placeholder with your own eBay developer APP NAME which can be applied on eBay developer site.</p>
+
+<p>Next, let&#8217;s build a generic request processor for eBay Finding serivce, with this base request processor, all specific request processors(supported by eBay Finding service) can be easily built later, let&#8217;s see the full definition of this base request processor:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">ebay</span><span class="o">.</span><span class="na">finding</span><span class="o">.</span><span class="na">request</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.finding.FindingConstants</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.finding.auth.AppNameAuthenticationProvider</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.marketplace.search.v1.services.AckValue</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.marketplace.search.v1.services.BaseServiceResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.marketplace.search.v1.services.ErrorMessage</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.callback.HttpCallback</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.client.RestClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.domain.ResponseStatus</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.logger.ALog</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.parser.NanoXmlResponseParser</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.request.NanoXmlRequestProcessor</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BaseFindingRequestProcessor</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">NanoXmlRequestProcessor</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">final</span> <span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">responseType</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">public</span> <span class="nf">BaseFindingRequestProcessor</span><span class="o">(</span><span class="n">Object</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">String</span> <span class="n">opName</span><span class="o">,</span> <span class="n">Class</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">responseType</span><span class="o">,</span>
+</span><span class='line'>          <span class="n">HttpCallback</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">callback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="kd">super</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span>
+</span><span class='line'>            <span class="n">responseType</span><span class="o">,</span>
+</span><span class='line'>            <span class="n">callback</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">responseType</span> <span class="o">=</span> <span class="n">responseType</span><span class="o">;</span>
+</span><span class='line'>      
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">RestClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">getRestClient</span><span class="o">();</span>
+</span><span class='line'>      <span class="n">client</span><span class="o">.</span><span class="na">setUrl</span><span class="o">(</span><span class="n">FindingConstants</span><span class="o">.</span><span class="na">PRODUCTION_ENDPOINT</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">client</span><span class="o">.</span><span class="na">setAuthentication</span><span class="o">(</span><span class="k">new</span> <span class="n">AppNameAuthenticationProvider</span><span class="o">());</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">client</span><span class="o">.</span><span class="na">addHeader</span><span class="o">(</span><span class="n">FindingConstants</span><span class="o">.</span><span class="na">X_EBAY_SOA_OPERATION_NAME</span><span class="o">,</span>  <span class="n">opName</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">NanoXmlResponseParser</span><span class="o">&lt;</span><span class="n">ErrorMessage</span><span class="o">&gt;</span> <span class="n">errorMessageParser</span> <span class="o">=</span>
+</span><span class='line'>          <span class="k">new</span> <span class="n">NanoXmlResponseParser</span><span class="o">&lt;</span><span class="n">ErrorMessage</span><span class="o">&gt;(</span><span class="n">ErrorMessage</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">handleResponse</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      
+</span><span class='line'>        <span class="kd">final</span> <span class="n">RestClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">getRestClient</span><span class="o">();</span>
+</span><span class='line'>        <span class="kd">final</span> <span class="n">ResponseStatus</span> <span class="n">status</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="na">getResponseStatus</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="na">getResponse</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">ALog</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="n">status</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">status</span><span class="o">.</span><span class="na">getStatusCode</span><span class="o">()</span> <span class="o">&lt;</span> <span class="mi">200</span> <span class="o">||</span> <span class="n">status</span><span class="o">.</span><span class="na">getStatusCode</span><span class="o">()</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="k">if</span> <span class="o">(</span><span class="n">isXmlResponse</span><span class="o">(</span><span class="n">response</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>              <span class="n">parseErrorMessage</span><span class="o">(</span><span class="n">response</span><span class="o">);</span>
+</span><span class='line'>          <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>              <span class="n">getResponseHandler</span><span class="o">().</span><span class="na">handleError</span><span class="o">(</span><span class="n">status</span><span class="o">);</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>          <span class="n">parseHttpResponse</span><span class="o">(</span><span class="n">response</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>      
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="kt">void</span> <span class="nf">parseErrorMessage</span><span class="o">(</span><span class="n">String</span> <span class="n">response</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="kd">final</span> <span class="n">ErrorMessage</span> <span class="n">errorMessage</span> <span class="o">=</span> <span class="n">errorMessageParser</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="n">response</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">T</span> <span class="n">responeData</span> <span class="o">=</span> <span class="n">responseType</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">BaseServiceResponse</span> <span class="n">baseServiceResponse</span> <span class="o">=</span> <span class="o">(</span><span class="n">BaseServiceResponse</span><span class="o">)</span><span class="n">responeData</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">baseServiceResponse</span><span class="o">.</span><span class="na">setAck</span><span class="o">(</span><span class="n">AckValue</span><span class="o">.</span><span class="na">FAILURE</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">baseServiceResponse</span><span class="o">.</span><span class="na">setErrorMessage</span><span class="o">(</span><span class="n">errorMessage</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">getResponseHandler</span><span class="o">().</span><span class="na">handleSuccess</span><span class="o">(</span><span class="n">responeData</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="kd">final</span> <span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">ResponseStatus</span> <span class="n">responseStatus</span> <span class="o">=</span> <span class="n">ResponseStatus</span><span class="o">.</span><span class="na">getParseErrorStatus</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">ALog</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="n">responseStatus</span><span class="o">.</span><span class="na">toString</span><span class="o">(),</span> <span class="n">e</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">getResponseHandler</span><span class="o">().</span><span class="na">handleError</span><span class="o">(</span><span class="n">responseStatus</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">isXmlResponse</span><span class="o">(</span><span class="n">String</span> <span class="n">response</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">(</span><span class="n">response</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="na">startsWith</span><span class="o">(</span><span class="s">&quot;&lt;?xml&quot;</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>Base request processor is the core of the proxy, let me give more comments about the base processor:<br/>
+1. we extend NanoXmlRequestProcessor class, since we want to leverage Nano xml framework for request marshalling and response unmarshalling.<br/>
+2. In the constuctor, we provides request object, operaion name and
+a HttpCallback instance as parameters and delegate these parameters to the super class, the requst object is an eBay Finding request object like FindItemsByKeywordsRequest object, the operation name is required by eBay Finding service as request header, and I will give more explanation about the HttpCallback instance later. <br/>
+3. Also in the constructor, we set eBay Finding service production endpoint url on the rest client(replace here if you need to access sandbox instead), plug in authentication provider defined above, and add operation name as request header. Note, authentication provider plugin is not necessary, you can always add APP NAME directly on the rest client as a request header, I use authentication provider here just to show the formal way to do authentication when Nano-rest framework is used.<br/>
+4. The response handling logic of the eBay Finding serivce needs a special fix, usually, eBay service supports RRE(resposne resident error), means error message are wrapped in a normal response message, but in some cases, eBay Finding service may return a single error xml message without a wrapping response. In order to fix this, I overrided the Nano-rest response handling logic, please see handleResponse and
+parseErrorMessage methods for details.</p>
+
+<p>The responseHandler(defined in super class and returned by getResponseHandler method) is assocated with the HttpCallback instance passed in the constructor, it only has two methods: handleSuccess and handleError, usually, if the service invocation is successful, then handleSuccess method should be called, otherwise, handleError method should be called, responseHandler is only responsilbe for the callback, concrete success or error handling logic is defined by application logic.</p>
+
+<p>With base processor defined, it&#8217;s quite easy to define a specific request processor, let&#8217;s define a FindItemsByKeywordsReqeustProcessor since I will use this function of eBay Finding service as demo:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">ebay</span><span class="o">.</span><span class="na">finding</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.finding.request.BaseFindingRequestProcessor</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.marketplace.search.v1.services.FindItemsByKeywordsRequest</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.marketplace.search.v1.services.FindItemsByKeywordsResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.RequestProcessor</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.callback.HttpCallback</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">FindingService</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">TAG</span> <span class="o">=</span> <span class="n">FindingService</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getSimpleName</span><span class="o">();</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">RequestProcessor</span> <span class="nf">getFindItemsByKeywordsRequestProcessor</span><span class="o">(</span>
+</span><span class='line'>          <span class="n">FindItemsByKeywordsRequest</span> <span class="n">requestObject</span><span class="o">,</span>
+</span><span class='line'>          <span class="n">HttpCallback</span><span class="o">&lt;</span><span class="n">FindItemsByKeywordsResponse</span><span class="o">&gt;</span> <span class="n">callback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="k">new</span> <span class="n">BaseFindingRequestProcessor</span><span class="o">&lt;</span><span class="n">FindItemsByKeywordsResponse</span><span class="o">&gt;(</span><span class="n">requestObject</span><span class="o">,</span> <span class="s">&quot;findItemsByKeywords&quot;</span><span class="o">,</span> <span class="n">FindItemsByKeywordsResponse</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">callback</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Not much code, and no magic here if you are familar with Java generic. We just define a factory method, provide specific parameters requried by FindItemsByKeywords API call. Use this method as template, it&#8217;s not hard for you to create other request processors, like <br/>
+getFindItemsAdvandedRequestProcessor, getFindItemsByCategoryRequestProcessor, etc, all functions of eBay Finding service can be defined in this way, actually, you can even build a complete eBay Finding SDK in this way for later reuse.</p>
+
+<h3>Step 4: Write real application logic and UI</h3>
+
+<p>Now it&#8217;s time for us to write real application logic and UI, in this demo, I just want to show minimum application logic and UI, the UI part only has an EditText as keywords input and a Button to trigger search by calling FindingItemsByKeywords API, and a Toast for response display.
+The application logic is even simpler, let&#8217;s see the whole definition of the Main Activity:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nanorest</span><span class="o">.</span><span class="na">sample</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.finding.FindingService</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.marketplace.search.v1.services.AckValue</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.marketplace.search.v1.services.FindItemsByKeywordsRequest</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.marketplace.search.v1.services.FindItemsByKeywordsResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.marketplace.search.v1.services.PaginationInput</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.RequestProcessor</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.callback.HttpCallback</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nanorest.domain.ResponseStatus</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.os.Bundle</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.view.View</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.view.View.OnClickListener</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.Button</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.Toast</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.EditText</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.app.Activity</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MainActivity</span> <span class="kd">extends</span> <span class="n">Activity</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">Button</span> <span class="n">btn</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onCreate</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="kd">super</span><span class="o">.</span><span class="na">onCreate</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">setContentView</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">activity_main</span><span class="o">);</span>
+</span><span class='line'>          
+</span><span class='line'>        <span class="n">btn</span> <span class="o">=</span> <span class="o">(</span><span class="n">Button</span><span class="o">)</span> <span class="k">this</span><span class="o">.</span><span class="na">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">btn</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">btn</span><span class="o">.</span><span class="na">setOnClickListener</span><span class="o">(</span><span class="k">new</span> <span class="n">OnClickListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nd">@Override</span>
+</span><span class='line'>          <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">arg0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="n">String</span> <span class="n">keywords</span> <span class="o">=</span> <span class="o">((</span><span class="n">EditText</span><span class="o">)</span> <span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">edit_input</span><span class="o">)).</span><span class="na">getText</span><span class="o">().</span><span class="na">toString</span><span class="o">();</span>    
+</span><span class='line'>              <span class="n">FindItemsByKeywordsRequest</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FindItemsByKeywordsRequest</span><span class="o">();</span>
+</span><span class='line'>              <span class="n">request</span><span class="o">.</span><span class="na">setKeywords</span><span class="o">(</span><span class="n">keywords</span><span class="o">);</span>
+</span><span class='line'>              <span class="n">PaginationInput</span> <span class="n">pi</span> <span class="o">=</span> <span class="k">new</span> <span class="n">PaginationInput</span><span class="o">();</span>
+</span><span class='line'>              <span class="n">pi</span><span class="o">.</span><span class="na">setPageNumber</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+</span><span class='line'>              <span class="n">pi</span><span class="o">.</span><span class="na">setEntriesPerPage</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+</span><span class='line'>              <span class="n">request</span><span class="o">.</span><span class="na">setPaginationInput</span><span class="o">(</span><span class="n">pi</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>              <span class="n">RequestProcessor</span> <span class="n">requestProcessor</span> <span class="o">=</span> <span class="n">FindingService</span><span class="o">.</span><span class="na">getFindItemsByKeywordsHttpRequest</span><span class="o">(</span>
+</span><span class='line'>                      <span class="n">request</span><span class="o">,</span>
+</span><span class='line'>                      <span class="k">new</span> <span class="nf">FindItemsByKeywordsCallback</span><span class="o">()</span>
+</span><span class='line'>                      <span class="o">);</span>
+</span><span class='line'>              <span class="n">requestProcessor</span><span class="o">.</span><span class="na">invokeAsync</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">.</span><span class="na">getApplicationContext</span><span class="o">());</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>          
+</span><span class='line'>        <span class="o">});</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">FindItemsByKeywordsCallback</span> <span class="kd">implements</span> <span class="n">HttpCallback</span><span class="o">&lt;</span><span class="n">FindItemsByKeywordsResponse</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nd">@Override</span>
+</span><span class='line'>      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="n">FindItemsByKeywordsResponse</span> <span class="n">responseData</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          
+</span><span class='line'>          <span class="k">if</span> <span class="o">(</span><span class="n">responseData</span><span class="o">.</span><span class="na">getAck</span><span class="o">()</span> <span class="o">==</span> <span class="n">AckValue</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">getApplicationContext</span><span class="o">(),</span>
+</span><span class='line'>                      <span class="n">responseData</span><span class="o">.</span><span class="na">getSearchResult</span><span class="o">().</span><span class="na">getItem</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="na">getTitle</span><span class="o">(),</span>
+</span><span class='line'>                      <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>          <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>              <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">getApplicationContext</span><span class="o">(),</span>
+</span><span class='line'>                      <span class="n">responseData</span><span class="o">.</span><span class="na">getErrorMessage</span><span class="o">().</span><span class="na">getError</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="na">getMessage</span><span class="o">(),</span>
+</span><span class='line'>                      <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nd">@Override</span>
+</span><span class='line'>      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onHttpError</span><span class="o">(</span><span class="n">ResponseStatus</span> <span class="n">responseCode</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">getApplicationContext</span><span class="o">(),</span>
+</span><span class='line'>                    <span class="n">responseCode</span><span class="o">.</span><span class="na">getStatusCode</span><span class="o">()</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">responseCode</span><span class="o">.</span><span class="na">getStatusMessage</span><span class="o">(),</span>
+</span><span class='line'>                    <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>          
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>      
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The code is easy to understand if you know Java and Android, let me give a few comments:<br/>
+1. We register a click listener to the button, inside the listener is the main application logic:
+get keywords input and build a FindItemByKeywordsRequest object, get a FindItemByKeywordsRequestProcessor from the factory we defined above, and invoke the request processor asynchronously at last.<br/>
+2. When we build the FindItemByKeywordsRequestProcessor instance, we passed in a FindItemsByKeywordsCallback instance as parameter, FindItemsByKeywordsCallback implements HttpCallback interface, it contains the main response logic, this is the place when final asynchronous response handling happen. Usually, inside a HttpCallback, we update UI according to the success or failure of the response, in this case, if the response is successful, we show the title of the result item, if there is http error, we show the status code and message. Since eBay Finding service support Response Resident Error(RRE), even in the onSuccess callback, we still need to check the Ack value to find out if there is application error and handle accordingly.</p>
+
+<p>Here I just show a typical asynchronous service invocation paradigm using Nano-rest framework, you can follow this paradigm for other service invocations according to your real needs.</p>
+
+<h3>Step 5 : Run the application</h3>
+
+<p>Now lets run the application, note again, please fill in your APP NAME before you run the application, below is the UI of a success case:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano-rest/hello_ebay_finding_success.png" width="400" height="600"></p>
+
+<p>Let&#8217;s provide an invalid APP NAME and try again, below is the UI of the failed case since the APP NAME is invalid:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano-rest/hello_ebay_finding_failure.png" width="400" height="600"></p>
+
+<p>To facilitate debug and trouble shooting, you can always check the request or response xml by looking at the log in the LogCat provided by ADT.</p>
+
+<h3>Conclusion:</h3>
+
+<p>The demo shown in this tutorial is just a bare minimum or starter kit, there is still much work to do before you can release a fully functional service backed Android application, but anyway, with a reuseable service proxy, you are free from low level and error-prone serivce message parsing and http handling anymore, instead, you can put your effor on main application logic and UI, this can definitly accelerate the development of the application.</p>
+
+<p>Scheam driven development is a popular and mature development methodology, when used appropriately, it can improve development efficiency and enhance the reliability and maintainability of the application. Now with the support of Nano-rest framework and the mxjc binding compiler, we can also do schema driven client development on Android.</p>
+
+<p>You can find the whole source of the sample application and all the generated eBay Finding service classes <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayFinding">here</a>.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[movie search android app using nano]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/02/12/movie-search-android-app-using-nano/"/>
+    <updated>2013-02-12T17:02:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/02/12/movie-search-android-app-using-nano</id>
+    <content type="html"><![CDATA[<p><a href="http://www.javacodegeeks.com/author/Ilias-Tsagklis">Some one</a> did a great job to write a tutorial about <a href="http://www.javacodegeeks.com/2010/10/android-full-application-tutorial.html">the development of an end to end Android application</a>,  this is a full android application, including main activity UI, HTTP interaction, async request handling and response parsing, list view, etc. In that tutorial, the author manually parsed the response to domain objects using SAX parser built in Android, while in this post, I will show you how I adapted that application by leveraging automatic annotation driven binding supported by Nano xml binding framework.</p>
+
+<!--more-->
+
+
+<p><a href="https://github.com/bulldog2011/nano">Nano</a> is a light-weight xml binding framework tailored for Android platform, with Nano, you can be free from error-prone and tedious xml parsing work, instead, you can focus your main development effort on application logic and UI.</p>
+
+<p>The original author has elaborated the development steps of the application in his tutorial series, so in this post, I will not repeat what he has done very well, please refer to his tutorial for details about the overall application development. In this post, I will focus on the adaption of the response binding with domain objects part, using Nano binding framework.</p>
+
+<p>The application is a typical movie search application, using <a href="http://api.themoviedb.org/2.1/">TMDb API</a> in the backend, if you are not familar with this API, please have a quick review of its official site, also, If you want to try the sample appliction on emulator or real Android device, you need to <a href="https://www.themoviedb.org/account/signup">sign up</a> for a TMDb account, get the API key, and replace the API key placeholder with your real key before you run the application, the source file need to be changed is <a href="https://github.com/bulldog2011/nano/blob/master/sample/AndroidMovieSearchAppProject/src/com/javacodegeeks/android/apps/moviesearchapp/services/GenericSeeker.java">this one</a>.</p>
+
+<p>Let&#8217;s cut to the chase and see how to perform the binding. The main API we will use is <a href="http://api.themoviedb.org/2.1/methods/Movie.search">movie search</a>, you can find an example response on the API usage page.</p>
+
+<p>First of all, download latest Nano release by following link on <a href="https://github.com/bulldog2011/nano">this page</a>, and put the Nano jar in the <strong><em>libs</em></strong> folder of the sample application(You can download the original application <a href="http://dl.dropbox.com/u/7215751/JavaCodeGeeks/AndroidFullAppTutorialPart07/AndroidMovieSearchAppProject_Part07.zip">here</a>, or you may download the whole adapted application by following link at the end of this post).</p>
+
+<p>The most important thing is to create the model objects and map appropriately to the XML document by inspecting the sample response on TMDb API site. If we take a look at the XML file, we should see that the root element is called OpenSearchDescription and it includes a Query element, a &#8220;totalResults&#8221; element and a number of movies. Here is our main model class looks like:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">javacodegeeks</span><span class="o">.</span><span class="na">android</span><span class="o">.</span><span class="na">apps</span><span class="o">.</span><span class="na">moviesearchapp</span><span class="o">.</span><span class="na">model</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.RootElement</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@RootElement</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;OpenSearchDescription&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MovieSearchResult</span> <span class="kd">implements</span> <span class="n">Serializable</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">5992078345571261309L</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Query&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">Query</span> <span class="n">query</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Element</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">int</span> <span class="n">totalResults</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;movies&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">MovieContainer</span> <span class="n">movieContainer</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <a href="http://bulldog2011.github.com/nano/apidocs/com/leansoft/nano/annotation/RootElement.html">RootElement</a> annotation denotes that the specific class represents a root XML element, we also provided a <a href="http://bulldog2011.github.com/nano/apidocs/com/leansoft/nano/annotation/RootElement.html#name%28%29">name</a> parameter equals to &#8216;OpenSearchDescription&#8217; in the annotation since this is the real root element name in the sample response, if this name is not provided, Nano will by default use the class name(with first chararacter in lower case) as the element name, this is not expected. We also use the <a href="http://bulldog2011.github.com/nano/apidocs/com/leansoft/nano/annotation/Element.html">Element</a> annotations for the nested elements. Note that Nano can only handle annotations annotated directly on fields, not on get/set methods, it&#8217;s ok to annotate either public or private fields. One thing to be aware of is that we use the <a href="http://bulldog2011.github.com/nano/apidocs/com/leansoft/nano/annotation/Element.html#name%28%29">name</a> parameter(for &#8220;Query&#8221; and &#8220;movies&#8221;) in order to explicitly specify the corresponding XML element name. This should be done when the XML element has a different name than the Java field, since Nano by default looks for an element with the same name as the field.</p>
+
+<p>Let&#8217;s now see the Query class:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">javacodegeeks</span><span class="o">.</span><span class="na">android</span><span class="o">.</span><span class="na">apps</span><span class="o">.</span><span class="na">moviesearchapp</span><span class="o">.</span><span class="na">model</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Attribute</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Query</span> <span class="kd">implements</span> <span class="n">Serializable</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="mi">7875169023013805580L</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Attribute</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">searchTerms</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This class contains only an attribute called &#8220;sarchTerms&#8221;, so the relevant field is annotated with <a href="http://bulldog2011.github.com/nano/apidocs/com/leansoft/nano/annotation/Attribute.html">Attribute</a>.</p>
+
+<p>Very easy until now. Let&#8217;s check the more complex Movie class:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">javacodegeeks</span><span class="o">.</span><span class="na">android</span><span class="o">.</span><span class="na">apps</span><span class="o">.</span><span class="na">moviesearchapp</span><span class="o">.</span><span class="na">model</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Movie</span> <span class="kd">implements</span> <span class="n">Serializable</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="mi">5114870955079482108L</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">score</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">popularity</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">boolean</span> <span class="n">translated</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">boolean</span> <span class="n">adult</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">language</span><span class="o">;</span>
+</span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;original_name&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">originalName</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">type</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">id</span><span class="o">;</span>
+</span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;imdb_id&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">imdbId</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">url</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">votes</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">rating</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">certification</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">overview</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">released</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">version</span><span class="o">;</span>
+</span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;last_modified_at&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">lastModifiedAt</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;images&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">ImageContainer</span> <span class="n">imageContainer</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This class contains many fields, all of them map to XML element, we don&#8217;t want get trouble with writing Element annotations on every fields, so we just add a <a href="http://bulldog2011.github.com/nano/apidocs/com/leansoft/nano/annotation/Default.html">Default</a> annotation at the class level, indicating that fields of this class should be mapped to default XML element unless explicitly specified. We also need to explicitly provide annotation parameter name on some fields(like original_name, imdb_id, last_modified_at and images) since there is a mismatch between Java field name and corresponding XML element name.</p>
+
+<p>Let&#8217;s see the Image class:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">javacodegeeks</span><span class="o">.</span><span class="na">android</span><span class="o">.</span><span class="na">apps</span><span class="o">.</span><span class="na">moviesearchapp</span><span class="o">.</span><span class="na">model</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Attribute</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Image</span> <span class="kd">implements</span> <span class="n">Serializable</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">5274909668022888191L</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">SIZE_ORIGINAL</span> <span class="o">=</span> <span class="s">&quot;original&quot;</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">SIZE_MID</span> <span class="o">=</span> <span class="s">&quot;mid&quot;</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">SIZE_COVER</span> <span class="o">=</span> <span class="s">&quot;cover&quot;</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">SIZE_THUMB</span> <span class="o">=</span> <span class="s">&quot;thumb&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">TYPE_PROFILE</span> <span class="o">=</span> <span class="s">&quot;profile&quot;</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">TYPE_POSTER</span> <span class="o">=</span> <span class="s">&quot;poster&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Attribute</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">type</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Attribute</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">url</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Attribute</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">size</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Attribute</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">int</span> <span class="n">width</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Attribute</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">int</span> <span class="n">height</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Attribute</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="n">id</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This class includes only attributes so we annotate the fields accordingly, there is no annotation on public static final fields, so these fields are not visable to Nano binding framework at runtime.</p>
+
+<p>Till now, the carefull reader will find that the root MovieSearchResult class has no direct reference to the Movie class(The Movie class also has no direct reference to the Image class), the MovieSearchResult class only reference a container class called MovieContainer, why we need a container class instead of a direct Movie class reference? This is caused by a limitation of current Nano framework, it does not support <strong><em>inline style list</em></strong> yet. By inspecting the sample XML response, you will find a list of movie elements are wrapped in a movies element, but there is no specific annotation for wrapper element, so as a workaround, we build a container class for the wrapper element, below is the definition of the MovieContainer(ImageContainer is similar):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">javacodegeeks</span><span class="o">.</span><span class="na">android</span><span class="o">.</span><span class="na">apps</span><span class="o">.</span><span class="na">moviesearchapp</span><span class="o">.</span><span class="na">model</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.Serializable</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MovieContainer</span> <span class="kd">implements</span> <span class="n">Serializable</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">957664961371798735L</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;movie&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Movie</span><span class="o">&gt;</span> <span class="n">movies</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With all domain class mapping defined, the final step is to write the response binding code, this is quite simple since the original author designed the application in a quite clean way, just find the GenericSeeker abstract class in the services package, in the class we define and initialize a Nano xml reader, see below(most irrelevant content of this class is omitted here to save space):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">javacodegeeks</span><span class="o">.</span><span class="na">android</span><span class="o">.</span><span class="na">apps</span><span class="o">.</span><span class="na">moviesearchapp</span><span class="o">.</span><span class="na">services</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.net.URLEncoder</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.IReader</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.NanoFactory</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">GenericSeeker</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">protected</span> <span class="n">IReader</span> <span class="n">xmlReader</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLReader</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>Then in the concrete MovieSeeker class we bind the HTTP response with MovieSearchResult class instance in Nano way, the binding can&#8217;t be simpler, it&#8217;s only one java statement, below is an extract of the MovieSeeker class:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">javacodegeeks</span><span class="o">.</span><span class="na">android</span><span class="o">.</span><span class="na">apps</span><span class="o">.</span><span class="na">moviesearchapp</span><span class="o">.</span><span class="na">services</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.util.Log</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.javacodegeeks.android.apps.moviesearchapp.model.Movie</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.javacodegeeks.android.apps.moviesearchapp.model.MovieSearchResult</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MovieSeeker</span> <span class="kd">extends</span> <span class="n">GenericSeeker</span><span class="o">&lt;</span><span class="n">Movie</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Movie</span><span class="o">&gt;</span> <span class="nf">retrieveMoviesList</span><span class="o">(</span><span class="n">String</span> <span class="n">query</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">String</span> <span class="n">url</span> <span class="o">=</span> <span class="n">constructSearchUrl</span><span class="o">(</span><span class="n">query</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">String</span> <span class="n">response</span> <span class="o">=</span> <span class="n">httpRetriever</span><span class="o">.</span><span class="na">retrieve</span><span class="o">(</span><span class="n">url</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">(),</span> <span class="n">response</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">MovieSearchResult</span> <span class="n">searchResult</span> <span class="o">=</span> <span class="n">xmlReader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">MovieSearchResult</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">response</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">(</span><span class="n">searchResult</span><span class="o">.</span><span class="na">movieContainer</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="n">searchResult</span><span class="o">.</span><span class="na">movieContainer</span><span class="o">.</span><span class="na">movies</span><span class="o">;</span>
+</span><span class='line'>      <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>          <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&#8217;s all I have done to adapt the orignal application to use Nano binding instead, now let&#8217;s run the sample in emulator(don&#8217;t forget to fill in your API key before run), below is a screenshot:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano/movie_search.png" width="400" height="600"></p>
+
+<p>Cool! with automatic annotation driven binding supported by Nano, there is no error-prone and tedious manual xml parsing anymore, the whole application becomes even more cleaner and maintainable. So, when you develop your next xml service based Android application, remember that manual xml parsing is not necessary on Android platform, it can be completely automated by Nano binding framework!</p>
+
+<p>You may get the whole source of the adapted application <a href="https://github.com/bulldog2011/nano/tree/master/sample/AndroidMovieSearchAppProject">here</a>.</p>
+
+<p>At last, I would thank the original author again for a great tutorial he has written!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[nano on android tutorial 1]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1/"/>
+    <updated>2013-02-10T16:09:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1</id>
+    <content type="html"><![CDATA[<p>This is my first post showing how to use Nano on Android, in this post, I will show you how to use Nano to export and import a set of domain object as XML to/from the SD card on Android. Nano is tailored for Android platform, you will see in this post how Nano can greatly simplify tedious and boring object and xml binding task in Android application development.</p>
+
+<!--more-->
+
+
+<h3>Prerequisite</h3>
+
+<p>Nano is quite light, On Android platform, it has no 3rd party jar dependency, all you need to do is to create a noraml Android project and add reference to the Nano jar, you can find latest Nano jar by following link <a href="https://github.com/bulldog2011/nano">here</a>, by the way, if necessary, you may also reference Nano source directly in your project.</p>
+
+<h3>Define Domain Classes</h3>
+
+<p>As usual project, let&#8217;s define domain classes first. The set of domain classes is small but illustrates how to serialize both aggregations and lists of other domain classes. At the root is an Organization class, that has a name, Address object and a list of Person objects. Each Person object has a name and an Address object. Below are the definitions of these domain classses, note, get/set methods are omitted to save space.</p>
+
+<h4>Organization</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">.</span><span class="na">domain</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Attribute</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Organization</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Address</span><span class="o">();</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Person</span><span class="o">&gt;</span> <span class="n">staff</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Person</span><span class="o">&gt;();</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Attribute</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="kt">int</span> <span class="n">count</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Address</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">.</span><span class="na">domain</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Address</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">street</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">code</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">city</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Person</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">.</span><span class="na">domain</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Person</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Address</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note, all domain classes are annotated with @Default Nano annotation, indicating that all fields of the class will be mapped to xml element during serialization, except that on the count filed of Organization, there is an explicit @Attribute annotation, indicating that the count field will be mapped to xml attribute during serialization.</p>
+
+<p>Also, I&#8217;ve build a Generator class to auto-generate faked organization with faked person list, to save space, I don&#8217;t  want to dump the Generator code here, you can find the source <a href="https://github.com/bulldog2011/nano/blob/master/sample/nano-and-android/src/com/leansoft/nano/sample/domain/Generator.java">here</a>.</p>
+
+<h3>The Sample Flow</h3>
+
+<p>The sample has a quite simple flow :  <br/>
+1. On applicaton startup, auto-generate a faked organization with a random number of persons.<br/>
+2. On click the &#8216;Export Data&#8217; button, serialize the organization to xml on SD card using Nano Xml writer, then update status text with bytes written.<br/>
+3. On click the &#8216;Import Data&#8217; button, deserialize the xml on SD card into organization object using Nano Xml reader, then update status text with person size got.</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano/nano_and_android.png" width="400" height="600"></p>
+
+<p>The main UI of the sample cantains three components:<br/>
+1. A &#8216;Export Data&#8217; button for serialization demo. <br/>
+2. A &#8216;Import Data&#8217; button for deserialization demo.<br/>
+3. A TextView for status display.</p>
+
+<p><strong><em>Note</em></strong>, faked data generation, export, import may be time consuming tasks depending the size of the data, executing these time consuming tasks directly on main UI thread may block it, leading to application crash, so it&#8217;s a best practice to encapsulate these tasks as asyn tasks, and to use progress bar to let user know the progress of the task. I have encapsulated these tasks using Android AsyncTask structure, for details, please refer to the source of this demo project(link at the end of this post), for more background about Android AsyncTask, please refer to <a href="http://developer.android.com/reference/android/os/AsyncTask.html">its documentation</a>.</p>
+
+<p>The buttons <strong><em>Export</em></strong> and <strong><em>Import</em></strong> have their click actions tied to the flowing methods:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">Button</span> <span class="n">exportButton</span> <span class="o">=</span> <span class="o">(</span><span class="n">Button</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">exportButton</span><span class="o">);</span>
+</span><span class='line'><span class="n">exportButton</span><span class="o">.</span><span class="na">setOnClickListener</span><span class="o">(</span> <span class="k">new</span> <span class="n">OnClickListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">arg0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">ExportTask</span>  <span class="n">task</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ExportTask</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="k">new</span> <span class="n">OnCompletionListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>          <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onCompletion</span><span class="o">(</span><span class="n">Object</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="n">File</span> <span class="n">file</span> <span class="o">=</span> <span class="o">(</span><span class="n">File</span><span class="o">)</span> <span class="n">result</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">appendStatus</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">&quot;Written %d bytes to %s&quot;</span><span class="o">,</span> <span class="n">file</span><span class="o">.</span><span class="na">length</span><span class="o">(),</span> <span class="n">file</span><span class="o">.</span><span class="na">getAbsolutePath</span><span class="o">()));</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>      <span class="o">});</span>
+</span><span class='line'>      <span class="n">task</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">organization</span><span class="o">,</span> <span class="n">dirName</span><span class="o">,</span> <span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'><span class="o">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">Button</span> <span class="n">importButton</span> <span class="o">=</span> <span class="o">(</span><span class="n">Button</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">importButton</span><span class="o">);</span>
+</span><span class='line'><span class="n">importButton</span><span class="o">.</span><span class="na">setOnClickListener</span><span class="o">(</span><span class="k">new</span> <span class="n">OnClickListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">v</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">ImportTask</span>  <span class="n">task</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ImportTask</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="k">new</span> <span class="n">OnCompletionListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>          <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onCompletion</span><span class="o">(</span><span class="n">Object</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="n">organization</span> <span class="o">=</span> <span class="o">(</span><span class="n">Organization</span><span class="o">)</span> <span class="n">result</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">appendStatus</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">&quot;Imported organization &#39;%s&#39; having %d persons&quot;</span><span class="o">,</span>
+</span><span class='line'>                      <span class="n">organization</span><span class="o">.</span><span class="na">getName</span><span class="o">(),</span> <span class="n">organization</span><span class="o">.</span><span class="na">getStaff</span><span class="o">().</span><span class="na">size</span><span class="o">()));</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>      <span class="o">});</span>
+</span><span class='line'>      <span class="n">task</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">dirName</span><span class="o">,</span> <span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'><span class="o">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <strong><em>ExportTask</em></strong> and <strong><em>ImportTask</em></strong> classes have logic where real Nano marshalling and unmarshalling magic happens:</p>
+
+<h4>Export Logic</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="nd">@Override</span>
+</span><span class='line'><span class="kd">protected</span> <span class="n">File</span> <span class="nf">doInBackground</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Organization</span> <span class="n">organization</span> <span class="o">=</span> <span class="o">(</span><span class="n">Organization</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">dirName</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">fileName</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">2</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">File</span> <span class="n">file</span> <span class="o">=</span> <span class="n">getFile</span><span class="o">(</span><span class="n">dirName</span><span class="o">,</span>  <span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">Writer</span> <span class="n">out</span> <span class="o">=</span> <span class="n">openForWrite</span><span class="o">(</span><span class="n">file</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">IWriter</span> <span class="n">xmlWriter</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLWriter</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">xmlWriter</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">organization</span><span class="o">,</span> <span class="n">out</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">out</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">file</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">LOG</span><span class="o">,</span> <span class="s">&quot;Failed to export. &quot;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Import Logic</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">protected</span> <span class="n">Organization</span> <span class="nf">doInBackground</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">dirName</span>  <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">fileName</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">Reader</span> <span class="n">in</span> <span class="o">=</span> <span class="n">openForRead</span><span class="o">(</span><span class="n">getFile</span><span class="o">(</span><span class="n">dirName</span><span class="o">,</span>  <span class="n">fileName</span><span class="o">));</span>
+</span><span class='line'>        <span class="n">IReader</span> <span class="n">xmlReader</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLReader</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">Organization</span> <span class="n">org</span> <span class="o">=</span> <span class="n">xmlReader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">Organization</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">in</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">in</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">org</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">LOG</span><span class="o">,</span> <span class="s">&quot;Failed to import. &quot;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now you see the power of Nano : there are only 2 lines of marshalling and unmarshalling code, amazing!</p>
+
+<h3>The Resulting XML</h3>
+
+<p>It&#8217;s easy to pull out the XML file from the SD card using the File Explorer of DDMS.</p>
+
+<p>And here is an extract of its contents:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39; ?&gt;</span>
+</span><span class='line'><span class="nt">&lt;organization</span> <span class="na">count=</span><span class="s">&quot;88&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;address&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;street&gt;</span>Street LY07<span class="nt">&lt;/street&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;code&gt;</span>VXUSB<span class="nt">&lt;/code&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;city&gt;</span>City SWT<span class="nt">&lt;/city&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/address&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;staff&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;address&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;street&gt;</span>Street VRAW<span class="nt">&lt;/street&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;code&gt;</span>6NEA8<span class="nt">&lt;/code&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;city&gt;</span>City JLN<span class="nt">&lt;/city&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/address&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>name ND4Q<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/staff&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;staff&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;address&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;street&gt;</span>Street XW8P<span class="nt">&lt;/street&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;code&gt;</span>DNSP7<span class="nt">&lt;/code&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;city&gt;</span>City PXP<span class="nt">&lt;/city&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/address&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>name 5OMA<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/staff&gt;</span>
+</span><span class='line'>
+</span><span class='line'>...
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;name&gt;</span>Org IN3V9<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'><span class="nt">&lt;/organization&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>The Source</h3>
+
+<p>You can get the whole source of this demo project <a href="https://github.com/bulldog2011/nano/tree/master/sample/nano-and-android">here</a>, by the way, some source is adapted from <a href="http://blog.ribomation.com/2011/07/android-and-xml/">this post</a>, so part of the content of this post should be contributed to the author of that post.</p>
+
+<h3>Conclusion</h3>
+
+<p>Without automatic xml binding tool, data serialization and deserialization on Android is a tedious and time-consuming development task, needless to say later maintenance. The Nano xml binding framework can greatly accelerate xml based Android application development by automating the tedious and error-prone xml binding tasks, letting developers put more focus on their application logic instead of xml parsing.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[nano benchmark on android]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/02/08/nano-benchmark-on-android/"/>
+    <updated>2013-02-08T10:04:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/02/08/nano-benchmark-on-android</id>
+    <content type="html"><![CDATA[<p>Since I have built a light-weight XML/JSON binding framework tailored for Android platform, I want to test its performance on Android when compared with typical xml parsers on Android like SAX, DOM and Xml Pull, I will show you detailed test results in this post.</p>
+
+<!--more-->
+
+
+<p>I did the benchmark on my own mobile phone(it was quite cheap when I bought it:)), below is the spec of my mobile phone:</p>
+
+<blockquote><ol>
+<li>Brand : Samsung SCH-i559(Galaxy Mini)</li>
+<li>CPU : ARM6 600MHz</li>
+<li>RAM : 128MB</li>
+<li>OS : Android 2.2.1</li>
+</ol>
+</blockquote>
+
+<p>The payload I used is a faked person list, you can find the scheam <a href="https://github.com/bulldog2011/nano/blob/master/performance/nano-vs-jaxb/src/main/resources/person.xsd">here</a> and all payloads <a href="https://github.com/bulldog2011/nano/tree/master/performance/nano-on-android/assets">here</a>, I created these payloads with Nano and an auto-fake data generator called <a href="http://www.jemos.eu/projects/podam/">podam</a>. I tested 3 kinds of payload size :</p>
+
+<blockquote><ol>
+<li>10 records - 4KB xml, 2KB json</li>
+<li>50 records - 17KB xml, 9KB json</li>
+<li>300 records - 100KB xml, 50KB json</li>
+</ol>
+</blockquote>
+
+<p>Basically, the size of json payload is almost half of the size of xml, this is because json has a more compact messsage format, the 300 records case is used for testing performance when dealing with big payload size.</p>
+
+<p>The benchmark program itself is a typcial Android application, I adaped the test project from <a href="http://www.developer.com/ws/android/development-tools/Android-XML-Parser-Performance-3824221.htm">this</a> post, I added Nano cases and SAX, DOM, XML pull parsing cases in the benchmark program, you can download the whole benchmark program <a href="https://github.com/bulldog2011/nano/tree/master/performance/nano-on-android">here</a>.</p>
+
+<p>Below is the UI of the benchmark application on PC emulator,</p>
+
+<p><img src="http://bulldog2011.github.com/images/nano/nano-benchmark-app1.png" width="300" height="600">  <img src="http://bulldog2011.github.com/images/nano/nano-benchmark-app2.png" width="300" height="600"></p>
+
+<p>following choices are avaliable for combined benchmark:</p>
+
+<blockquote><ol>
+<li>Thread Number - 1, 3, 5 threads</li>
+<li>Payload Size - 10, 50, 300 records</li>
+<li>Test Type - Nano Xml Read, Nano Json Read, SAX Read, DOM Read, XML Pull Read, Nano Xml Write, Nano Json Write</li>
+</ol>
+</blockquote>
+
+<h3>Test Result</h3>
+
+<p><strong><em>Note:</em></strong></p>
+
+<blockquote><ol>
+<li>the unit of test result is milliseconds</li>
+<li>all test results are average of 20 runs.</li>
+<li>for read test, the time includes file reading time, for write test, serialized content is only written in memory, not real file.</li>
+</ol>
+</blockquote>
+
+<h4>1 Thread Read(Unmarshall) Test</h4>
+
+<table>
+   <tr>
+      <td>[Records]</td>
+      <td>[Nano XML]</td>
+      <td>[Nano JSON]</td>
+      <td>[RAW SAX]</td>
+      <td>[RAW DOM]</td>
+      <td>[RAW Pull]</td>
+   </tr>
+   <tr>
+      <td>10</td>
+      <td>34</td>
+      <td>31</td>
+      <td>18</td>
+      <td>53</td>
+      <td>24</td>
+   </tr>
+   <tr>
+      <td>50</td>
+      <td>133</td>
+      <td>67</td>
+      <td>70</td>
+      <td>217</td>
+      <td>90</td>
+   </tr>
+   <tr>
+      <td>300</td>
+      <td>724</td>
+      <td>292</td>
+      <td>388</td>
+      <td>1318</td>
+      <td>497</td>
+   </tr>
+</table>
+
+
+<p></p>
+
+<h4>3 Threads Read(Unmarshall) Test</h4>
+
+<table>
+   <tr>
+      <td>[Records]</td>
+      <td>[Nano XML]</td>
+      <td>[Nano JSON]</td>
+      <td>[RAW SAX]</td>
+      <td>[RAW DOM]</td>
+      <td>[RAW Pull]</td>
+   </tr>
+   <tr>
+      <td>10</td>
+      <td>102</td>
+      <td>99</td>
+      <td>53</td>
+      <td>163</td>
+      <td>76</td>
+   </tr>
+   <tr>
+      <td>50</td>
+      <td>405</td>
+      <td>215</td>
+      <td>206</td>
+      <td>713</td>
+      <td>272</td>
+   </tr>
+   <tr>
+      <td>300</td>
+      <td>2318</td>
+      <td>951</td>
+      <td>1186</td>
+      <td>3812</td>
+      <td>1599</td>
+   </tr>
+</table>
+
+
+<p></p>
+
+<h4>1 Thread Write(Marshall) Test</h4>
+
+<table>
+   <tr>
+      <td>[Records] </td>
+      <td>[Nano XML]</td>
+      <td>[Nano JSON]</td>
+   </tr>
+   <tr>
+      <td>10</td>
+      <td>15</td>
+      <td>23</td>
+   </tr>
+   <tr>
+      <td>50</td>
+      <td>61</td>
+      <td>87</td>
+   </tr>
+   <tr>
+      <td>300</td>
+      <td>403</td>
+      <td>508</td>
+   </tr>
+</table>
+
+
+<p></p>
+
+<h4>3 Threads Write(Marshall) Test</h4>
+
+<table>
+   <tr>
+      <td>[Records] </td>
+      <td>[Nano XML]</td>
+      <td>[Nano JSON]</td>
+   </tr>
+   <tr>
+      <td>10</td>
+      <td>39</td>
+      <td>60</td>
+   </tr>
+   <tr>
+      <td>50</td>
+      <td>118</td>
+      <td>276</td>
+   </tr>
+   <tr>
+      <td>300</td>
+      <td>1290</td>
+      <td>1664</td>
+   </tr>
+</table>
+
+
+<p></p>
+
+<h3>Conclusion</h3>
+
+<h4>For Read Test:</h4>
+
+<ol>
+<li>Of all the tests, the best performers are Nano JSON and RAW SAX, this is not to say that the parsing speed of JSON is identical to SAX, but JSON message format is more compact, and its payload size is almost half of XML, leading to better performance.</li>
+<li>Of all the tests, the worst performer is RAW DOM, this is obvious since DOM needs to put whole doc tree in memory and this will triger much GC on memory limited mobile device, leading to much slower speed.</li>
+<li>The performance of Nano XML is in the middle, internally, Nano XML also use SAX paring technology, but it also needs to do automatic binding by reflection, this causes Nano XML to lose almost half of its performance, however, one the other hand, the maintainability and development effciency of Nano XML are much better than SAX.</li>
+</ol>
+
+
+<h4>For Write Test:</h4>
+
+<p>Both Nano XML and Nano JSON perform quite good, in singe thread case they both can serialize 300 records(100KB xml, 50KB json) with less than half second.</p>
+
+<p>Another finding is, there is almost a linear relationship between thread number and performance, when more threads are addded to benchmark, performance will degrade in proportion, considering the computation resource limitation of mobile device, it&#8217;s not advisable to do multi-threading xml parsing on mobile device.</p>
+
+<h3>My Recommendation:</h3>
+
+<p>If your mobile application is performance critical, Nano JSON or RAW SAX is the way to go, I perfer Nano JSON since its automatic binding feature will have better maintainability and can impove development effciency a lot.<br/>
+In other cases, Nano XML is also a good choice since it&#8217;s a good balance among maintainability, development effciency, readability and performance. This is especially the case when you have a complex business domain, in such case, parsing a large amount of domain class will be a big development headache, never to say later maintenance, instead, the automatic code generation and binding features of Nano binding framework will be a big help in such case.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[schema driven nano binding]]></title>
@@ -665,7 +2223,7 @@ The Nano code is quite compact. A little technical details here, the xmlWriter i
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>We will instruct Nano to marshall fileds by adding @Element annotations on all fields that needs to be marshalled(just as the annotation name implies, @Element indicates that the field will map to xml element):</p>
+<p>We will instract Nano to marshall all fields to default Xml Elements by adding @Default annotation on all classes.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -689,28 +2247,22 @@ The Nano code is quite compact. A little technical details here, the xmlWriter i
 <span class='line-number'>20</span>
 <span class='line-number'>21</span>
 <span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
 </span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
 </span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
 </span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Customer</span> <span class="o">{</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="kt">long</span> <span class="n">id</span><span class="o">;</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span><span class="o">;</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">PhoneNumber</span><span class="o">&gt;</span> <span class="n">phoneNumbers</span><span class="o">;</span>
 </span><span class='line'>  
 </span><span class='line'>  <span class="kd">public</span> <span class="nf">Customer</span><span class="o">()</span> <span class="o">{</span>
@@ -734,17 +2286,15 @@ The Nano code is quite compact. A little technical details here, the xmlWriter i
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-<span class='line-number'>13</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;</span>
 </span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
 </span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
 </span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Address</span> <span class="o">{</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">city</span><span class="o">;</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">street</span><span class="o">;</span>
 </span><span class='line'>  
 </span><span class='line'><span class="o">}</span>
@@ -765,17 +2315,15 @@ The Nano code is quite compact. A little technical details here, the xmlWriter i
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-<span class='line-number'>13</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;</span>
 </span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
 </span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
 </span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">PhoneNumber</span> <span class="o">{</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">type</span><span class="o">;</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">number</span><span class="o">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">}</span>
@@ -915,23 +2463,21 @@ The Nano code is quite compact. A little technical details here, the xmlWriter i
 <span class='line-number'>22</span>
 <span class='line-number'>23</span>
 <span class='line-number'>24</span>
-<span class='line-number'>25</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">domain</span><span class="o">.</span><span class="na">nano</span><span class="o">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
 </span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
 </span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
 </span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Customer</span> <span class="o">{</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="kt">long</span> <span class="n">id</span><span class="o">;</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
+</span><span class='line'>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span><span class="o">;</span>
 </span><span class='line'>  
 </span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;phone-number&quot;</span><span class="o">)</span>
@@ -1156,17 +2702,17 @@ The Nano code is quite compact. A little technical details here, the xmlWriter i
 </span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Attribute</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
 </span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
 </span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Customer</span> <span class="o">{</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="nd">@Attribute</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="kt">long</span> <span class="n">id</span><span class="o">;</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span><span class="o">;</span>
 </span><span class='line'>  
 </span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;phone-number&quot;</span><span class="o">)</span>
@@ -1415,19 +2961,19 @@ The Nano code is quite compact. A little technical details here, the xmlWriter i
 </span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Attribute</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.RootElement</span><span class="o">;</span>
 </span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
 </span><span class='line'><span class="nd">@RootElement</span><span class="o">(</span><span class="n">namespace</span><span class="o">=</span><span class="s">&quot;http://www.example.com&quot;</span><span class="o">)</span>
 </span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Customer</span> <span class="o">{</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="nd">@Attribute</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="kt">long</span> <span class="n">id</span><span class="o">;</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
 </span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Element</span>
 </span><span class='line'>  <span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span><span class="o">;</span>
 </span><span class='line'>  
 </span><span class='line'>  <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;phone-number&quot;</span><span class="o">)</span>
@@ -2027,7 +3573,7 @@ The Nano code is quite compact. A little technical details here, the xmlWriter i
 
 <h3>1. Nano Dependency</h3>
 
-<p>Nano 0.6.2 can be downloaded <a href="https://github.com/bulldog2011/bulldog-repo/raw/master/repo/releases/com/leansoft/nano/0.6.2/nano-0.6.2-all.zip">here</a>, extract the zip file, and put all 3 jars in lib folder on your project classpath.<br/>
+<p>Latest Nano can be downloaded by following link <a href="https://github.com/bulldog2011/nano">here</a>, extract the zip file, and put all 3 jars in lib folder on your project classpath.<br/>
 <strong><em>Note</em></strong>:<br/>
 On normal Java platform, Nano depends on Kxml and org.json library, however, on Android, Nano has no such dependency, since Kxml and org.json are built in Android Platform.</p>
 

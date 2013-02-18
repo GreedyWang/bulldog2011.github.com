@@ -1,0 +1,628 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>nano on android tutorial 1 - Abstraction Builder</title>
+  <meta name="author" content="Bulldog">
+
+  
+  <meta name="description" content="a tutorial showing how to use Nano on Android to marshall objects to or unmarshall xml from sdcard.">
+  <meta name="keywords" content="nano binding framework, xml binding on Android, jaxb, xml json data binding">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Abstraction Builder" type="application/atom+xml">
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <div id="logo">
+  	<div id="logoLeft">{</div>
+  	<div id="logoText">ab</div>
+  	<div id="logoRight">}</div>
+  	<div class="clear"></div>
+  </div>
+  <h1><a href="/">Abstraction Builder</a></h1>
+  
+    <h2>Building simple and elegant programming abstractions</h2>
+  
+  <div class="clear"></div>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:bulldog2011.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/projects">Projects</a></li>
+  <li><a href="/lab">Lab</a></li>
+  <li><a href="/about">About Me</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Nano on Android Tutorial 1</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-10T16:09:00+08:00" pubdate data-updated="true">Feb 10<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>This is my first post showing how to use Nano on Android, in this post, I will show you how to use Nano to export and import a set of domain object as XML to/from the SD card on Android. Nano is tailored for Android platform, you will see in this post how Nano can greatly simplify tedious and boring object and xml binding task in Android application development.</p>
+
+<!--more-->
+
+
+<h3>Prerequisite</h3>
+
+<p>Nano is quite light, On Android platform, it has no 3rd party jar dependency, all you need to do is to create a noraml Android project and add reference to the Nano jar, you can find latest Nano jar by following link <a href="https://github.com/bulldog2011/nano">here</a>, by the way, if necessary, you may also reference Nano source directly in your project.</p>
+
+<h3>Define Domain Classes</h3>
+
+<p>As usual project, let&#8217;s define domain classes first. The set of domain classes is small but illustrates how to serialize both aggregations and lists of other domain classes. At the root is an Organization class, that has a name, Address object and a list of Person objects. Each Person object has a name and an Address object. Below are the definitions of these domain classses, note, get/set methods are omitted to save space.</p>
+
+<h4>Organization</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">.</span><span class="na">domain</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Attribute</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Organization</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Address</span><span class="o">();</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Person</span><span class="o">&gt;</span> <span class="n">staff</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Person</span><span class="o">&gt;();</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nd">@Attribute</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="kt">int</span> <span class="n">count</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Address</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">.</span><span class="na">domain</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Address</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">street</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">code</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">city</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Person</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">.</span><span class="na">domain</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Default</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@Default</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Person</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">Address</span> <span class="n">address</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Address</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note, all domain classes are annotated with @Default Nano annotation, indicating that all fields of the class will be mapped to xml element during serialization, except that on the count filed of Organization, there is an explicit @Attribute annotation, indicating that the count field will be mapped to xml attribute during serialization.</p>
+
+<p>Also, I&#8217;ve build a Generator class to auto-generate faked organization with faked person list, to save space, I don&#8217;t  want to dump the Generator code here, you can find the source <a href="https://github.com/bulldog2011/nano/blob/master/sample/nano-and-android/src/com/leansoft/nano/sample/domain/Generator.java">here</a>.</p>
+
+<h3>The Sample Flow</h3>
+
+<p>The sample has a quite simple flow :  <br/>
+1. On applicaton startup, auto-generate a faked organization with a random number of persons.<br/>
+2. On click the &#8216;Export Data&#8217; button, serialize the organization to xml on SD card using Nano Xml writer, then update status text with bytes written.<br/>
+3. On click the &#8216;Import Data&#8217; button, deserialize the xml on SD card into organization object using Nano Xml reader, then update status text with person size got.</p>
+
+<p><img class="center" src="/images/nano/nano_and_android.png" width="400" height="600"></p>
+
+<p>The main UI of the sample cantains three components:<br/>
+1. A &#8216;Export Data&#8217; button for serialization demo. <br/>
+2. A &#8216;Import Data&#8217; button for deserialization demo.<br/>
+3. A TextView for status display.</p>
+
+<p><strong><em>Note</em></strong>, faked data generation, export, import may be time consuming tasks depending the size of the data, executing these time consuming tasks directly on main UI thread may block it, leading to application crash, so it&#8217;s a best practice to encapsulate these tasks as asyn tasks, and to use progress bar to let user know the progress of the task. I have encapsulated these tasks using Android AsyncTask structure, for details, please refer to the source of this demo project(link at the end of this post), for more background about Android AsyncTask, please refer to <a href="http://developer.android.com/reference/android/os/AsyncTask.html">its documentation</a>.</p>
+
+<p>The buttons <strong><em>Export</em></strong> and <strong><em>Import</em></strong> have their click actions tied to the flowing methods:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">Button</span> <span class="n">exportButton</span> <span class="o">=</span> <span class="o">(</span><span class="n">Button</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">exportButton</span><span class="o">);</span>
+</span><span class='line'><span class="n">exportButton</span><span class="o">.</span><span class="na">setOnClickListener</span><span class="o">(</span> <span class="k">new</span> <span class="n">OnClickListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">arg0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">ExportTask</span>  <span class="n">task</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ExportTask</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="k">new</span> <span class="n">OnCompletionListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>          <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onCompletion</span><span class="o">(</span><span class="n">Object</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="n">File</span> <span class="n">file</span> <span class="o">=</span> <span class="o">(</span><span class="n">File</span><span class="o">)</span> <span class="n">result</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">appendStatus</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">&quot;Written %d bytes to %s&quot;</span><span class="o">,</span> <span class="n">file</span><span class="o">.</span><span class="na">length</span><span class="o">(),</span> <span class="n">file</span><span class="o">.</span><span class="na">getAbsolutePath</span><span class="o">()));</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>      <span class="o">});</span>
+</span><span class='line'>      <span class="n">task</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">organization</span><span class="o">,</span> <span class="n">dirName</span><span class="o">,</span> <span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'><span class="o">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">Button</span> <span class="n">importButton</span> <span class="o">=</span> <span class="o">(</span><span class="n">Button</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">importButton</span><span class="o">);</span>
+</span><span class='line'><span class="n">importButton</span><span class="o">.</span><span class="na">setOnClickListener</span><span class="o">(</span><span class="k">new</span> <span class="n">OnClickListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">v</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">ImportTask</span>  <span class="n">task</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ImportTask</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="k">new</span> <span class="n">OnCompletionListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>          <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onCompletion</span><span class="o">(</span><span class="n">Object</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="n">organization</span> <span class="o">=</span> <span class="o">(</span><span class="n">Organization</span><span class="o">)</span> <span class="n">result</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">appendStatus</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">&quot;Imported organization &#39;%s&#39; having %d persons&quot;</span><span class="o">,</span>
+</span><span class='line'>                      <span class="n">organization</span><span class="o">.</span><span class="na">getName</span><span class="o">(),</span> <span class="n">organization</span><span class="o">.</span><span class="na">getStaff</span><span class="o">().</span><span class="na">size</span><span class="o">()));</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>      <span class="o">});</span>
+</span><span class='line'>      <span class="n">task</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">dirName</span><span class="o">,</span> <span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  
+</span><span class='line'><span class="o">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <strong><em>ExportTask</em></strong> and <strong><em>ImportTask</em></strong> classes have logic where real Nano marshalling and unmarshalling magic happens:</p>
+
+<h4>Export Logic</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="nd">@Override</span>
+</span><span class='line'><span class="kd">protected</span> <span class="n">File</span> <span class="nf">doInBackground</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Organization</span> <span class="n">organization</span> <span class="o">=</span> <span class="o">(</span><span class="n">Organization</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">dirName</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">fileName</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">2</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">File</span> <span class="n">file</span> <span class="o">=</span> <span class="n">getFile</span><span class="o">(</span><span class="n">dirName</span><span class="o">,</span>  <span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">Writer</span> <span class="n">out</span> <span class="o">=</span> <span class="n">openForWrite</span><span class="o">(</span><span class="n">file</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">IWriter</span> <span class="n">xmlWriter</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLWriter</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">xmlWriter</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">organization</span><span class="o">,</span> <span class="n">out</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">out</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">file</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">LOG</span><span class="o">,</span> <span class="s">&quot;Failed to export. &quot;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Import Logic</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">protected</span> <span class="n">Organization</span> <span class="nf">doInBackground</span><span class="o">(</span><span class="n">Object</span><span class="o">...</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">dirName</span>  <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">fileName</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+</span><span class='line'>        <span class="n">Reader</span> <span class="n">in</span> <span class="o">=</span> <span class="n">openForRead</span><span class="o">(</span><span class="n">getFile</span><span class="o">(</span><span class="n">dirName</span><span class="o">,</span>  <span class="n">fileName</span><span class="o">));</span>
+</span><span class='line'>        <span class="n">IReader</span> <span class="n">xmlReader</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLReader</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">Organization</span> <span class="n">org</span> <span class="o">=</span> <span class="n">xmlReader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">Organization</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">in</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">in</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">org</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">LOG</span><span class="o">,</span> <span class="s">&quot;Failed to import. &quot;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now you see the power of Nano : there are only 2 lines of marshalling and unmarshalling code, amazing!</p>
+
+<h3>The Resulting XML</h3>
+
+<p>It&#8217;s easy to pull out the XML file from the SD card using the File Explorer of DDMS.</p>
+
+<p>And here is an extract of its contents:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39; ?&gt;</span>
+</span><span class='line'><span class="nt">&lt;organization</span> <span class="na">count=</span><span class="s">&quot;88&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;address&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;street&gt;</span>Street LY07<span class="nt">&lt;/street&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;code&gt;</span>VXUSB<span class="nt">&lt;/code&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;city&gt;</span>City SWT<span class="nt">&lt;/city&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/address&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;staff&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;address&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;street&gt;</span>Street VRAW<span class="nt">&lt;/street&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;code&gt;</span>6NEA8<span class="nt">&lt;/code&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;city&gt;</span>City JLN<span class="nt">&lt;/city&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/address&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>name ND4Q<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/staff&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;staff&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;address&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;street&gt;</span>Street XW8P<span class="nt">&lt;/street&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;code&gt;</span>DNSP7<span class="nt">&lt;/code&gt;</span>
+</span><span class='line'>      <span class="nt">&lt;city&gt;</span>City PXP<span class="nt">&lt;/city&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/address&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;name&gt;</span>name 5OMA<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/staff&gt;</span>
+</span><span class='line'>
+</span><span class='line'>...
+</span><span class='line'>
+</span><span class='line'>  <span class="nt">&lt;name&gt;</span>Org IN3V9<span class="nt">&lt;/name&gt;</span>
+</span><span class='line'><span class="nt">&lt;/organization&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>The Source</h3>
+
+<p>You can get the whole source of this demo project <a href="https://github.com/bulldog2011/nano/tree/master/sample/nano-and-android">here</a>, by the way, some source is adapted from <a href="http://blog.ribomation.com/2011/07/android-and-xml/">this post</a>, so part of the content of this post should be contributed to the author of that post.</p>
+
+<h3>Conclusion</h3>
+
+<p>Without automatic xml binding tool, data serialization and deserialization on Android is a tedious and time-consuming development task, needless to say later maintenance. The Nano xml binding framework can greatly accelerate xml based Android application development by automating the tedious and error-prone xml binding tasks, letting developers put more focus on their application logic instead of xml parsing.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bulldog</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-10T16:09:00+08:00" pubdate data-updated="true">Feb 10<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/nano/'>nano</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left articlenav" href="/blog/2013/02/08/nano-benchmark-on-android/" title="Previous Post: nano benchmark on android">&laquo; nano benchmark on android</a>
+      
+      
+        <a class="basic-alignment right articlenav" href="/blog/2013/02/12/movie-search-android-app-using-nano/" title="Next Post: movie search android app using nano">movie search android app using nano &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Categories</h1>
+  <ul id="categories">
+    <li class='category'><a href='/blog/categories/big-queue/'>big queue (6)</a></li>
+<li class='category'><a href='/blog/categories/design/'>design (1)</a></li>
+<li class='category'><a href='/blog/categories/ebay-api/'>ebay api (1)</a></li>
+<li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
+<li class='category'><a href='/blog/categories/nano/'>nano (8)</a></li>
+
+  </ul>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/">Schema Driven Web API Client Development on Android, Part 1: Hello eBay Finding</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/12/movie-search-android-app-using-nano/">movie search android app using nano</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/10/nano-on-android-tutorial-1/">nano on android tutorial 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/08/nano-benchmark-on-android/">nano benchmark on android</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/07/schema-driven-nano-binding/">schema driven nano binding</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Bulldog -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'bulldogtech';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

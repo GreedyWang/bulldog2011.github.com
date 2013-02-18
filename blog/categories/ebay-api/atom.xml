@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ebay api | Abstraction Builder]]></title>
+  <link href="http://bulldog2011.github.com/blog/categories/ebay-api/atom.xml" rel="self"/>
+  <link href="http://bulldog2011.github.com/"/>
+  <updated>2013-02-18T13:16:38+08:00</updated>
+  <id>http://bulldog2011.github.com/</id>
+  <author>
+    <name><![CDATA[Bulldog]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Schema Driven Web API Client Development on Android, Part 1: Hello eBay Finding]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/"/>
+    <updated>2013-02-17T12:48:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding</id>
+    <content type="html"><![CDATA[<p>Scheam driven web service development is quite popular in Java world, JAXB and JAX-WS are both mature standard, and frameworks like CXF, Axis are famous amount many developers for fast service development. It's common to do scheam driven developent on server side, can scheam driven client development be done on Android? Yes, you can. Today I will show you how do do scheam driven development on Android by leveraging following light-weight frameworks:</p>
+
+<!--more-->
+
+
+<blockquote><ol>
+<li><a href="https://github.com/bulldog2011/nano-rest">Nano-rest</a> restful client framework for Android, with Nano xml binding support.</li>
+<li><a href="https://github.com/bulldog2011/mxjc">mxjc</a> scheam to Android java binding compiler.</li>
+</ol>
+</blockquote>
+
+<p>The serivce I choose for demo is <a href="https://www.x.com/developers/ebay/products/finding-api">eBay Finding service</a>, here are why I choose this service:</p>
+
+<blockquote><ol>
+<li>I have some direct experience with this service.</li>
+<li>eBay Finding serivce supports schema driven development since it provides a wsdl, at the same time, it also supports RESTful style service call.</li>
+</ol>
+</blockquote>
+
+<p>If you are not familar with this serivce, please visit its <a href="https://www.x.com/developers/ebay/products/finding-api">official site</a>.</p>
+
+<h3>The Big Picture</h3>
+
+<p>TODO</p>
+
+<h3>Step 1 : Generate service classes from schema</h3>
+
+<p>The first step of scheam driven development is to generate service classes from schema or wsdl, let's download eBay Finding serivce wsdl <a href="http://developer.ebay.com/webservices/finding/latest/FindingService.wsdl">here</a>, also, let's download <a href="https://github.com/bulldog2011/mxjc">mxjc binding compiler</a> zip package by following links on the github site, extract the zip package, suppose we put the wsdl in the same folder as the extracted zip package, then we execute command(suppose we are in Windows environment, Unix environment will be similar).</p>
+
+<p><code>
+bin\mxjc.bat -wsdl FindingService.wsdl
+</code></p>
+
+<p>When we execute this command, the schema inside the wsdl will be parsed by the binding compiler and Nano bindable classes will be generated, by default, the binding compiler will derive package name from wsdl, but you can override this by providing custom package name directly as command line options.
+'-wsdl' option is needed since we are generating from wsdl, not default xsd. <br/>
+By default, the service classes will be generated in the current directory.</p>
+
+<h3>Step 2: Create a New Android Project</h3>
+
+<p>Now let's create a new Android project in IDE like Eclipse with ADT installed, to use Nano-rest client framework, the Android API version must be equal to or newer than 7(Androdi 2.1 or above), this is required since Nano-rest leverages Android Service mechanism for asynchronous service invocation.</p>
+
+<p>With new Android project created, let's add Nano-rest jar in the <strong><em>libs</em></strong> folder of the project, the Nano-rest jar can be downloaded by following link on the <a href="https://github.com/bulldog2011/nano-rest">Nano-rest github site</a>, the shaded jar is preferred since it already includes Nano xml binding framework dependency, otherwise, you have to add Nano xml binding framework jar separately.
+Now, let's copy the above generated service classes into the <strong><em>src</em></strong> folder the project, if we refresh the project, there should be no compiling error since all imports in the generated classes can be resolved by the Nano-rest shaded jar reference.</p>
+
+<p>To let Nano-rest framework work correctly at runtime, we <strong><em>must</em></strong> added following declarations in the manifest file of the project:</p>
+
+<p>```xml</p>
+
+<p>  <uses-permission android:name="android.permission.INTERNET" /></p>
+
+<p>  <uses-sdk android:minSdkVersion="7" /></p>
+
+<p>  <application></p>
+
+<pre><code>&lt;service android:name="com.leansoft.nanorest.service.HTTPRequestExecutorService" &gt;
+&lt;/service&gt;
+</code></pre>
+
+<p>  </application></p>
+
+<p>```</p>
+
+<p>The uses-permission declaration is needed for internet access, the minSdkVersion declaration has be explained above, and the HTTPRequestExecutorService class is required for asynchronous service invocation, synchronous service invocation may block Android main UI, leading to process crash, this is not expected, so as a best practice, we should always invoke service asynchronously on Android.</p>
+
+<h3>Step 3 : Create eBay Finding API Proxy</h3>
+
+<p>Web service client proxy can simplify service invocation code, usually, web serivce framework like CXF or JAX-WS has tool to auto-generate service proxy from wsdl, however, current mxjc binding compiler does not support proxy generation yet(it can only generate service classes from schema), but it's not hard for us to write proxy class manually since Nano-rest has already encapsulated generic service invocation logic for us, we only need to extend it and add a few service specific logic, let's just do it:</p>
+
+<p>First, let's definite some constants which will be used later:</p>
+
+<p>``` java</p>
+
+<p>package com.ebay.finding;</p>
+
+<p>public interface FindingConstants {</p>
+
+<pre><code>public static String PRODUCTION_ENDPOINT = "http://svcs.ebay.com/services/search/FindingService/v1";
+
+public static String SANDBOX_ENDPOINT = "http://svcs.sandbox.ebay.com/services/search/FindingService/v1";
+
+public static String X_EBAY_SOA_OPERATION_NAME = "X-EBAY-SOA-OPERATION-NAME";
+
+public static String X_EBAY_SOA_SECURITY_APPNAME = "X-EBAY-SOA-SECURITY-APPNAME";
+</code></pre>
+
+<p>}</p>
+
+<p>```
+These constants are quite self explanatory, so I won't give more comments.</p>
+
+<p>Then we build a simple authentication class, eBay Finding serivce need a <strong><em>APP NAME</em></strong> as one of http request headers, so we just add it,</p>
+
+<p>``` java</p>
+
+<p>package com.ebay.finding.auth;</p>
+
+<p>import com.ebay.finding.FindingConstants;
+import com.leansoft.nanorest.auth.AuthenticationProvider;
+import com.leansoft.nanorest.client.BaseRestClient;</p>
+
+<p>public class AppNameAuthenticationProvider implements AuthenticationProvider {</p>
+
+<pre><code>@Override
+public void authenticateRequest(BaseRestClient client) {
+    client.addHeader(FindingConstants.X_EBAY_SOA_SECURITY_APPNAME, "YOUR_APPNAME_HERE");
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
+
+<p><strong><em>Note</em></strong>, before you can run the final finished application, you mush replace the APP NAME placeholder with your own eBay developer APP NAME which can be applied on eBay developer site.</p>
+
+<p>Next, let's build a generic request processor for eBay Finding serivce, with this base request processor, all specific request processors(supported by eBay Finding service) can be easily built later, let's see the full definition of this base request processor:</p>
+
+<p>``` java</p>
+
+<p>package com.ebay.finding.request;</p>
+
+<p>import com.ebay.finding.FindingConstants;
+import com.ebay.finding.auth.AppNameAuthenticationProvider;
+import com.ebay.marketplace.search.v1.services.AckValue;
+import com.ebay.marketplace.search.v1.services.BaseServiceResponse;
+import com.ebay.marketplace.search.v1.services.ErrorMessage;
+import com.leansoft.nanorest.callback.HttpCallback;
+import com.leansoft.nanorest.client.RestClient;
+import com.leansoft.nanorest.domain.ResponseStatus;
+import com.leansoft.nanorest.logger.ALog;
+import com.leansoft.nanorest.parser.NanoXmlResponseParser;
+import com.leansoft.nanorest.request.NanoXmlRequestProcessor;</p>
+
+<p>public class BaseFindingRequestProcessor<T> extends NanoXmlRequestProcessor<T> {</p>
+
+<pre><code>private final Class&lt;T&gt; responseType;
+
+public BaseFindingRequestProcessor(Object requestObject, String opName, Class&lt;T&gt; responseType, 
+        HttpCallback&lt;T&gt; callback) {
+
+    super(requestObject,
+          responseType,
+          callback);
+
+    this.responseType = responseType;
+
+
+    RestClient client = getRestClient();
+    client.setUrl(FindingConstants.PRODUCTION_ENDPOINT);
+    client.setAuthentication(new AppNameAuthenticationProvider());
+
+    client.addHeader(FindingConstants.X_EBAY_SOA_OPERATION_NAME,  opName);
+}
+
+private NanoXmlResponseParser&lt;ErrorMessage&gt; errorMessageParser = 
+        new NanoXmlResponseParser&lt;ErrorMessage&gt;(ErrorMessage.class);
+
+@Override
+protected void handleResponse() {
+
+    final RestClient client = getRestClient();
+    final ResponseStatus status = client.getResponseStatus();
+    String response = client.getResponse();
+    ALog.d(TAG, status.toString());
+    if (status.getStatusCode() &lt; 200 || status.getStatusCode() &gt;= 300) {
+        if (isXmlResponse(response)) {
+            parseErrorMessage(response);
+        } else {
+            getResponseHandler().handleError(status);
+        }
+    } else {
+        parseHttpResponse(response);
+    }
+
+}
+
+private void parseErrorMessage(String response) {
+    try {
+        final ErrorMessage errorMessage = errorMessageParser.parse(response);
+
+        T responeData = responseType.newInstance();
+        BaseServiceResponse baseServiceResponse = (BaseServiceResponse)responeData;
+        baseServiceResponse.setAck(AckValue.FAILURE);
+        baseServiceResponse.setErrorMessage(errorMessage);
+
+        getResponseHandler().handleSuccess(responeData);
+    } catch (final Exception e) {
+        ResponseStatus responseStatus = ResponseStatus.getParseErrorStatus();
+        ALog.d(TAG, responseStatus.toString(), e);
+        getResponseHandler().handleError(responseStatus);
+    }
+}
+
+private boolean isXmlResponse(String response) {
+    if (response == null) return false;
+    return response.startsWith("&lt;?xml");
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
+
+<p>Base request processor is the core of the proxy, let me give more comments about the base processor:<br/>
+1. we extend NanoXmlRequestProcessor class, since we want to leverage Nano xml framework for request marshalling and response unmarshalling.<br/>
+2. In the constuctor, we provides request object, operaion name and
+a HttpCallback instance as parameters and delegate these parameters to the super class, the requst object is an eBay Finding request object like FindItemsByKeywordsRequest object, the operation name is required by eBay Finding service as request header, and I will give more explanation about the HttpCallback instance later. <br/>
+3. Also in the constructor, we set eBay Finding service production endpoint url on the rest client(replace here if you need to access sandbox instead), plug in authentication provider defined above, and add operation name as request header. Note, authentication provider plugin is not necessary, you can always add APP NAME directly on the rest client as a request header, I use authentication provider here just to show the formal way to do authentication when Nano-rest framework is used.<br/>
+4. The response handling logic of the eBay Finding serivce needs a special fix, usually, eBay service supports RRE(resposne resident error), means error message are wrapped in a normal response message, but in some cases, eBay Finding service may return a single error xml message without a wrapping response. In order to fix this, I overrided the Nano-rest response handling logic, please see handleResponse and
+parseErrorMessage methods for details.</p>
+
+<p>The responseHandler(defined in super class and returned by getResponseHandler method) is assocated with the HttpCallback instance passed in the constructor, it only has two methods: handleSuccess and handleError, usually, if the service invocation is successful, then handleSuccess method should be called, otherwise, handleError method should be called, responseHandler is only responsilbe for the callback, concrete success or error handling logic is defined by application logic.</p>
+
+<p>With base processor defined, it's quite easy to define a specific request processor, let's define a FindItemsByKeywordsReqeustProcessor since I will use this function of eBay Finding service as demo:</p>
+
+<p>``` java
+package com.ebay.finding;</p>
+
+<p>import com.ebay.finding.request.BaseFindingRequestProcessor;
+import com.ebay.marketplace.search.v1.services.FindItemsByKeywordsRequest;
+import com.ebay.marketplace.search.v1.services.FindItemsByKeywordsResponse;
+import com.leansoft.nanorest.RequestProcessor;
+import com.leansoft.nanorest.callback.HttpCallback;</p>
+
+<p>public class FindingService {</p>
+
+<pre><code>public static final String TAG = FindingService.class.getSimpleName();
+
+public static RequestProcessor getFindItemsByKeywordsRequestProcessor( 
+        FindItemsByKeywordsRequest requestObject, 
+        HttpCallback&lt;FindItemsByKeywordsResponse&gt; callback) {
+    return new BaseFindingRequestProcessor&lt;FindItemsByKeywordsResponse&gt;(requestObject, "findItemsByKeywords", FindItemsByKeywordsResponse.class, callback);
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
+
+<p>Not much code, and no magic here if you are familar with Java generic. We just define a factory method, provide specific parameters requried by FindItemsByKeywords API call. Use this method as template, it's not hard for you to create other request processors, like <br/>
+getFindItemsAdvandedRequestProcessor, getFindItemsByCategoryRequestProcessor, etc, all functions of eBay Finding service can be defined in this way, actually, you can even build a complete eBay Finding SDK in this way for later reuse.</p>
+
+<h3>Step 4: Write real application logic and UI</h3>
+
+<p>Now it's time for us to write real application logic and UI, in this demo, I just want to show minimum application logic and UI, the UI part only has an EditText as keywords input and a Button to trigger search by calling FindingItemsByKeywords API, and a Toast for response display.
+The application logic is even simpler, let's see the whole definition of the Main Activity:</p>
+
+<p>``` java
+package com.leansoft.nanorest.sample;</p>
+
+<p>import com.ebay.finding.FindingService;
+import com.ebay.marketplace.search.v1.services.AckValue;
+import com.ebay.marketplace.search.v1.services.FindItemsByKeywordsRequest;
+import com.ebay.marketplace.search.v1.services.FindItemsByKeywordsResponse;
+import com.ebay.marketplace.search.v1.services.PaginationInput;
+import com.leansoft.nanorest.RequestProcessor;
+import com.leansoft.nanorest.callback.HttpCallback;
+import com.leansoft.nanorest.domain.ResponseStatus;</p>
+
+<p>import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.Toast;
+import android.widget.EditText;
+import android.app.Activity;</p>
+
+<p>public class MainActivity extends Activity {</p>
+
+<pre><code>private Button btn;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+
+    btn = (Button) this.findViewById(R.id.btn);
+    btn.setOnClickListener(new OnClickListener() {
+
+        @Override
+        public void onClick(View arg0) {
+            String keywords = ((EditText) findViewById(R.id.edit_input)).getText().toString();  
+            FindItemsByKeywordsRequest request = new FindItemsByKeywordsRequest();
+            request.setKeywords(keywords);
+            PaginationInput pi = new PaginationInput();
+            pi.setPageNumber(1);
+            pi.setEntriesPerPage(1);
+            request.setPaginationInput(pi);
+
+            RequestProcessor requestProcessor = FindingService.getFindItemsByKeywordsHttpRequest(
+                    request, 
+                    new FindItemsByKeywordsCallback()
+                    );
+            requestProcessor.invokeAsync(MainActivity.this.getApplicationContext());
+        }
+
+    });
+}
+
+private final class FindItemsByKeywordsCallback implements HttpCallback&lt;FindItemsByKeywordsResponse&gt; {
+
+    @Override
+    public void onSuccess(FindItemsByKeywordsResponse responseData) {
+
+        if (responseData.getAck() == AckValue.SUCCESS) {
+            Toast.makeText(getApplicationContext(),
+                    responseData.getSearchResult().getItem().get(0).getTitle(),
+                    Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getApplicationContext(),
+                    responseData.getErrorMessage().getError().get(0).getMessage(),
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onHttpError(ResponseStatus responseCode) {
+        Toast.makeText(getApplicationContext(),
+                responseCode.getStatusCode() + " " + responseCode.getStatusMessage(),
+                Toast.LENGTH_LONG).show();
+
+    }
+
+}
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
+
+<p>The code is easy to understand if you know Java and Android, let me give a few comments:<br/>
+1. We register a click listener to the button, inside the listener is the main application logic:
+get keywords input and build a FindItemByKeywordsRequest object, get a FindItemByKeywordsRequestProcessor from the factory we defined above, and invoke the request processor asynchronously at last.<br/>
+2. When we build the FindItemByKeywordsRequestProcessor instance, we passed in a FindItemsByKeywordsCallback instance as parameter, FindItemsByKeywordsCallback implements HttpCallback interface, it contains the main response logic, this is the place when final asynchronous response handling happen. Usually, inside a HttpCallback, we update UI according to the success or failure of the response, in this case, if the response is successful, we show the title of the result item, if there is http error, we show the status code and message. Since eBay Finding service support Response Resident Error(RRE), even in the onSuccess callback, we still need to check the Ack value to find out if there is application error and handle accordingly.</p>
+
+<p>Here I just show a typical asynchronous service invocation paradigm using Nano-rest framework, you can follow this paradigm for other service invocations according to your real needs.</p>
+
+<h3>Step 5 : Run the application</h3>
+
+<p>Now lets run the application, note again, please fill in your APP NAME before you run the application, below is the UI of a success case:</p>
+
+<p><img class="center" src="/images/nano-rest/hello_ebay_finding_success.png" width="400" height="600"></p>
+
+<p>Let's provide an invalid APP NAME and try again, below is the UI of the failed case since the APP NAME is invalid:</p>
+
+<p><img class="center" src="/images/nano-rest/hello_ebay_finding_failure.png" width="400" height="600"></p>
+
+<p>To facilitate debug and trouble shooting, you can always check the request or response xml by looking at the log in the LogCat provided by ADT.</p>
+
+<h3>Conclusion:</h3>
+
+<p>The demo shown in this tutorial is just a bare minimum or starter kit, there is still much work to do before you can release a fully functional service backed Android application, but anyway, with a reuseable service proxy, you are free from low level and error-prone serivce message parsing and http handling anymore, instead, you can put your effor on main application logic and UI, this can definitly accelerate the development of the application.</p>
+
+<p>Scheam driven development is a popular and mature development methodology, when used appropriately, it can improve development efficiency and enhance the reliability and maintainability of the application. Now with the support of Nano-rest framework and the mxjc binding compiler, we can also do schema driven client development on Android.</p>
+
+<p>You can find the whole source of the sample application and all the generated eBay Finding service classes <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayFinding">here</a>.</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -30,7 +30,7 @@
     </url>
     <url>
         <loc>http://bulldog2011.github.com/blog/2013/02/05/nano-hello-world/</loc>
-        <lastmod>2013-02-06T19:53:46+08:00</lastmod>
+        <lastmod>2013-02-17T12:39:03+08:00</lastmod>
     </url>
     <url>
         <loc>http://bulldog2011.github.com/blog/2013/02/05/nano-list-tutorial/</loc>
@@ -38,11 +38,31 @@
     </url>
     <url>
         <loc>http://bulldog2011.github.com/blog/2013/02/06/nano-compare-to-jaxb/</loc>
-        <lastmod>2013-02-07T10:53:59+08:00</lastmod>
+        <lastmod>2013-02-17T12:39:03+08:00</lastmod>
     </url>
     <url>
         <loc>http://bulldog2011.github.com/blog/2013/02/07/schema-driven-nano-binding/</loc>
         <lastmod>2013-02-07T21:38:15+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/blog/2013/02/08/nano-benchmark-on-android/</loc>
+        <lastmod>2013-02-17T12:39:03+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1/</loc>
+        <lastmod>2013-02-17T12:39:03+08:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://bulldog2011.github.com/blog/2013/02/12/movie-search-android-app-using-nano/
+        </loc>
+        <lastmod>2013-02-17T12:39:03+08:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/
+        </loc>
+        <lastmod>2013-02-18T13:13:13+08:00</lastmod>
     </url>
     <url>
         <loc>http://bulldog2011.github.com/about/</loc>
@@ -50,11 +70,11 @@
     </url>
     <url>
         <loc>http://bulldog2011.github.com/blog/archives/</loc>
-        <lastmod>2013-02-07T21:38:15+08:00</lastmod>
+        <lastmod>2013-02-18T13:13:13+08:00</lastmod>
     </url>
     <url>
         <loc>http://bulldog2011.github.com/</loc>
-        <lastmod>2013-02-07T21:38:15+08:00</lastmod>
+        <lastmod>2013-02-18T13:13:13+08:00</lastmod>
     </url>
     <url>
         <loc>http://bulldog2011.github.com/lab/</loc>

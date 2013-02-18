@@ -4,7 +4,7 @@
   <title><![CDATA[Category: ebay api | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/ebay-api/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-18T21:03:06+08:00</updated>
+  <updated>2013-02-18T21:04:55+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -18,7 +18,7 @@
     <link href="http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/"/>
     <updated>2013-02-17T12:48:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding</id>
-    <content type="html"><![CDATA[<p>Scheam driven web service development is quite popular in Java world, JAXB and JAX-WS are both mature standard, and frameworks like CXF, Axis are famous amount many developers for fast service development. It's common to do scheam driven developent on server side, can scheam driven client development be done on Android? Yes, you can. Today I will show you how do do scheam driven development on Android by leveraging following light-weight frameworks:</p>
+    <content type="html"><![CDATA[<p>Scheam driven web service development is quite popular in Java world, JAXB and JAX-WS are both mature standard, and frameworks like CXF, Axis are famous amount many developers for fast service development. It's common to do scheam driven developent on server side, can scheam driven client development be done on Android? Yes, it can. Today I will show you how do do scheam driven development on Android by leveraging following light-weight frameworks:</p>
 
 <!--more-->
 

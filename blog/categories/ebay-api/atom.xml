@@ -4,7 +4,7 @@
   <title><![CDATA[Category: ebay api | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/ebay-api/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-18T21:09:24+08:00</updated>
+  <updated>2013-02-18T21:11:20+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -43,7 +43,7 @@
 
 <p><img class="center" src="/images/nano-rest/big_picture.png" width="600" height="800"></p>
 
-<p>The picture above is the blueprint of scheam driven development on Android. The left part of the blueprint is a build time view, here we leverage mxjc binding compiler to automatically generate service or domain classes from scheam or wsdl; The right part of the blueprint is a runtime view, a typical flow starts from your Android app, it issues request object on proxy component, the proxy passes the request to the Nano restful framework which will delegate the object to xml marshalling work to Nano binding framework and send the xml request to external service through HTTP transportation component, when an xml resposne is received by the HTTP transportation component, the Nano restful framework also will delegate the xml to object unmarshalling work to Nano binding framework and passes the response object to the proxy which will return the response object back to the calling app.</p>
+<p>The picture above is the blueprint of scheam driven development on Android. The left part of the blueprint is a build time view, here we leverage mxjc binding compiler to automatically generate service or domain classes from scheam or wsdl; The right part of the blueprint is a runtime view, a typical flow starts from your Android app, it issues request object on proxy component, the proxy passes the request to the Nano restful framework which will delegate the object to xml marshalling work to Nano binding framework and send the xml request to external service through HTTP transportation component, when an xml resposne is received by the HTTP transportation component, the Nano restful framework will also delegate the xml to object unmarshalling work to Nano binding framework and passes the response object to the proxy which will return the response object back to the calling app.</p>
 
 <p>Let's follow the blueprint and build a simple Android app step by step:</p>
 

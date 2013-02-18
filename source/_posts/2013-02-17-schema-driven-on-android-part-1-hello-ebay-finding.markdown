@@ -24,7 +24,11 @@ If you are not familar with this serivce, please visit its [official site](https
 
 ###The Big Picture
 
-TODO
+{% img center /images/nano-rest/big_picture.png 400 600 %}
+
+The picture above is the blueprint of scheam driven development on Android. The left part of the blueprint is a build time view, here we leverage mxjc binding compiler to automatically generate service or domain classes from scheam or wsdl; The right part of the blueprint is a runtime view, a typical flow starts from your Android app, it issues request object on proxy component, the proxy passes the request to the Nano restful framework which will delegate the object to xml marshalling work to Nano binding framework and send the xml request to external service through HTTP transportation component, when an xml resposne is received by the HTTP transportation component, the Nano restful framework also will delegate the xml to object unmarshalling work to Nano binding framework and passes the response object to the proxy which will return the response object back to the calling app.
+
+Let's follow the blueprint and build a simple Android app step by step:
 
 ###Step 1 : Generate service classes from schema
 The first step of scheam driven development is to generate service classes from schema or wsdl, let's download eBay Finding serivce wsdl [here](http://developer.ebay.com/webservices/finding/latest/FindingService.wsdl), also, let's download [mxjc binding compiler](https://github.com/bulldog2011/mxjc) zip package by following links on the github site, extract the zip package, suppose we put the wsdl in the same folder as the extracted zip package, then we execute command(suppose we are in Windows environment, Unix environment will be similar).

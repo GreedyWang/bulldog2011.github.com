@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Schema Driven Web API Client Development on Android, Part 1: Hello eBay Finding"
+title: "Schema driven web service client development on Android, Part 1: Hello eBay Finding"
 date: 2013-02-17 12:48
 comments: true
 categories: [nano, ebay api]
@@ -8,7 +8,7 @@ keywords: schema driven web API client development, xml binding on Andorid, ebay
 description: Showing show to generate eBay Finding API proxy using mxjc binding compiler then call eBay Finding API using nano-rest framework for Android.
 ---
 
-Scheam driven web service development is quite popular in Java world, JAXB and JAX-WS are both mature standard, and frameworks like CXF, Axis are famous amount many developers for fast service development. It's common to do scheam driven developent on server side, can scheam driven client development be done on Android? Yes, you can. Today I will show you how do do scheam driven development on Android by leveraging following light-weight frameworks:
+Scheam driven web service development is quite popular in Java world, JAXB and JAX-WS are both mature standard, and frameworks like CXF, Axis are famous amount many developers for fast service development. It's common to do scheam driven developent on server side, can scheam driven client development be done on Android? Yes, it can. Today I will show you how do do scheam driven development on Android by leveraging following light-weight frameworks:
 
 <!--more-->
 
@@ -24,9 +24,9 @@ If you are not familar with this serivce, please visit its [official site](https
 
 ###The Big Picture
 
-{% img center /images/nano-rest/big_picture.png 400 600 %}
+{% img center /images/nano-rest/big_picture.png 600 800 %}
 
-The picture above is the blueprint of scheam driven development on Android. The left part of the blueprint is a build time view, here we leverage mxjc binding compiler to automatically generate service or domain classes from scheam or wsdl; The right part of the blueprint is a runtime view, a typical flow starts from your Android app, it issues request object on proxy component, the proxy passes the request to the Nano restful framework which will delegate the object to xml marshalling work to Nano binding framework and send the xml request to external service through HTTP transportation component, when an xml resposne is received by the HTTP transportation component, the Nano restful framework also will delegate the xml to object unmarshalling work to Nano binding framework and passes the response object to the proxy which will return the response object back to the calling app.
+The picture above is the blueprint of scheam driven development on Android. The left part of the blueprint is a build time view, here we leverage mxjc binding compiler to automatically generate service or domain classes from scheam or wsdl; The right part of the blueprint is a runtime view, a typical flow starts from your Android app, it issues request object on proxy component, the proxy passes the request to the Nano restful framework which will delegate the object to xml marshalling work to Nano binding framework and send the xml request to external service through HTTP transportation component, when an xml resposne is received by the HTTP transportation component, the Nano restful framework will also delegate the xml to object unmarshalling work to Nano binding framework and passes the response object to the proxy which will return the response object back to the calling app.
 
 Let's follow the blueprint and build a simple Android app step by step:
 

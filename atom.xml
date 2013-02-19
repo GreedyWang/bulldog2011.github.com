@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-18T21:11:20+08:00</updated>
+  <updated>2013-02-19T22:08:21+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -14,7 +14,43 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Schema Driven Web API Client Development on Android, Part 1: Hello eBay Finding]]></title>
+    <title type="html"><![CDATA[Schema driven web service client development on Android, Part 2: eBay Search App]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/"/>
+    <updated>2013-02-19T20:47:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search</id>
+    <content type="html"><![CDATA[<p>This is the second part of my schema driven web service client development on Android series, in <a href="http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/">part one</a>, I introduced the blueprint of scheam driven development on Android, then I created a web service client proxy for eBay Finding API and built a minimum App as demo. In this second part, I will continue to create a functional eBay search app on Android by leveraging the proxy created in part one.</p>
+
+<!--more-->
+
+
+<p>There is a <a href="http://huguesjohnson.com/programming/java/android-ebay/">good post</a> showing how to integrate Android Application with the eBay API, the author did a very good job, the steps are shown in great detail, this is definitely the recommended reading if you want to develop eBay API based application on Android, however, the author created the application with much low-level passing and plumbing code, there are at least three problems with such approach:<br/>
+1. The effort to create such simple application is nontrival, this is enough to scare away average developers.<br/>
+2. The application is hard to maintain, whenever eBay changes some API interface, much effort is needed to rewrite and debug the json parsing code.<br/>
+3. The application is hard to scale, if more functions and more API calls are needed, much effort is needed to write additional parsing and calling code.</p>
+
+<p>I&#8217;ve created a similar application without much effort, I just leveraged the proxy code base created in part one of this series and focused my effort on writing some application logic and UI code. In fact, since I don&#8217;t get troubled in backend parsing and plumbing code, I can write far less code than the above mentioned author, this is the power of scheam driven or proxy driven development, below is the main UI of the finished application.</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano-rest/ebay_search.png" width="400" height="600"></p>
+
+<p>I won&#8217;t post much code here since this is a typical andorid application and the code of the whole application is quite self explanatory, you can download the whole application <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/EBaySearch">here</a></p>
+
+<p>Let me drop a few notes about this application here:</p>
+
+<ol>
+<li>The application uses the FindItemsByKeywords request processor built in part 1, and the API call follows the same paradigm shown in part 1.</li>
+<li>This is a typical eBay search application, there is only one <a href="https://github.com/bulldog2011/nano-rest/blob/master/sample/EBaySearch/src/com/leansoft/nanorest/sample/FindingActivity.java">main activity</a> which extends ListActivity, user input a search keyword and click search, the application calls the FindItemsByKeywords request processor with asynchronous callback specified, inside the callback, UI is updated by populating the list view with search result items, not much code in the main activity.</li>
+<li><a href="https://github.com/mttkay/droid-fu/blob/master/src/main/java/com/github/droidfu/widgets/WebImageView.java">Droidfu WebImageView</a> component is used to shown ebay item gallary thumbnail image, note, I removed the cache part of the component to minimize the code base, in real application, image cache is required for better performance.</li>
+<li>I&#8217;ve added a dynamic sliding with pagination feature which makes the applciation look cool and friendly.</li>
+<li>Before you run the application, please don&#8217;t forget to fill your <strong><em>APP NAME</em></strong> in the <a href="https://github.com/mttkay/droid-fu/blob/master/src/main/java/com/github/droidfu/widgets/WebImageView.java">AppNameAuthenticationProvider class</a>.</li>
+</ol>
+
+
+<p>With the eBay Finding API proxy as SDK and the sample app as template, it&#8217;s not hard for you to create a more functional eBay Finding App on Android, I am looking forward that someone will build one, and let me know when you build one.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Schema driven web service client development on Android, Part 1: Hello eBay Finding]]></title>
     <link href="http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/"/>
     <updated>2013-02-17T12:48:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding</id>

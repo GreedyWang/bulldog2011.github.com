@@ -1,0 +1,292 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Schema driven web service client development on Android, Part 2: eBay Search App - Abstraction Builder</title>
+  <meta name="author" content="Bulldog">
+
+  
+  <meta name="description" content="build a full eBay search Android app by leveraging code base created in part 1">
+  <meta name="keywords" content="ebay Finding API, eBay Finding API proxy for Android, eBay search app on Android">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Abstraction Builder" type="application/atom+xml">
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <div id="logo">
+  	<div id="logoLeft">{</div>
+  	<div id="logoText">ab</div>
+  	<div id="logoRight">}</div>
+  	<div class="clear"></div>
+  </div>
+  <h1><a href="/">Abstraction Builder</a></h1>
+  
+    <h2>Building simple and elegant programming abstractions</h2>
+  
+  <div class="clear"></div>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:bulldog2011.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/projects">Projects</a></li>
+  <li><a href="/lab">Lab</a></li>
+  <li><a href="/about">About Me</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Schema Driven Web Service Client Development on Android, Part 2: eBay Search App</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-19T20:47:00+08:00" pubdate data-updated="true">Feb 19<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>This is the second part of my schema driven web service client development on Android series, in <a href="http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/">part one</a>, I introduced the blueprint of scheam driven development on Android, then I created a web service client proxy for eBay Finding API and built a minimum App as demo. In this second part, I will continue to create a functional eBay search app on Android by leveraging the proxy created in part one.</p>
+
+<!--more-->
+
+
+<p>There is a <a href="http://huguesjohnson.com/programming/java/android-ebay/">good post</a> showing how to integrate Android Application with the eBay API, the author did a very good job, the steps are shown in great detail, this is definitely the recommended reading if you want to develop eBay API based application on Android, however, the author created the application with much low-level passing and plumbing code, there are at least three problems with such approach:<br/>
+1. The effort to create such simple application is nontrival, this is enough to scare away average developers.<br/>
+2. The application is hard to maintain, whenever eBay changes some API interface, much effort is needed to rewrite and debug the json parsing code.<br/>
+3. The application is hard to scale, if more functions and more API calls are needed, much effort is needed to write additional parsing and calling code.</p>
+
+<p>I&#8217;ve created a similar application without much effort, I just leveraged the proxy code base created in part one of this series and focused my effort on writing some application logic and UI code. In fact, since I don&#8217;t get troubled in backend parsing and plumbing code, I can write far less code than the above mentioned author, this is the power of scheam driven or proxy driven development, below is the main UI of the finished application.</p>
+
+<p><img class="center" src="/images/nano-rest/ebay_search.png" width="400" height="600"></p>
+
+<p>I won&#8217;t post much code here since this is a typical andorid application and the code of the whole application is quite self explanatory, you can download the whole application <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/EBaySearch">here</a></p>
+
+<p>Let me drop a few notes about this application here:</p>
+
+<ol>
+<li>The application uses the FindItemsByKeywords request processor built in part 1, and the API call follows the same paradigm shown in part 1.</li>
+<li>This is a typical eBay search application, there is only one <a href="https://github.com/bulldog2011/nano-rest/blob/master/sample/EBaySearch/src/com/leansoft/nanorest/sample/FindingActivity.java">main activity</a> which extends ListActivity, user input a search keyword and click search, the application calls the FindItemsByKeywords request processor with asynchronous callback specified, inside the callback, UI is updated by populating the list view with search result items, not much code in the main activity.</li>
+<li><a href="https://github.com/mttkay/droid-fu/blob/master/src/main/java/com/github/droidfu/widgets/WebImageView.java">Droidfu WebImageView</a> component is used to shown ebay item gallary thumbnail image, note, I removed the cache part of the component to minimize the code base, in real application, image cache is required for better performance.</li>
+<li>I&#8217;ve added a dynamic sliding with pagination feature which makes the applciation look cool and friendly.</li>
+<li>Before you run the application, please don&#8217;t forget to fill your <strong><em>APP NAME</em></strong> in the <a href="https://github.com/mttkay/droid-fu/blob/master/src/main/java/com/github/droidfu/widgets/WebImageView.java">AppNameAuthenticationProvider class</a>.</li>
+</ol>
+
+
+<p>With the eBay Finding API proxy as SDK and the sample app as template, it&#8217;s not hard for you to create a more functional eBay Finding App on Android, I am looking forward that someone will build one, and let me know when you build one.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bulldog</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-19T20:47:00+08:00" pubdate data-updated="true">Feb 19<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/ebay-api/'>ebay api</a>, <a class='category' href='/blog/categories/nano/'>nano</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left articlenav" href="/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/" title="Previous Post: Schema driven web service client development on Android, Part 1: Hello eBay Finding">&laquo; Schema driven web service client development on Android, Part 1: Hello eBay Finding</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Categories</h1>
+  <ul id="categories">
+    <li class='category'><a href='/blog/categories/big-queue/'>big queue (6)</a></li>
+<li class='category'><a href='/blog/categories/design/'>design (1)</a></li>
+<li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
+<li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
+<li class='category'><a href='/blog/categories/nano/'>nano (9)</a></li>
+
+  </ul>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/">Schema driven web service client development on Android, Part 2: eBay Search App</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/">Schema driven web service client development on Android, Part 1: Hello eBay Finding</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/12/movie-search-android-app-using-nano/">movie search android app using nano</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/10/nano-on-android-tutorial-1/">nano on android tutorial 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/08/nano-benchmark-on-android/">nano benchmark on android</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Bulldog -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'bulldogtech';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

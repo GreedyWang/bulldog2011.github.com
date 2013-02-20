@@ -353,6 +353,12 @@ Scheam driven development is a popular and mature development methodology, when 
 You can find the whole source of the sample application and all the generated eBay Finding service classes [here](https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayFinding).
 
 
+####Update 1 (2.20.2013)
+A similar proxy and demo for [eBay Shopping API](https://www.x.com/developers/ebay/products/shopping-api) has been created, get the whole source [here](https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayShopping). With the Shopping API proxy as SDK and the demo as template, you may create a functional eBay Shopping API based appliction for Android, you may even mix both eBay Finding and Shopping APIs in your application, cool.
+
+
+
+
 
 
 

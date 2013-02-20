@@ -29,7 +29,7 @@ Let me drop a few notes about this application here:
 2. This is a typical eBay search application, there is only one [main activity](https://github.com/bulldog2011/nano-rest/blob/master/sample/EBaySearch/src/com/leansoft/nanorest/sample/FindingActivity.java) which extends ListActivity, user input a search keyword and click search, the application calls the FindItemsByKeywords request processor with asynchronous callback specified, inside the callback, UI is updated by populating the list view with search result items, not much code in the main activity.
 3. [Droidfu WebImageView](https://github.com/mttkay/droid-fu/blob/master/src/main/java/com/github/droidfu/widgets/WebImageView.java) component is used to shown ebay item gallary thumbnail image, note, I removed the cache part of the component to minimize the code base, in real application, image cache is required for better performance.
 4. I've added a dynamic sliding with pagination feature which makes the applciation look cool and friendly.
-5. Before you run the application, please don't forget to fill your ***APP NAME*** in the [AppNameAuthenticationProvider class](https://github.com/mttkay/droid-fu/blob/master/src/main/java/com/github/droidfu/widgets/WebImageView.java).
+5. Before you run the application, please don't forget to fill your ***APP NAME*** in the [AppNameAuthenticationProvider class](https://github.com/bulldog2011/nano-rest/blob/master/sample/EBaySearch/src/com/ebay/finding/auth/AppNameAuthenticationProvider.java).
 
 
 With the eBay Finding API proxy as SDK and the sample app as template, it's not hard for you to create a more functional eBay Finding App on Android, I am looking forward that someone will build one, and let me know when you build one.

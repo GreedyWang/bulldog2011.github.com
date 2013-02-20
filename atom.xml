@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-19T22:08:21+08:00</updated>
+  <updated>2013-02-20T12:10:09+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -41,7 +41,7 @@
 <li>This is a typical eBay search application, there is only one <a href="https://github.com/bulldog2011/nano-rest/blob/master/sample/EBaySearch/src/com/leansoft/nanorest/sample/FindingActivity.java">main activity</a> which extends ListActivity, user input a search keyword and click search, the application calls the FindItemsByKeywords request processor with asynchronous callback specified, inside the callback, UI is updated by populating the list view with search result items, not much code in the main activity.</li>
 <li><a href="https://github.com/mttkay/droid-fu/blob/master/src/main/java/com/github/droidfu/widgets/WebImageView.java">Droidfu WebImageView</a> component is used to shown ebay item gallary thumbnail image, note, I removed the cache part of the component to minimize the code base, in real application, image cache is required for better performance.</li>
 <li>I&#8217;ve added a dynamic sliding with pagination feature which makes the applciation look cool and friendly.</li>
-<li>Before you run the application, please don&#8217;t forget to fill your <strong><em>APP NAME</em></strong> in the <a href="https://github.com/mttkay/droid-fu/blob/master/src/main/java/com/github/droidfu/widgets/WebImageView.java">AppNameAuthenticationProvider class</a>.</li>
+<li>Before you run the application, please don&#8217;t forget to fill your <strong><em>APP NAME</em></strong> in the <a href="https://github.com/bulldog2011/nano-rest/blob/master/sample/EBaySearch/src/com/ebay/finding/auth/AppNameAuthenticationProvider.java">AppNameAuthenticationProvider class</a>.</li>
 </ol>
 
 
@@ -610,6 +610,10 @@ get keywords input and build a FindItemByKeywordsRequest object, get a FindItemB
 <p>Scheam driven development is a popular and mature development methodology, when used appropriately, it can improve development efficiency and enhance the reliability and maintainability of the application. Now with the support of Nano-rest framework and the mxjc binding compiler, we can also do schema driven client development on Android.</p>
 
 <p>You can find the whole source of the sample application and all the generated eBay Finding service classes <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayFinding">here</a>.</p>
+
+<h4>Update 1 (2.20.2013)</h4>
+
+<p>A similar proxy and demo for <a href="https://www.x.com/developers/ebay/products/shopping-api">eBay Shopping API</a> has been created, get the whole source <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayShopping">here</a>. With the Shopping API proxy as SDK and the demo as template, you may create a functional eBay Shopping API based appliction for Android, you may even mix both eBay Finding and Shopping APIs in your application, cool.</p>
 ]]></content>
   </entry>
   

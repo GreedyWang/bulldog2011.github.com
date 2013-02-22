@@ -4,7 +4,7 @@
   <title><![CDATA[Category: nano | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/nano/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-22T12:35:52+08:00</updated>
+  <updated>2013-02-22T12:39:58+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -421,7 +421,7 @@ get keywords input and build a FindItemByKeywordsRequest object, get a FindItemB
 <h4>Update 2 (2.21.2013)</h4>
 
 <p>A similar proxy and a demo for <a href="https://www.x.com/developers/ebay/products/trading-api">eBay Trading API</a> have been created, get the whole source <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayTrading">here</a>. Now you can build more cool eBay Apps on Android, like buying and selling Apps, enjoy! <br/>
-<strong><em>Note </em></strong> eBay Trading wsdl has some issue to work with mxjc, if you want to generate eBay Trading proxy from <a href="http://developer.ebay.com/webservices/latest/ebaySvc.wsdl">eBay Trading wsdl</a>, you need to following fix:</p>
+<strong><em>Note </em></strong> eBay Trading wsdl has some issue to work with mxjc directly, if you want to generate eBay Trading proxy from <a href="http://developer.ebay.com/webservices/latest/ebaySvc.wsdl">eBay Trading wsdl</a> using mxjc, you need to do following fix:</p>
 
 <ol>
 <li>Remove an any element declaration in ReviseInventoryStatusRequestType, since any has already been declarated in the AbstractRequestType(from which ReviseInventoryStatusRequestType extends).</li>

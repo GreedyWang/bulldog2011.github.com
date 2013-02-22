@@ -354,7 +354,37 @@ You can find the whole source of the sample application and all the generated eB
 
 
 ####Update 1 (2.20.2013)
-A similar proxy and demo for [eBay Shopping API](https://www.x.com/developers/ebay/products/shopping-api) has been created, get the whole source [here](https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayShopping). With the Shopping API proxy as SDK and the demo as template, you may create a functional eBay Shopping API based appliction for Android, you may even mix both eBay Finding and Shopping APIs in your application, cool.
+A similar proxy and a demo for [eBay Shopping API](https://www.x.com/developers/ebay/products/shopping-api) have been created, get the whole source [here](https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayShopping). With the Shopping API proxy as SDK and the demo as template, you may create a functional eBay Shopping API based appliction for Android, you may even mix both eBay Finding and Shopping APIs in your application, cool.
+
+####Update 2 (2.21.2013)
+A similar proxy and a demo for [eBay Trading API](https://www.x.com/developers/ebay/products/trading-api) have been created, get the whole source [here](https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayTrading). Now you can build more cool eBay Apps on Android, like buying and selling Apps, enjoy!   
+***Note *** eBay Trading wsdl has some issue to work with mxjc directly, if you want to generate eBay Trading proxy from [eBay Trading wsdl](http://developer.ebay.com/webservices/latest/ebaySvc.wsdl) using mxjc, you need to do following fix:
+
+1. Remove an any element declaration in ReviseInventoryStatusRequestType, since any has already been declarated in the AbstractRequestType(from which ReviseInventoryStatusRequestType extends).
+2. Add a RequesterCredentials(of type CustomSecurityHeaderType) element in AbstractRequestType, such that eBay token authentication can work with XML call.
+3. Add following annotation in the schema definition(at the beginning):
+``` xml
+	   <xs:annotation>
+		 <xs:appinfo>
+		   <jaxb:globalBindings typesafeEnumMaxMembers="1000" />
+		 </xs:appinfo>
+	   </xs:annotation>
+```
+since the numbe of members in some enum types in wsdl exceeds the maximum allowed by defult xjc/jaxb processor. Of couse, you also need to declare jaxb namespace and version in wsdl definition.
+[Here](https://github.com/bulldog2011/nano-rest/tree/master/sample/HelloEBayTrading/wsdl) is a fixed eBay Trading wsdl(version 809), you can search 'mxjc' to find out what I have fixed.
+
+Also, eBay Trading wsdl is very big(> 5M), leading to big jar after code generation and compilation, however, eBay provides a [wsdl pruner tool](http://developer.ebay.com/DevZone/codebase/wsdlpruner/pruner.zip), to minimize jar of your application on Android, you can use this tool to prune the wsdl according to the operations you need, for example, if you only need [AddItem](http://developer.ebay.com/DevZone/XML/docs/Reference/eBay/AddItem.html) operation, just choose this operation, the pruner will ensure only AddItem call related types are left in wsdl after pruning.
+
+
+
+
+
+
+
+
+
+
+
 
 
 

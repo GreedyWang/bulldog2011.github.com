@@ -34,6 +34,31 @@ Let me drop a few notes about this application here:
 
 With the eBay Finding API proxy as SDK and the sample app as template, it's not hard for you to create a more functional eBay Finding App on Android, I am looking forward that someone will build one, and let me know when you build one.
 
+Let me reinterate three main ***highhights*** of scheam driven development on Android:
+
+1. Development effort is minimized, focus on application and UI logic instead of low level plumbling code.
+2. Easy to maintain and scale, whenever the schema changes, resynchronize the proxy with the new schema and update application and UI logic accordingly, no manual xml parsing and debugging anymore.
+3. Better quality and reliability, code generation and component resue foster better software quality and reliability.
+
+####Update 1 (2.23.2013)
+The eBay Search App has been enhanced to show how to mix API calls in one App:
+
+1. Search eBay using eBay Finding [FindItemsByKeywords](http://developer.ebay.com/DevZone/finding/CallRef/findItemsByKeywords.html) API.
+2. Show item details using eBay Shopping [GetSingleItem](http://developer.ebay.com/DevZone/shopping/docs/CallRef/GetSingleItem.html) API.
+3. Add item to watch list using eBay Trading [AddToWatchList](http://developer.ebay.com/DevZone/XML/docs/Reference/eBay/AddToWatchList.html) API
+
+below is the item details UI:
+
+{% img center /images/nano-rest/ebay_demo.png 400 600 %}
+
+Now with eBay Finding/Shopping/Trading API proxy as SDK and the demo app as template, you may create whatever eBay application you can think of, just let loose your imagination!
+
+You can get the whole source of the enhanced App [here](https://github.com/bulldog2011/nano-rest/tree/master/sample/EBayDemo), Note, before you run the App, please fill in your eBay AppId and auth token in the [ConfigFactory](https://github.com/bulldog2011/nano-rest/blob/master/sample/EBayDemo/src/com/leansoft/nanorest/sample/ConfigFactory.java) class.
+
+
+
+
+
 
 
 

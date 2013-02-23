@@ -4,7 +4,7 @@
   <title><![CDATA[Category: ebay api | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/ebay-api/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-22T12:39:58+08:00</updated>
+  <updated>2013-02-23T12:08:14+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -46,6 +46,34 @@
 
 
 <p>With the eBay Finding API proxy as SDK and the sample app as template, it's not hard for you to create a more functional eBay Finding App on Android, I am looking forward that someone will build one, and let me know when you build one.</p>
+
+<p>Let me reinterate three main highhights of scheam driven development on Android:</p>
+
+<ol>
+<li>Development effort is minimized, focus on application and UI logic instead of low level plumbling code.</li>
+<li>Easy to maintain and scale, whenever the schema changes, resynchronize the proxy with the new schema and update application and UI logic accordingly, no manual xml parsing and debugging anymore.</li>
+<li>Better quality and reliability, code generation and component resue foster better software quality and reliability.</li>
+</ol>
+
+
+<h4>Update 1 (2.23.2013)</h4>
+
+<p>The eBay Search App has been enhanced to show how to mix API calls in one App:</p>
+
+<ol>
+<li>Search eBay using eBay Finding <a href="http://developer.ebay.com/DevZone/finding/CallRef/findItemsByKeywords.html">FindItemsByKeywords</a> API.</li>
+<li>Show item details using eBay Shopping <a href="http://developer.ebay.com/DevZone/shopping/docs/CallRef/GetSingleItem.html">GetSingleItem</a> API.</li>
+<li>Add item to watch list using eBay Trading <a href="http://developer.ebay.com/DevZone/XML/docs/Reference/eBay/AddToWatchList.html">AddToWatchList</a> API</li>
+</ol>
+
+
+<p>below is the item details UI:</p>
+
+<p><img class="center" src="/images/nano-rest/ebay_demo.png" width="400" height="600"></p>
+
+<p>Now with eBay Finding/Shopping/Trading API proxy as SDK and the demo app as template, you may create whatever eBay application you can think of, just let loose your imagination.</p>
+
+<p>You can get the whole source of the enhanced App <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/EBayDemo">here</a>.</p>
 ]]></content>
   </entry>
   

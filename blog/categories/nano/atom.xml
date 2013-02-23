@@ -4,7 +4,7 @@
   <title><![CDATA[Category: nano | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/nano/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-23T12:08:14+08:00</updated>
+  <updated>2013-02-23T12:10:50+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -47,7 +47,7 @@
 
 <p>With the eBay Finding API proxy as SDK and the sample app as template, it's not hard for you to create a more functional eBay Finding App on Android, I am looking forward that someone will build one, and let me know when you build one.</p>
 
-<p>Let me reinterate three main highhights of scheam driven development on Android:</p>
+<p>Let me reinterate three main <strong><em>highhights</em></strong> of scheam driven development on Android:</p>
 
 <ol>
 <li>Development effort is minimized, focus on application and UI logic instead of low level plumbling code.</li>
@@ -71,9 +71,9 @@
 
 <p><img class="center" src="/images/nano-rest/ebay_demo.png" width="400" height="600"></p>
 
-<p>Now with eBay Finding/Shopping/Trading API proxy as SDK and the demo app as template, you may create whatever eBay application you can think of, just let loose your imagination.</p>
+<p>Now with eBay Finding/Shopping/Trading API proxy as SDK and the demo app as template, you may create whatever eBay application you can think of, just let loose your imagination!</p>
 
-<p>You can get the whole source of the enhanced App <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/EBayDemo">here</a>.</p>
+<p>You can get the whole source of the enhanced App <a href="https://github.com/bulldog2011/nano-rest/tree/master/sample/EBayDemo">here</a>, Note, before you run the App, please fill in your eBay AppId and auth token in the <a href="https://github.com/bulldog2011/nano-rest/blob/master/sample/EBayDemo/src/com/leansoft/nanorest/sample/ConfigFactory.java">ConfigFactory</a> class.</p>
 ]]></content>
   </entry>
   

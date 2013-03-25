@@ -126,7 +126,7 @@ Fanout is a very powerful queue sementics, in a last project, we successfully us
 
 Sometimes, one consumer is not enough to keep up the speed of the producers, in such case, we can let multiple consumers(may host on same machines or multiple machines) to form a consumer group(the consumer in the same consumer group will use same fanout id), this will tremendously improve the consuming throughput.
 
-The fanout queue provided in the bigqueue library also provides methods to clean up expired back data files or to limit the total size of the back data files, please see the interface and unit tests for details.
+Fanout queue is backed by the big array structure, so it is also big, fast and persistent, the capacity of fanout queue is only limited by available disk storage, fanout queue also provides methods to clean up expired back data files or to limit the total size of the back data files, please see the interface and unit tests for details. 
 
 
 

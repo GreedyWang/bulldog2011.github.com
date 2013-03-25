@@ -9,7 +9,7 @@
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="This is the second part of my schema driven web service client development on Android series, in part one, I introduced the blueprint of scheam &hellip;">
+  <meta name="description" content="This is a tutorial to show the basic API usage of fanout queue, the source of this tutorial is here. Why we need a queue with fanout semantics? here &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -75,6 +75,54 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
+        <h1 class="entry-title"><a href="/blog/2013/03/25/fanout-queue-tutorial/">Fanout Queue Tutorial</a></h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-25T15:34:00+08:00" pubdate data-updated="true">Mar 25<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/03/25/fanout-queue-tutorial/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This is a tutorial to show the basic API usage of fanout queue, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/FanOutQueueTutorial.java">here</a>.</p>
+
+<p>Why we need a queue with fanout semantics? here is a typical case:
+Suppose we have a queue for log collecting, at the backend, we have two(or more) use cases of the log data, for example, one use case is real-time log analysis and alerting, another use case is offline log analysis and reporting, in these cases, we will have two(or more) independent consumers, such as one real-time log consumer and one offline log consumer, but we only have one queue, if we just use a typical queue, then it only supports one consumer(this is called consume once semantics), the data consumed by one consumer will not be available to other consumer(s) again. One solution to this problem is to create two(or more) queues for each consumer, and let producers produce messages into all these queues, but this is a silly and bandwidth/storage cost solution. A more elegant solution is to add fanout semantics to the queue - one queue can be independently consumed by multiple consumers, internally, fanout queue will maintain queue front pointers for multiple consumers. The fanout queue in the bigqueue library supports fanout semantics, it also supports a group consuming scenario - multiple consumers form a group(use same fanout id) to consume a queue concurrently for higher consuming throughput.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2013/03/25/fanout-queue-tutorial/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -489,55 +537,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/28/log-collecting/">Producing and Consuming 4TB Log Daily on One Commodity Machine</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-01-28T13:10:00+08:00" pubdate data-updated="true">Jan 28<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/01/28/log-collecting/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I have built a <a href="https://github.com/bulldog2011/bigqueue">big queue</a>, and I have <a href="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/">turned it into a Thrift based queue service</a>, in this post, I will show you how to collect logs using this queue service, also, I will show some performance number to let you know the capability of big queue as a log collecting tool.</p>
-
-<h3>Collecting and Consuming Logs using Thrift based Queue Serivce</h3>
-
-<p>Big queue was originally designed for log collecting and analysis scenario, it&#8217;s very simple to collecting logs using big queue, all you need to do are:</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/01/28/log-collecting/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -551,7 +550,7 @@
     <section>
   <h1>Categories</h1>
   <ul id="categories">
-    <li class='category'><a href='/blog/categories/big-queue/'>big queue (6)</a></li>
+    <li class='category'><a href='/blog/categories/big-queue/'>big queue (7)</a></li>
 <li class='category'><a href='/blog/categories/design/'>design (1)</a></li>
 <li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
@@ -562,6 +561,10 @@
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/03/25/fanout-queue-tutorial/">fanout queue tutorial</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/">Schema driven web service client development on Android, Part 2: eBay Search App</a>
@@ -577,10 +580,6 @@
     
       <li class="post">
         <a href="/blog/2013/02/10/nano-on-android-tutorial-1/">nano on android tutorial 1</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/02/08/nano-benchmark-on-android/">nano benchmark on android</a>
       </li>
     
   </ul>

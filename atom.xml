@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-02-23T12:10:50+08:00</updated>
+  <updated>2013-03-25T17:20:04+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,185 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[fanout queue tutorial]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/03/25/fanout-queue-tutorial/"/>
+    <updated>2013-03-25T15:34:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/03/25/fanout-queue-tutorial</id>
+    <content type="html"><![CDATA[<p>This is a tutorial to show the basic API usage of fanout queue, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/FanOutQueueTutorial.java">here</a>.</p>
+
+<p>Why we need a queue with fanout semantics? here is a typical case:
+Suppose we have a queue for log collecting, at the backend, we have two(or more) use cases of the log data, for example, one use case is real-time log analysis and alerting, another use case is offline log analysis and reporting, in these cases, we will have two(or more) independent consumers, such as one real-time log consumer and one offline log consumer, but we only have one queue, if we just use a typical queue, then it only supports one consumer(this is called consume once semantics), the data consumed by one consumer will not be available to other consumer(s) again. One solution to this problem is to create two(or more) queues for each consumer, and let producers produce messages into all these queues, but this is a silly and bandwidth/storage cost solution. A more elegant solution is to add fanout semantics to the queue - one queue can be independently consumed by multiple consumers, internally, fanout queue will maintain queue front pointers for multiple consumers. The fanout queue in the bigqueue library supports fanout semantics, it also supports a group consuming scenario - multiple consumers form a group(use same fanout id) to consume a queue concurrently for higher consuming throughput.</p>
+
+<!--more-->
+
+
+<p>Below is figure visually show the fanout semantics:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/bigqueue/fanout-queue.png" width="300" height="300"></p>
+
+<p>The interface of fanout queue is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IFanOutQueue.java">here</a>.</p>
+
+<p>You can create(initialize) a new fanout queue in just one statement:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// create a new fanout queue</span>
+</span><span class='line'><span class="n">IFanOutQueue</span> <span class="n">foQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FanOutQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/tutorial/fanout-queue&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>the first parameter is a directory you want to store the queue data file, the second parameter is the queue name. Now you have a reference to an empty queue.</p>
+
+<p>At producing side, fanout queue is the same as typical queue, to add or produce item into the queue, you just call the <strong><em>enqueue</em></strong> method on the queue reference, here we enqueue 10 logs into the queue:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// enqueue some logs</span>
+</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">String</span> <span class="n">log</span> <span class="o">=</span> <span class="s">&quot;log-&quot;</span> <span class="o">+</span> <span class="n">i</span><span class="o">;</span>
+</span><span class='line'>  <span class="n">foQueue</span><span class="o">.</span><span class="na">enqueue</span><span class="o">(</span><span class="n">log</span><span class="o">.</span><span class="na">getBytes</span><span class="o">());</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong><em>Note:</em></strong> the enqueue method only accept byte array data as input, if your object is not byte array data, you are responsible to convert your object into byte array first before enqueue, this is called serialization, when you dequeue later, you are also response to de-serialize the byte array data into your object format.</p>
+
+<p>Now let&#8217;s see the fanout semantics, to consume from a fanout queue, you need to provide a fanout id to uniquely identify the fanout queue, then call the <strong><em>dequeue</em></strong> method with fanout id as parameter, below we use a fanout id called &#8216;realtime&#8217; to consume all logs in the &#8216;realtime&#8217; fanout queue(&#8216;realtime&#8217; is just a logic name, there is only one physical underlying queue):</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// consuming the queue with fanoutId 1</span>
+</span><span class='line'><span class="n">String</span> <span class="n">fanoutId1</span> <span class="o">=</span> <span class="s">&quot;realtime&quot;</span><span class="o">;</span>
+</span><span class='line'><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;output from &quot;</span> <span class="o">+</span> <span class="n">fanoutId1</span> <span class="o">+</span> <span class="s">&quot; consumer:&quot;</span><span class="o">);</span>
+</span><span class='line'><span class="k">while</span><span class="o">(!</span><span class="n">foQueue</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">(</span><span class="n">fanoutId1</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">foQueue</span><span class="o">.</span><span class="na">dequeue</span><span class="o">(</span><span class="n">fanoutId1</span><span class="o">));</span>
+</span><span class='line'>  <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">item</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>below is the output:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>output from realtime consumer
+</span><span class='line'>log-0
+</span><span class='line'>log-1
+</span><span class='line'>log-2
+</span><span class='line'>log-3
+</span><span class='line'>log-4
+</span><span class='line'>log-5
+</span><span class='line'>log-6
+</span><span class='line'>log-7
+</span><span class='line'>log-8
+</span><span class='line'>log-9</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now let&#8217;s suppose there is another consumer called &#8216;offline&#8217;, to consume all logs in the &#8216;offline&#8217; fanout queue, we just use similar consuming logic:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'> <span class="c1">// consuming the queue with fanoutId 2</span>
+</span><span class='line'>  <span class="n">String</span> <span class="n">fanoutId2</span> <span class="o">=</span> <span class="s">&quot;offline&quot;</span><span class="o">;</span>
+</span><span class='line'>  <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;output from &quot;</span> <span class="o">+</span> <span class="n">fanoutId2</span> <span class="o">+</span> <span class="s">&quot; consumer:&quot;</span><span class="o">);</span>
+</span><span class='line'>  <span class="k">while</span><span class="o">(!</span><span class="n">foQueue</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">(</span><span class="n">fanoutId2</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">foQueue</span><span class="o">.</span><span class="na">dequeue</span><span class="o">(</span><span class="n">fanoutId2</span><span class="o">));</span>
+</span><span class='line'>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">item</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The only difference is now we use &#8216;offline&#8217; as fanout id instead of &#8216;realtime&#8217;, below is the output:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>output from offline consumer
+</span><span class='line'>log-0
+</span><span class='line'>log-1
+</span><span class='line'>log-2
+</span><span class='line'>log-3
+</span><span class='line'>log-4
+</span><span class='line'>log-5
+</span><span class='line'>log-6
+</span><span class='line'>log-7
+</span><span class='line'>log-8
+</span><span class='line'>log-9</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By comparing the output, you can see that both &#8216;realtime&#8217; consumer and &#8216;offline&#8217; consumer can consume one queue independently.</p>
+
+<p>Finally, when you finish with the queue, just call <strong><em>close</em></strong> method to release resource used by the queue, this is not mandatory, just a best practice, call close will release part of used memory immediately. Usually, you initialize big queue in a try block and close it in the finally block, here is the usage paradigm:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// typical queue initialization and closing paradigm</span>
+</span><span class='line'><span class="n">IFanOutQueue</span> <span class="n">foQueue</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'><span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">foQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FanOutQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/tutorial/fanout-queue&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">foQueue</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">foQueue</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By the way, currently, the fantout queue provided by bigqueue library does not limit the number of fanout queues, in other word, one queue can support arbitrary fanout consumers, as long as all consuemr are using unique fanout ids.</p>
+
+<p>Fanout is a very powerful queue sementics, in a last project, we successfully used one log queue to support 3 kinds of log consumers:</p>
+
+<ol>
+<li>realtime consumer, filter and store log events in in-memory db for real-time event alerting.</li>
+<li>near-realtime consumer, store logs in HBase for daily log search and analysis.</li>
+<li>offline consumer, store logs in Hadoop for long term analysis and reporting.</li>
+</ol>
+
+
+<p>Sometimes, one consumer is not enough to keep up the speed of the producers, in such case, we can let multiple consumers(may host on same machines or multiple machines) to form a consumer group(the consumer in the same consumer group will use same fanout id), this will tremendously improve the consuming throughput.</p>
+
+<p>The fanout queue provided in the bigqueue library also provides methods to clean up expired back data files or to limit the total size of the back data files, please see the interface and unit tests for details.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Schema driven web service client development on Android, Part 2: eBay Search App]]></title>

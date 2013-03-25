@@ -4,7 +4,7 @@
   <title><![CDATA[Category: big queue | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/big-queue/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-25T17:20:04+08:00</updated>
+  <updated>2013-03-25T17:36:47+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -214,7 +214,7 @@ The only difference is now we use 'offline' as fanout id instead of 'realtime', 
 
 <p>Sometimes, one consumer is not enough to keep up the speed of the producers, in such case, we can let multiple consumers(may host on same machines or multiple machines) to form a consumer group(the consumer in the same consumer group will use same fanout id), this will tremendously improve the consuming throughput.</p>
 
-<p>The fanout queue provided in the bigqueue library also provides methods to clean up expired back data files or to limit the total size of the back data files, please see the interface and unit tests for details.</p>
+<p>Fanout queue is backed by the big array structure, so it is also big, fast and persistent, the capacity of fanout queue is only limited by available disk storage, fanout queue also provides methods to clean up expired back data files or to limit the total size of the back data files, please see the interface and unit tests for details.</p>
 ]]></content>
   </entry>
   

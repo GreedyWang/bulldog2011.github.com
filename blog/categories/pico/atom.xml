@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: pico | Abstraction Builder]]></title>
+  <link href="http://bulldog2011.github.com/blog/categories/pico/atom.xml" rel="self"/>
+  <link href="http://bulldog2011.github.com/"/>
+  <updated>2013-03-25T21:27:20+08:00</updated>
+  <id>http://bulldog2011.github.com/</id>
+  <author>
+    <name><![CDATA[Bulldog]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[wsdl driven development on iOS - the big picture]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/"/>
+    <updated>2013-03-25T20:03:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture</id>
+    <content type="html"><![CDATA[<p>WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with OO object directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost.</p>
+
+<!--more-->
+
+
+<p>Although nowadays there a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it's very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
+
+<p>Can WSDL driven development be done on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.</p>
+
+<p>Let's see the big picture:</p>
+
+<p><img class="center" src="/images/pico/big_picture.png" width="600" height="800"></p>
+
+<p>The picture above is the blueprint of WSDL driven development on iOS. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can't be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/pico">Pico Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your iOS app, your app issues request on service proxy, the proxy passes the request to the Pico runtime framework which will delegate the object to XML/SOAP marshalling work to Pico binding framework then send XML/SOAP request to external service through AFNetworking HTTP client component, when an XML/SOAP response is received by the HTTP client component, the Pico runtime framework will also delegate the XML/SOAP to object unmarshalling work to Pico binding framework and passes the response object to the proxy which will eventually return the response object back to the calling app.</p>
+
+<p>We used the synchronous flow in the picture just for convenient demonstration, the real call flow in the runtime is asynchronous, by leveraging NSOperation, NSOperationQueue and GCD, in order not to block main UI thread.</p>
+
+<p>With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.</p>
+
+<p>In later posts, I will show how to carry out WSDL driven iOS app development in a series of tutorials, just stay tuned.</p>
+]]></content>
+  </entry>
+  
+</feed>

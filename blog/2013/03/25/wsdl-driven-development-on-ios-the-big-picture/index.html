@@ -5,13 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>hello world - Abstraction Builder</title>
+  <title>wsdl driven development on iOS - the big picture - Abstraction Builder</title>
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="This is just to log the beginning of my blogging era.
-">
-  
+  <meta name="description" content="show the big picture of wsdl driven development on iOS platform">
+  <meta name="keywords" content="wsdl, soap, ios, iphone">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -19,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/01/23/hello-world/">
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -80,7 +79,7 @@
   <header>
     
       
-        <h1 class="entry-title">Hello World</h1>
+        <h1 class="entry-title">Wsdl Driven Development on iOS - the Big Picture</h1>
       
     
     
@@ -97,7 +96,7 @@
   
 
 
-<time datetime="2013-01-23T12:05:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
+<time datetime="2013-03-25T20:03:00+08:00" pubdate data-updated="true">Mar 25<span>th</span>, 2013</time>
         
          | <a href="#disqus_thread">Comments</a>
         
@@ -106,7 +105,26 @@
   </header>
 
 
-<div class="entry-content"><p>This is just to log the beginning of my blogging era.</p>
+<div class="entry-content"><p>WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with OO object directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost.</p>
+
+<!--more-->
+
+
+<p>Although nowadays there a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it&#8217;s very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
+
+<p>Can WSDL driven development be done on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.</p>
+
+<p>Let&#8217;s see the big picture:</p>
+
+<p><img class="center" src="/images/pico/big_picture.png" width="600" height="800"></p>
+
+<p>The picture above is the blueprint of WSDL driven development on iOS. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can&#8217;t be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/pico">Pico Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your iOS app, your app issues request on service proxy, the proxy passes the request to the Pico runtime framework which will delegate the object to XML/SOAP marshalling work to Pico binding framework then send XML/SOAP request to external service through AFNetworking HTTP client component, when an XML/SOAP response is received by the HTTP client component, the Pico runtime framework will also delegate the XML/SOAP to object unmarshalling work to Pico binding framework and passes the response object to the proxy which will eventually return the response object back to the calling app.</p>
+
+<p>We used the synchronous flow in the picture just for convenient demonstration, the real call flow in the runtime is asynchronous, by leveraging NSOperation, NSOperationQueue and GCD, in order not to block main UI thread.</p>
+
+<p>With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.</p>
+
+<p>In later posts, I will show how to carry out WSDL driven iOS app development in a series of tutorials, just stay tuned.</p>
 </div>
 
 
@@ -129,12 +147,12 @@
   
 
 
-<time datetime="2013-01-23T12:05:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
+<time datetime="2013-03-25T20:03:00+08:00" pubdate data-updated="true">Mar 25<span>th</span>, 2013</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/misc/'>misc</a>
+    <a class='category' href='/blog/categories/pico/'>pico</a>
   
 </span>
 
@@ -143,7 +161,7 @@
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/01/23/hello-world/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/01/23/hello-world/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/" >Tweet</a>
   
   
   
@@ -152,8 +170,8 @@
     
     <p class="meta">
       
+        <a class="basic-alignment left articlenav" href="/blog/2013/03/25/fanout-queue-tutorial/" title="Previous Post: fanout queue tutorial">&laquo; fanout queue tutorial</a>
       
-        <a class="basic-alignment right articlenav" href="/blog/2013/01/23/big-queue-design/" title="Next Post: The Design of A Big, Fast, and Persistent Queue">The Design of A Big, Fast, and Persistent Queue &raquo;</a>
       
     </p>
   </footer>
@@ -232,8 +250,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/01/23/hello-world/';
-        var disqus_url = 'http://bulldog2011.github.com/blog/2013/01/23/hello-world/';
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/';
         var disqus_script = 'embed.js';
       
     (function () {

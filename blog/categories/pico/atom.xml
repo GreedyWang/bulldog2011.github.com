@@ -4,7 +4,7 @@
   <title><![CDATA[Category: pico | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/pico/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-25T21:27:20+08:00</updated>
+  <updated>2013-03-26T10:54:42+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -34,6 +34,46 @@
 <p>The picture above is the blueprint of WSDL driven development on iOS. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can't be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/pico">Pico Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your iOS app, your app issues request on service proxy, the proxy passes the request to the Pico runtime framework which will delegate the object to XML/SOAP marshalling work to Pico binding framework then send XML/SOAP request to external service through AFNetworking HTTP client component, when an XML/SOAP response is received by the HTTP client component, the Pico runtime framework will also delegate the XML/SOAP to object unmarshalling work to Pico binding framework and passes the response object to the proxy which will eventually return the response object back to the calling app.</p>
 
 <p>We used the synchronous flow in the picture just for convenient demonstration, the real call flow in the runtime is asynchronous, by leveraging NSOperation, NSOperationQueue and GCD, in order not to block main UI thread.</p>
+
+<p>The Pico binding framework is the core of the Pico runtime, the real object<->xml binding magic happens here, below is the architecture of the binding runtime:</p>
+
+<p><img class="center" src="/images/pico/binding.png" width="400" height="500"></p>
+
+<p>There are four main components:</p>
+
+<blockquote><ol>
+<li><strong><em>Marshaller</em></strong> - responsible for object to xml marshalling</li>
+<li><strong><em>Unmarshaller</em></strong> - responsible for xml to object unmarshalling</li>
+<li><strong><em>BindingSchema</em></strong> - store object<->xml mapping information, used by both Marshaller and Unmarshaller to guide the marshalling/unmarshalling process at runtime, schema is extracted from classes and is cached for better performance.</li>
+<li><strong><em>Converter</em></strong> - type converter for primitive types or frequently used types.</li>
+</ol>
+</blockquote>
+
+<p>The marshalling/unmarshalling algorithm is recursive in nature:</p>
+
+<blockquote><ol>
+<li>for fields of primitive or frequently used types, use corresponding converter to convert the field directly.</li>
+<li>for fields of object type, convert the fields of the object one by one and recursively.</li>
+</ol>
+</blockquote>
+
+<p>The code generator component is based on <a href="http://docs.oracle.com/javase/6/docs/technotes/tools/share/wsimport.html">JAX-WS Wsimport</a> and <a href="http://freemarker.org/">Freemarker</a> template engine, see the whole architecture below:</p>
+
+<p><img class="center" src="/images/pico/codegen-arch.png" width="600" height="750"></p>
+
+<p>The whole architecture can be summarized as <strong><em>Model + Template = Code</em></strong>, code generation flow as following:</p>
+
+<blockquote><ol>
+<li>WSDL doc is first fed into Wsimport and a JAXB/JAX-WS model is generated.</li>
+<li>The JAXB/JAX-WS model is then transformed into a language independent intermediate codegen model.</li>
+<li>The codegen model and corresponding target language templates(Objective-C or Android) are then fed into the Freemarker template engine.</li>
+<li>The Freemarker template engine will eventually transform the in-memory model into target code, guided by the templates.</li>
+</ol>
+</blockquote>
+
+<p>There are other WSDL to Objective-C code generation tools, like <a href="http://code.google.com/p/wsdl2objc/">wsdl2objc</a> and <a href="http://sudzc.com/">SudzC</a>, it's ok to use these tools to generate code from simple wsdl, but when fed with an industry level wsdl like eBay or Amazon wsdl, seems these tools will always break. Unlike these simple tools, the mwsc code generator provided by Pico framework is backed by JAX-WS Wsimport, which is mature and stable, and can recognize most standard WSDL/Schema components, by delegating the most tricky and complex wsdl model transformation task to Wsimport, the mwsc code generator solved the WSDL to Objective-C(or Android Java) problem in a simple while elegant way.</p>
+
+<p>The mwsc code generator not only generate simple bean classes from WSDL/Schema, but also generate the XML&lt;>object mapping information(schema) and record these information in the class as meta-data, the meta-data will later be leveraged by Pico binding framework to guide the XML<->Object transformation at runtime.</p>
 
 <p>With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.</p>
 

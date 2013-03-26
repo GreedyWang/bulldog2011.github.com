@@ -4,7 +4,7 @@
   <title><![CDATA[Category: pico | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/pico/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-26T10:56:10+08:00</updated>
+  <updated>2013-03-26T10:57:46+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -73,7 +73,7 @@
 
 <p>There are other WSDL to Objective-C code generation tools, like <a href="http://code.google.com/p/wsdl2objc/">wsdl2objc</a> and <a href="http://sudzc.com/">SudzC</a>, it's ok to use these tools to generate code from simple wsdl, but when fed with an industry level wsdl like eBay or Amazon wsdl, seems these tools will always break. Unlike these simple tools, the mwsc code generator provided by Pico framework is backed by JAX-WS Wsimport, which is mature and stable, and can recognize most standard WSDL/Schema components, by delegating the most tricky and complex wsdl model transformation task to Wsimport, the mwsc code generator solved the WSDL to Objective-C(or Android Java) problem in a simple while elegant way.</p>
 
-<p>The mwsc code generator not only generate simple bean classes from WSDL/Schema, but also generate the XML&lt;>object mapping information(schema) and record these information in the class as meta-data, the meta-data will later be leveraged by Pico binding framework to guide the XML<->Object transformation at runtime.</p>
+<p>The mwsc code generator not only generates simple bean classes from WSDL/Schema, but also generates the XML<->object mapping information(schema) and record these information in the class as meta-data, the meta-data will later be leveraged by Pico binding framework to guide the XML<->Object transformation at runtime.</p>
 
 <p>With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.</p>
 

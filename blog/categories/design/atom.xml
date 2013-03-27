@@ -4,7 +4,7 @@
   <title><![CDATA[Category: design | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/design/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-27T19:18:12+08:00</updated>
+  <updated>2013-03-27T19:19:41+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[the architecture and design of a pub-sub messaging system tailored for big data collecting and analytics]]></title>
+    <title type="html"><![CDATA[the architecture and design of a pub sub messaging system tailored for big data collecting and analytics]]></title>
     <link href="http://bulldog2011.github.com/blog/2013/03/27/the-architecture-and-design-of-a-pub-sub-messaging-system/"/>
     <updated>2013-03-27T16:30:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/03/27/the-architecture-and-design-of-a-pub-sub-messaging-system</id>

@@ -75,10 +75,48 @@ Luxun has a simple architecture, the main components of a broker are:
 
 # The Core Principle
 
+The core principle of a fast while persistent queue system like Luxun is from a key observation that ***[sequential disk read can be comparable to or even faster than random memory read](http://queue.acm.org/detail.cfm?id=1563874)***, see a comparison figure below:
+
+{% img center /images/luxun/core_principle.png 600 800 %}
+
+So if we can effectively organize the disk access pattern, then we can get fast performance comparable to memory which still have persistence. Queue is a rear append(or append only) and front read data structure, a nature fit to be implemented in sequential disk access mode.
+
+# The Design of the Persistent Queue
+
+### Logical View
+The logic view of the persistent queue is fairly simple and intuitive, it's just like a big array, see figure below:
+
+{% img center /images/luxun/queue_logical_view.png 400 600 %}
+
+you can access the queue using array like index, one special thing is that the index is of type long(in typical programming language, array index is of type int), so the queue can accomodate huge amount of data, only limited by available disk space. You may also think of the queue as a circular queue as shown in figure above, since the queue will wrap around when the long.max index is reached, (although in practice, we don't think current application will get chance to reach the long.max index:)).
+
+With simple array like abstraction, we can implement queue semantics with ease:
+
+>1. For a typical consume once queue, we just need one rear pointer pointing to the queue rear index, aka the next to be appended index, another pointer pointing to the queue front index, aka the next to be consumed index. When an item is produced into the queue, we add the data in the queue then advance the rear index, when an item is consumed from the queue, we fetch the data in the queue then advance the front index. In this case, multi-threads can concurrently produce into the queue, the queue internally will sync the append operation, and multi-threads can concurrently consume(by contention) the queue, and every item will only be consumed by one thread once. see figure below.
+2. For a fanout queue, we also just need one rear pointer pointing to the queue rear index, aka the next to be appended index, but on the consuming side, we let the queue maintain one queue front index for every fanout group, in other word, the fanout semantics is implemented in Luxun by letting Luxun server to maintain consuming state for every fanout group. In such case, multi-threads can concurrently and independently consume the queue, and every item will be consumed multiple times by different consumers as long as they belong to different consumer group(or fanout group). see figure below.
+
+{% img center /images/luxun/queue_semantics.png 400 600 %}
+
+By the way, consume once queue is just a special case of fanout queue, so it's not necessary for luxun to provide a separate consume one queue, as long as fanout queue has been provided.
+ 
+In summary, Luxun queue is an append only queue, means at producing side, item can only be appended into the queue, while at the consuming side, flexible queue consuming semantics are provided by array like index access model and state maintained on server side.
+
+Note, the Luxun queue service even expose the index based queue access interface to user, in case some user may need more flexible queue semantics, for example, to support transactional queue semantics by committing and saving index in DB or Zookeeper. It's even possible to consume the queue randomly by index, although there may have performance issue in such case.
 
 
 # Luxun vs Apache Kafka - the Main Differences
+Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:
+>1. Luxun is based on [Memory Mapped file](http://en.wikipedia.org/wiki/Memory-mapped_file), while Kafka is based on filesystem and OS page cache, memory mapped file is a natural bridge between volatile memory and persistent disk, hence it will have better throughput, memory mapped file also has following unique features:
+	* Message appended by producer thread will be immediately visible to consumer threads, even producer thread hasn't flushed the message explicitly, this makes realtime consuming possible.
+	* OS will ensure the message persistence even the process crashes and there is no explicit flush before the crash.
+	* In Java implementation, memory mapped file dose not use heap memory directly, so the GC impact is limited.
+2. Luxun leveraged [Thrift RPC](http://thrift.apache.org/) as communication layer, while Kafka built its custom NIO communication layer and messaging protocol, custom NIO layer may have better performance, while Thrift makes generating communication infrastructure and cross-language clients(producer or consumer) fairy simple, this is a typical maintainability over performance design decision.
+3. Luxun message consuming is index(array like) based, while Kafka message consuming is offset based, we believe index access mode can simplify design and can separate error domain better than offset.
+4. Luxun uses simple and random distribution mechanism for scalability, similar to Kestrel, each server handles a set of reliable, ordered message queues. When you put a cluster of these server together, with no cross communication, and pick a server at random whenever you do a `produce` or `consume`, you end up with a reliable, loosely ordered message queue(in many situations, loose ordering is sufficient). On the other hand, Kafka relies on Zookeeper for distributed coordination, We believe Zookeeper is still too heavy-weight for small to medium sized companies(the main targets of Luxun), and the learning curve is still steep for average developers. Of cause, Luxun has extension point left for future possible Zookeeper integration.
+5. Luxun only supports server level partitioning - partition a topic on different servers, while Kafka supports partitioning within a topic. Our performance test show partitioning within a topic has no performance gain, at the same time, it makes design complex.
 
+The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.
+ 
 
 ##Contributions
 Luxun borrowed design ideas and adapted source from following open source projects:

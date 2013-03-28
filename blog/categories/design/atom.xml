@@ -4,7 +4,7 @@
   <title><![CDATA[Category: design | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/design/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-27T19:21:47+08:00</updated>
+  <updated>2013-03-28T15:44:23+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -100,7 +100,33 @@ At the producing side, there are different kinds of producers, such as:</p>
 
 <h1>The Core Principle</h1>
 
+<p>The core principle of a fast while persistent queue system like Luxun is from a key observation that <strong><em><a href="http://queue.acm.org/detail.cfm?id=1563874">sequential disk read can be comparable to or even faster than random memory read</a></em></strong>, see a comparison figure below:</p>
+
+<p><img class="center" src="/images/luxun/core_principle.png" width="600" height="800"></p>
+
+<p>So if we can effectively organize the disk access pattern, then we can get fast performance comparable to memory which still have persistence. Queue is a rear append(or append only) and front read data structure, a nature fit to be implemented in sequential disk access mode.</p>
+
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
+
+<p>Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:</p>
+
+<blockquote><ol>
+<li>Luxun is based on <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped file</a>, while Kafka is based on filesystem and OS page cache, memory mapped file is a natural bridge between volatile memory and persistent disk, hence it will have better throughput, memory mapped file also has following unique features:
+
+<ul>
+<li>Message appended by producer thread will be immediately visible to consumer threads, even producer thread hasn't flushed the message explicitly, this makes realtime consuming possible.</li>
+<li>OS will ensure the message persistence even the process crashes and there is no explicit flush before the crash.</li>
+<li>In Java implementation, memory mapped file dose not use heap memory directly, so the GC impact is limited.</li>
+</ul>
+</li>
+<li>Luxun leveraged <a href="http://thrift.apache.org/">Thrift RPC</a> as communication layer, while Kafka built its custom NIO communication layer and messaging protocol, custom NIO layer may have better performance, while Thrift makes generating communication infrastructure and cross-language clients(producer or consumer) fairy simple, this is a typical maintainability over performance design decision.</li>
+<li>Luxun message consuming is index(array like) based, while Kafka message consuming is offset based, we believe index access mode can simplify design and can separate error domain better than offset.</li>
+<li>Luxun uses simple and random distribution mechanism for scalability, similar to Kestrel, each server handles a set of reliable, ordered message queues. When you put a cluster of these server together, with no cross communication, and pick a server at random whenever you do a <code>produce</code> or <code>consume</code>, you end up with a reliable, loosely ordered message queue(in many situations, loose ordering is sufficient). On the other hand, Kafka relies on Zookeeper for distributed coordination, We believe Zookeeper is still too heavy-weight for small to medium sized companies(the main targets of Luxun), and the learning curve is still steep for average developers.</li>
+<li>Luxun only supports server level partitioning - partition a topic on different servers, while Kafka supports partitioning within a topic. Our performance test show partitioning within a topic has no performance gain, at the same time, it makes design complex.</li>
+</ol>
+</blockquote>
+
+<p>The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.</p>
 
 <h2>Contributions</h2>
 

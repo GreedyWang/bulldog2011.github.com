@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-27T19:21:47+08:00</updated>
+  <updated>2013-03-28T15:44:23+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,131 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Pico Tutorial - a StockQuote sample]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/"/>
+    <updated>2013-03-27T20:07:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample</id>
+    <content type="html"><![CDATA[<p>This is the first post of Pico Tutorial serices, in this post, I will show you how easy to use <a href="https://github.com/bulldog2011/pico">Pico framework</a> to carry out WSDL driven application development on iOS platform. If this is the first time you get to know Pico, then after this tutorial, you will bascially understand what Pico can do for you, and the basic development flow when using Pico to carry out WSDL driven development on iOS. If you want to see the big picture, plese read <a href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">this post</a> first.</p>
+
+<p>WSDL driven development using Pico framework has following steps:</p>
+
+<blockquote><ol>
+<li>Genearte Objective-C proxy from WSDL</li>
+<li>Create new iOS project, add Pico runtime and generated proxy into your project</li>
+<li>Implement appliction logic and UI, call proxy to invoke web service as needed.</li>
+</ol>
+</blockquote>
+
+<p>Let me cut to the point and show you each step using a simple while popular <a href="http://www.webservicex.net/ws/WSDetails.aspx?WSID=9&amp;CATID=2">StockQueue</a> web serivce from WebserviceX.NET.</p>
+
+<!--more-->
+
+
+<h2>Step 1 - Generate Objective-c Proxy from WSDL</h2>
+
+<p>Pico has an accompanying code generator which can generate Objective-C proxy from wsdl, the tool is called <a href="https://github.com/bulldog2011/mwsc">mwsc</a>, please download the latest zip package <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/mwsc/0.5.0/mwsc-0.5.0-bin.zip">here</a> then extract it into you local folder.
+<strong><em>Note</em></strong> : mwsc code generator needs Java 1.6 or above to run, so please ensure Java is installed on your MacOS, if not, please install it first.</p>
+
+<p>The command line script <code>mwsc</code> is in the bin folder, please add executable right to it before you run it, you may optionally created a folder as your code generation target(for example, <code>generated</code>), otherwise, mwsc will generate code in current folder, now lets generte code from wsdl by running flowing command in the terminal:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin/mwsc -pico -d generated http://www.webservicex.net/stockquote.asmx?WSDL</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If everything works fine, you will see the code generator output <code>generating code…</code> and <code>done</code> in the end, the target proxy will be generated in the <code>generated</code> folder, the code generator may throw a few warnings, asking us to add extension options for some ports, since we won&#8217;t use those ports, so just ignore them right now, it&#8217;s all right as long as the SOAP port is generated correctly.</p>
+
+<h2>Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project</h2>
+
+<p>For this demo, we just create a simple iOS single view application, please don&#8217;t choose ARC when you create the project, since Pico does not support ARC yet.</p>
+
+<p>Now we need to import Pico library into the project first, there are two options, you can either include all Pico source into your project, or add Pico as static library into your project, in this tutorial, I just show you the second option, if you want to include the whole Pico source, please see Pico github site for instructions.</p>
+
+<p>Suppose you have downloaded Pico source project from github site, then:</p>
+
+<blockquote><ol>
+<li>Drag the Pico xcodeproj into your project,</li>
+<li>In the Build Phases of the target,  add <code>libPico.a</code> and <code>libxml2.dylib</code> to &#8220;Link Binary With Libraries&#8221; section.</li>
+<li>In the Build Setting of the target, add [path to Pico source] to your &#8220;User Header Search Paths&#8221;, choose &#8220;recursive&#8221; seach path.</li>
+</ol>
+</blockquote>
+
+<p>Now create a group in your project called <code>Proxy</code>(or other meaningful name you choose), then drap the step 1 generated proxy into this group, choose &#8220;Copy items to destination group&#8217;s folder&#8221; and &#8220;add to targets&#8221; when prompted.</p>
+
+<p>Now since both Pico library and the StockQuote web service proxy have been added in the project, you can try to build the project, if no build error, job well done, you can continue to the next step, otherwise, please do some toubleshooting, or check the source of this tutourial(in the Examples folder of Pico).</p>
+
+<p>Below is a screenshot after finish this step:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/pico/tutorial01/screen_shot1.png" width="600" height="800"></p>
+
+<p>Note, in the demo project, I also added a third part library called Toast which can generate toast style message, this is just for the convenience of demo, it is not necessary to do so in your real project.</p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>Pico use <a href="https://github.com/AFNetworking/AFNetworking">AFNetworking</a> Http client for low level communication, as an AFNetworking best practice, it&#8217;s not necessary for you to initiate a new client everytime you call service, a singleton client instance is enough for the whole application, so before writing any applicaiton logic, lets create a a shared StockQuote service client for later use, see code below:</p>
+
+<figure class='code'><figcaption><span>StockQuoteServiceClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/StockQuoteServiceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#import &quot;StockQuoteSoap_SOAPClient.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">StockQuoteServiceClient</span> : <span class="nc">StockQuoteSoap_SOAPClient</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">+</span> <span class="p">(</span><span class="n">StockQuoteServiceClient</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedClient</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>StockQuoteServiceClient.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/StockQuoteServiceClient.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#import &quot;StockQuoteServiceClient.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">stockQuoteServiceURLString</span> <span class="o">=</span> <span class="s">@&quot;http://www.webservicex.net/stockquote.asmx&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@implementation</span> <span class="nc">StockQuoteServiceClient</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">+</span> <span class="p">(</span><span class="n">StockQuoteServiceClient</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedClient</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">static</span> <span class="n">StockQuoteServiceClient</span> <span class="o">*</span><span class="n">_sharedClient</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>        <span class="n">_sharedClient</span> <span class="o">=</span> <span class="p">[[</span><span class="n">StockQuoteServiceClient</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithEndpointURL:</span><span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">stockQuoteServiceURLString</span><span class="p">]];</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">_sharedClient</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The code is quite self-explanatory, the <code>shareClient</code> static factory method just returns a StockQuoteServiceClient(SOAP proxy generated from wsdl, you can find it in the <code>Proxy</code> group) with specified target service endpoint address, and there will be only one client instance within the applicaiton.</p>
+
+<p>//to be continue</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[the architecture and design of a publish subscribe messaging system tailored for big data collecting and analytics]]></title>
@@ -100,7 +225,33 @@ At the producing side, there are different kinds of producers, such as:</p>
 
 <h1>The Core Principle</h1>
 
+<p>The core principle of a fast while persistent queue system like Luxun is from a key observation that <strong><em><a href="http://queue.acm.org/detail.cfm?id=1563874">sequential disk read can be comparable to or even faster than random memory read</a></em></strong>, see a comparison figure below:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/luxun/core_principle.png" width="600" height="800"></p>
+
+<p>So if we can effectively organize the disk access pattern, then we can get fast performance comparable to memory which still have persistence. Queue is a rear append(or append only) and front read data structure, a nature fit to be implemented in sequential disk access mode.</p>
+
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
+
+<p>Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:</p>
+
+<blockquote><ol>
+<li>Luxun is based on <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped file</a>, while Kafka is based on filesystem and OS page cache, memory mapped file is a natural bridge between volatile memory and persistent disk, hence it will have better throughput, memory mapped file also has following unique features:
+
+<ul>
+<li>Message appended by producer thread will be immediately visible to consumer threads, even producer thread hasn&#8217;t flushed the message explicitly, this makes realtime consuming possible.</li>
+<li>OS will ensure the message persistence even the process crashes and there is no explicit flush before the crash.</li>
+<li>In Java implementation, memory mapped file dose not use heap memory directly, so the GC impact is limited.</li>
+</ul>
+</li>
+<li>Luxun leveraged <a href="http://thrift.apache.org/">Thrift RPC</a> as communication layer, while Kafka built its custom NIO communication layer and messaging protocol, custom NIO layer may have better performance, while Thrift makes generating communication infrastructure and cross-language clients(producer or consumer) fairy simple, this is a typical maintainability over performance design decision.</li>
+<li>Luxun message consuming is index(array like) based, while Kafka message consuming is offset based, we believe index access mode can simplify design and can separate error domain better than offset.</li>
+<li>Luxun uses simple and random distribution mechanism for scalability, similar to Kestrel, each server handles a set of reliable, ordered message queues. When you put a cluster of these server together, with no cross communication, and pick a server at random whenever you do a <code>produce</code> or <code>consume</code>, you end up with a reliable, loosely ordered message queue(in many situations, loose ordering is sufficient). On the other hand, Kafka relies on Zookeeper for distributed coordination, We believe Zookeeper is still too heavy-weight for small to medium sized companies(the main targets of Luxun), and the learning curve is still steep for average developers.</li>
+<li>Luxun only supports server level partitioning - partition a topic on different servers, while Kafka supports partitioning within a topic. Our performance test show partitioning within a topic has no performance gain, at the same time, it makes design complex.</li>
+</ol>
+</blockquote>
+
+<p>The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.</p>
 
 <h2>Contributions</h2>
 

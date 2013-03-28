@@ -8,13 +8,13 @@ keywords: wsdl, soap, ios, iphone
 description: show the big picture of wsdl driven development on iOS platform
 ---
 
-WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with OO object directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost. 
+WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost. 
 
 <!--more-->
 
-Although nowadays there a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it's very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are [Amazon Product Advertising Web Service](https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html), eBay [Finding](https://www.x.com/developers/ebay/products/finding-api), [Shopping](https://www.x.com/developers/ebay/products/shopping-api) and [Trading](https://www.x.com/developers/ebay/products/trading-api) Web Services, etc.
+Although nowadays there is a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it's very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are [Amazon Product Advertising Web Service](https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html), eBay [Finding](https://www.x.com/developers/ebay/products/finding-api), [Shopping](https://www.x.com/developers/ebay/products/shopping-api) and [Trading](https://www.x.com/developers/ebay/products/trading-api) Web Services, etc.
 
-Can WSDL driven development be done on iOS platform? Yes, now with [Pico Web Service Client Framework](https://github.com/bulldog2011/pico) and [WSDL compiler for iOS](https://github.com/bulldog2011/mwsc), you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.
+Can WSDL driven development be put into practice on iOS platform? Yes, now with [Pico Web Service Client Framework](https://github.com/bulldog2011/pico) and [WSDL compiler for iOS](https://github.com/bulldog2011/mwsc), you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.
 
 Let's see the big picture:
 
@@ -57,7 +57,7 @@ The mwsc code generator not only generates simple bean classes from WSDL/Schema,
 
 With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.
 
-In later posts, I will show how to carry out WSDL driven iOS app development in a series of tutorials, just stay tuned.
+In later posts, I will show how to put WSDL driven iOS app development into practice in a series of tutorials, just stay tuned.
  
 
 

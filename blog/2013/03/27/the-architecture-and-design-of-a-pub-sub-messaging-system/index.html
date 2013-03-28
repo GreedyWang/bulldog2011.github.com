@@ -211,6 +211,8 @@ At the producing side, there are different kinds of producers, such as:</p>
 </ol>
 
 
+<p><img class="center" src="/images/luxun/queue_semantics.png" width="400" height="600"></p>
+
 <p>By the way, consume once queue is just a special case of fanout queue, so it&#8217;s not necessary for luxun to provide a separate consume one queue, as long as fanout queue has been provided.</p>
 
 <p>In summary, Luxun queue is an append only queue, means at producing side, item can only be appended into the queue, while at the consuming side, flexible queue consuming semantics are provided by array like index access model and state maintained on server side.</p>

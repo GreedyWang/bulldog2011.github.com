@@ -4,7 +4,7 @@
   <title><![CDATA[Category: luxun | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/luxun/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-28T19:42:53+08:00</updated>
+  <updated>2013-03-28T19:45:09+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -123,6 +123,8 @@ At the producing side, there are different kinds of producers, such as:</p>
 <li>For a fanout queue, we also just need one rear pointer pointing to the queue rear index, aka the next to be appended index, but on the consuming side, we let the queue maintain one queue front index for every fanout group, in other word, the fanout semantics is implemented in Luxun by letting Luxun server to maintain consuming state for every fanout group. In such case, multi-threads can concurrently and independently consume the queue, and every item will be consumed multiple times by different consumers as long as they belong to different consumer group(or fanout group). see figure below.</li>
 </ol>
 
+
+<p><img class="center" src="/images/luxun/queue_semantics.png" width="400" height="600"></p>
 
 <p>By the way, consume once queue is just a special case of fanout queue, so it's not necessary for luxun to provide a separate consume one queue, as long as fanout queue has been provided.</p>
 

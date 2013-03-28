@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-28T19:45:09+08:00</updated>
+  <updated>2013-03-28T19:46:24+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -243,11 +243,11 @@ At the producing side, there are different kinds of producers, such as:</p>
 
 <p>With simple array like abstraction, we can implement queue semantics with ease:</p>
 
-<ol>
+<blockquote><ol>
 <li>For a typical consume once queue, we just need one rear pointer pointing to the queue rear index, aka the next to be appended index, another pointer pointing to the queue front index, aka the next to be consumed index. When an item is produced into the queue, we add the data in the queue then advance the rear index, when an item is consumed from the queue, we fetch the data in the queue then advance the front index. In this case, multi-threads can concurrently produce into the queue, the queue internally will sync the append operation, and multi-threads can concurrently consume(by contention) the queue, and every item will only be consumed by one thread once. see figure below.</li>
 <li>For a fanout queue, we also just need one rear pointer pointing to the queue rear index, aka the next to be appended index, but on the consuming side, we let the queue maintain one queue front index for every fanout group, in other word, the fanout semantics is implemented in Luxun by letting Luxun server to maintain consuming state for every fanout group. In such case, multi-threads can concurrently and independently consume the queue, and every item will be consumed multiple times by different consumers as long as they belong to different consumer group(or fanout group). see figure below.</li>
 </ol>
-
+</blockquote>
 
 <p><img class="center" src="http://bulldog2011.github.com/images/luxun/queue_semantics.png" width="400" height="600"></p>
 

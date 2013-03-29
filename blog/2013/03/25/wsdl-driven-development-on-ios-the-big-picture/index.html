@@ -105,14 +105,14 @@
   </header>
 
 
-<div class="entry-content"><p>WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with OO object directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost.</p>
+<div class="entry-content"><p>WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost.</p>
 
 <!--more-->
 
 
-<p>Although nowadays there a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it&#8217;s very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
+<p>Although nowadays there is a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it&#8217;s very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
 
-<p>Can WSDL driven development be done on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.</p>
+<p>Can WSDL driven development be put into practice on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.</p>
 
 <p>Let&#8217;s see the big picture:</p>
 
@@ -164,7 +164,7 @@
 
 <p>With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.</p>
 
-<p>In later posts, I will show how to carry out WSDL driven iOS app development in a series of tutorials, just stay tuned.</p>
+<p>In later posts, I will show how to put WSDL driven iOS app development into practice in a series of tutorials, just stay tuned.</p>
 </div>
 
 
@@ -238,13 +238,21 @@
 <li class='category'><a href='/blog/categories/luxun/'>luxun (1)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
 <li class='category'><a href='/blog/categories/nano/'>nano (9)</a></li>
-<li class='category'><a href='/blog/categories/pico/'>pico (2)</a></li>
+<li class='category'><a href='/blog/categories/pico/'>pico (4)</a></li>
 
   </ul>
 </section>
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/">Pico Tutoiral 3 - Hello eBay Finding</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/">Pico Tutorial 2 - a Currency Converter Sample</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">Pico Tutorial - a StockQuote sample</a>
@@ -256,14 +264,6 @@
     
       <li class="post">
         <a href="/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">wsdl driven development on iOS - the big picture</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/03/25/fanout-queue-tutorial/">fanout queue tutorial</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/">Schema driven web service client development on Android, Part 2: eBay Search App</a>
       </li>
     
   </ul>

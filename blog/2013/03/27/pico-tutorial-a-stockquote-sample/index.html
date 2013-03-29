@@ -105,7 +105,9 @@
   </header>
 
 
-<div class="entry-content"><p>This is the first post of Pico Tutorial serices, in this post, I will show you how easy to use <a href="https://github.com/bulldog2011/pico">Pico framework</a> to carry out WSDL driven application development on iOS platform. If this is the first time you get to know Pico, then after this tutorial, you will bascially understand what Pico can do for you, and the basic development flow when using Pico to carry out WSDL driven development on iOS. If you want to see the big picture, plese read <a href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">this post</a> first.</p>
+<div class="entry-content"><p>This is the first post of Pico Tutorial series, in this post, I will show you how easy to use <a href="https://github.com/bulldog2011/pico">Pico framework</a> to put WSDL driven application development on iOS platform into practice. If this is the first time you get to know Pico, then after this tutorial, you will bascially understand what Pico can do for you, and the basic development process when using Pico to run WSDL driven development on iOS. If you want to see the big picture, plese read <a href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">this post</a> first.</p>
+
+<p>The whole source of this demo is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/StockQuote">here</a>.</p>
 
 <p>WSDL driven development using Pico framework has following steps:</p>
 
@@ -121,43 +123,43 @@
 <!--more-->
 
 
-<h2>Step 1 - Generate Objective-c Proxy from WSDL</h2>
+<h2>Step 1 - Generate Objective-C Proxy from WSDL</h2>
 
-<p>Pico has an accompanying code generator which can generate Objective-C proxy from wsdl, the tool is called <a href="https://github.com/bulldog2011/mwsc">mwsc</a>, please download the latest zip package <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/mwsc/0.5.0/mwsc-0.5.0-bin.zip">here</a> then extract it into you local folder.
+<p>Pico has an accompanying code generator which can generate Objective-C proxy from wsdl, the tool is called <a href="https://github.com/bulldog2011/mwsc">mwsc</a>, please download the latest zip package <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/mwsc/0.5.0/mwsc-0.5.0-bin.zip">here</a> then extract it into your local folder.
 <strong><em>Note</em></strong> : mwsc code generator needs Java 1.6 or above to run, so please ensure Java is installed on your MacOS, if not, please install it first.</p>
 
-<p>The command line script <code>mwsc</code> is in the bin folder, please add executable right to it before you run it, you may optionally created a folder as your code generation target(for example, <code>generated</code>), otherwise, mwsc will generate code in current folder, now lets generte code from wsdl by running flowing command in the terminal:</p>
+<p>The command line script <code>mwsc</code> is in the bin folder, please add executable right to it before you run it, you may optionally create a folder as your code generation target(for example, <code>generated</code>), otherwise, mwsc will generate code in current folder, now lets generte code from wsdl by running flowing command in the terminal:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>bin/mwsc -pico -d generated http://www.webservicex.net/stockquote.asmx?WSDL</span></code></pre></td></tr></table></div></figure>
 
 
-<p>If everything works fine, you will see the code generator output <code>generating code…</code> and <code>done</code> in the end, the target proxy will be generated in the <code>generated</code> folder, the code generator may throw a few warnings, asking us to add extension options for some ports, since we won&#8217;t use those ports, so just ignore them right now, it&#8217;s all right as long as the SOAP port is generated correctly.</p>
+<p>If everything works fine, you will see the code generator output <code>generating code…</code> and <code>done</code> at the end, the target proxy will be generated in the <code>generated</code> folder, the code generator may throw a few warnings, asking us to add extension options for some ports, since we won&#8217;t use those ports, just ignore them right now, it&#8217;s all right as long as the SOAP port is generated correctly.</p>
 
 <h2>Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project</h2>
 
 <p>For this demo, we just create a simple iOS single view application, please don&#8217;t choose ARC when you create the project, since Pico does not support ARC yet.</p>
 
-<p>Now we need to import Pico library into the project first, there are two options, you can either include all Pico source into your project, or add Pico as static library into your project, in this tutorial, I just show you the second option, if you want to include the whole Pico source, please see Pico github site for instructions.</p>
+<p>Now we need to import Pico library into the project first, there are two options, you can either include all Pico source into your project, or add Pico as a static library into your project, in this tutorial, I just show you the second option, if you want to include the whole Pico source, please see Pico github site for instructions.</p>
 
 <p>Suppose you have downloaded Pico source project from github site, then:</p>
 
 <blockquote><ol>
 <li>Drag the Pico xcodeproj into your project,</li>
 <li>In the Build Phases of the target,  add <code>libPico.a</code> and <code>libxml2.dylib</code> to &#8220;Link Binary With Libraries&#8221; section.</li>
-<li>In the Build Setting of the target, add [path to Pico source] to your &#8220;User Header Search Paths&#8221;, choose &#8220;recursive&#8221; seach path.</li>
+<li>In the Build Setting of the target, add [your path to Pico source] to &#8220;User Header Search Paths&#8221; setting, choose &#8220;recursive&#8221; seach path.</li>
 </ol>
 </blockquote>
 
-<p>Now create a group in your project called <code>Proxy</code>(or other meaningful name you choose), then drap the step 1 generated proxy into this group, choose &#8220;Copy items to destination group&#8217;s folder&#8221; and &#8220;add to targets&#8221; when prompted.</p>
+<p>Now create a group in your project called <code>Proxy</code>(or other meaningful name you choose), then drag the proxy generated in step 1 into this group, choose &#8220;Copy items to destination group&#8217;s folder&#8221; and &#8220;add to targets&#8221; when prompted.</p>
 
 <p>Now since both Pico library and the StockQuote web service proxy have been added in the project, you can try to build the project, if no build error, job well done, you can continue to the next step, otherwise, please do some toubleshooting, or check the source of this tutourial(in the Examples folder of Pico).</p>
 
-<p>Below is a screenshot after finish this step:</p>
+<p>Below is an Xcode screenshot after finish this step(please save the screenshot to local then view if the web version is not large enough to view clearly):</p>
 
 <p><img class="center" src="/images/pico/tutorial01/screen_shot1.png" width="600" height="800"></p>
 
-<p>Note, in the demo project, I also added a third part library called Toast which can generate toast style message, this is just for the convenience of demo, it is not necessary to do so in your real project.</p>
+<p>Note, in the demo project, I also added a third party library called Toast which can produce toast style message, this is just for the convenience of demo, it is not necessary for you to do so in your real project.</p>
 
 <h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
 
@@ -219,9 +221,247 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The code is quite self-explanatory, the <code>shareClient</code> static factory method just returns a StockQuoteServiceClient(SOAP proxy generated from wsdl, you can find it in the <code>Proxy</code> group) with specified target service endpoint address, and there will be only one client instance within the applicaiton.</p>
+<p>The code is quite self-explanatory, the <code>shareClient</code> static factory method just returns a StockQuoteServiceClient(which extends StockQuoteSoap_SOAPClient generated from wsdl, you can find StockQuoteSoap_SOAPClient in the <code>Proxy</code> group) instance with specified target service endpoint address, and there will be only one such client instance within the applicaiton.</p>
 
-<p>//to be continue</p>
+<p>Now time to the UI part, for this simple Demo, we only need an UITextField for company symbol input, an UIButton to triget getQuote service call and an UITextView for result dislay, quite simple, see definition in header file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/ViewController.h">ViewController.h</a> and instantiation in implementation file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/ViewController.m">ViewController.m</a>, in method <code>viewDidLoad</code>.</p>
+
+<p>Now let&#8217;s implement application logic by calling the getQuote service, with the help of the StockQuote service proxy generated from WSDL, web service call through Pico is extremely simple, let&#8217;s review and understand the generated getQuote proxy interface first before writing calling logic:</p>
+
+<figure class='code'><figcaption><span>StockQuoteSoap_SOAPClient.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/Proxy/client/StockQuoteSoap_SOAPClient.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">// Generated by wsdl compiler for ios/objective-c</span>
+</span><span class='line'><span class="c1">// DO NOT CHANGE!</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+</span><span class='line'><span class="cp">#import &quot;PicoSOAPClient.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;GetQuoteResponse.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;GetQuote.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> This class is the SOAP client to the StockQuoteSoap Web Service.</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">StockQuoteSoap_SOAPClient</span> : <span class="nc">PicoSOAPClient</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> Get Stock quote for a company Symbol</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">getQuote:</span><span class="p">(</span><span class="n">GetQuote</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">GetQuoteResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&lt;</span><span class="n">PicoBindable</span><span class="o">&gt;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is just a plain old interface generated from wsdl, unlike normal interface, this interface is asynchronous, when you call <code>getQuote</code> service, you need to provide a request of type <code>GetQuote</code> as first parameter, also you need to provide(or register) one <code>success</code> and one <code>failure</code> callbacks using Objective-C block, success callback will be called if the service invocation succeed, and you will get a response object of type <code>GetQuoteResponse</code>, usually, in success callback, you implement response handling logic and update UI according to the reasponse; failure callback will be called if the service invocation fail, or there is any HTTP or Pico parsing error, you may either get a <code>NSError</code>(indicationg HTTP or Pico parsing error), or get a <code>SOAPFault</code>(indicating service call fail), usually, you implement error handling logic in failure callback and update UI accordingly.</p>
+
+<p>By the way, although not necessary, I suggest you to review the proxy code generated by mwsc, this will help you better understand the inner working of Pico.</p>
+
+<p>Let&#8217;s see the service call implementation of the demo, it&#8217;s in the <code>getQuotePressed</code> method in the ViewController implementation, <code>getQuotePressed</code> will be triggered when you click the GetQuote button on the UI:</p>
+
+<figure class='code'><figcaption><span>ViewController.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/ViewController.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">getQuotePressed:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Hide the keyboard.</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">_symbolText</span> <span class="n">resignFirstResponder</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">_symbolText</span><span class="p">.</span><span class="n">text</span><span class="p">.</span><span class="n">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// start progress activity</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">makeToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// Get shared service client</span>
+</span><span class='line'>        <span class="n">StockQuoteServiceClient</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">[</span><span class="n">StockQuoteServiceClient</span> <span class="n">sharedClient</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">client</span><span class="p">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span> <span class="c1">// enable request/response message logging</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// Build request object</span>
+</span><span class='line'>        <span class="n">GetQuote</span> <span class="o">*</span><span class="n">request</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">GetQuote</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">request</span><span class="p">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">_symbolText</span><span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// make API call and register callbacks</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">client</span> <span class="nl">getQuote:</span><span class="n">request</span> <span class="nl">success:</span><span class="o">^</span><span class="p">(</span><span class="n">GetQuoteResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// stop progress activity</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// show result</span>
+</span><span class='line'>            <span class="n">_resultText</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">responseObject</span><span class="p">.</span><span class="n">getQuoteResult</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span> <span class="nl">failure:</span><span class="o">^</span><span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&lt;</span><span class="n">PicoBindable</span><span class="o">&gt;</span> <span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// stop progress activity</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// http or parsing error</span>
+</span><span class='line'>                <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="p">[</span><span class="n">error</span> <span class="n">localizedDescription</span><span class="p">]</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Error&quot;</span><span class="p">];</span>
+</span><span class='line'>            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                <span class="n">SOAP11Fault</span> <span class="o">*</span><span class="n">soap11Fault</span> <span class="o">=</span> <span class="p">(</span><span class="n">SOAP11Fault</span> <span class="o">*</span><span class="p">)</span><span class="n">soapFault</span><span class="p">;</span>
+</span><span class='line'>                <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="n">soap11Fault</span><span class="p">.</span><span class="n">faultstring</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;SOAP Fault&quot;</span><span class="p">];</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The call logic can&#8217;t simpler, I&#8217;ve added comments in the service call code for you to better understand the call flow. Also, I&#8217;ve enabled the debug mode of the proxy, so you can see the detailed request/response messages when you run the demo, this feature is extremely useful for troubleshooting.</p>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>Now it&#8217;s time to run the demo, let&#8217;s try it in the simulator(you may use a real device of cause ), I just want to see the stock quote of Apple(company symbol AAPL), belew is a screenshot of the simulator.</p>
+
+<p><img class="center" src="/images/pico/tutorial01/screen_shot2.png" width="300" height="500"></p>
+
+<p>The StockQuote web service just return stock quote information in XML format, so you see the result in xml.</p>
+
+<p>You can also find the debug output in the XCode, like below:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>2013-03-28 11:33:35.793 StockQuoteDemo[761:c07] Sending request to : http://www.webservicex.net/stockquote.asmx
+</span><span class='line'>2013-03-28 11:33:35.794 StockQuoteDemo[761:c07] Request message:
+</span><span class='line'>2013-03-28 11:33:35.794 StockQuoteDemo[761:c07] &lt;?xml version="1.0" encoding="UTF-8" ?>
+</span><span class='line'>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.webserviceX.NET/">
+</span><span class='line'>  &lt;soapenv:Body>
+</span><span class='line'>      &lt;GetQuote>
+</span><span class='line'>          &lt;symbol>AAPL&lt;/symbol>
+</span><span class='line'>      &lt;/GetQuote>
+</span><span class='line'>  &lt;/soapenv:Body>
+</span><span class='line'>&lt;/soapenv:Envelope>
+</span><span class='line'>2013-03-28 11:33:35.795 StockQuoteDemo[761:c07] Request HTTP Headers : 
+</span><span class='line'>{
+</span><span class='line'>    Accept = "text/xml";
+</span><span class='line'>    "Accept-Language" = "en, fr, de, ja, nl, it, es, pt, pt-PT, da, fi, nb, sv, ko, zh-Hans, zh-Hant, ru, pl, tr, uk, ar, hr, cs, el, he, ro, sk, th, id, ms, en-GB, ca, hu, vi, en-us;q=0.8";
+</span><span class='line'>    "Content-Type" = "text/xml";
+</span><span class='line'>    SOAPAction = "http://www.webserviceX.NET/GetQuote";
+</span><span class='line'>    "User-Agent" = "StockQuoteDemo/1.0 (iPhone Simulator; iOS 6.0; Scale/1.00)";
+</span><span class='line'>}
+</span><span class='line'>2013-03-28 11:33:37.367 StockQuoteDemo[761:4a03] Response HTTP status : 
+</span><span class='line'>200
+</span><span class='line'>2013-03-28 11:33:37.367 StockQuoteDemo[761:4a03] Response HTTP headers : 
+</span><span class='line'>{
+</span><span class='line'>    "Cache-Control" = "private, max-age=0";
+</span><span class='line'>    "Content-Encoding" = gzip;
+</span><span class='line'>    "Content-Length" = 634;
+</span><span class='line'>    "Content-Type" = "text/xml; charset=utf-8";
+</span><span class='line'>    Date = "Thu, 28 Mar 2013 03:33:54 GMT";
+</span><span class='line'>    Server = "Microsoft-IIS/7.0";
+</span><span class='line'>    Vary = "Accept-Encoding";
+</span><span class='line'>    "X-AspNet-Version" = "4.0.30319";
+</span><span class='line'>    "X-Powered-By" = "ASP.NET";
+</span><span class='line'>}
+</span><span class='line'>2013-03-28 11:33:37.367 StockQuoteDemo[761:1c03] Response message : 
+</span><span class='line'>2013-03-28 11:33:37.367 StockQuoteDemo[761:1c03] &lt;?xml version="1.0" encoding="utf-8"?>&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">&lt;soap:Body>&lt;GetQuoteResponse xmlns="http://www.webserviceX.NET/">&lt;GetQuoteResult>&lt;StockQuotes&gt;&lt;Stock&gt;&lt;Symbol&gt;AAPL&lt;/Symbol&gt;&lt;Last&gt;452.08&lt;/Last&gt;&lt;Date&gt;3/27/2013&lt;/Date&gt;&lt;Time&gt;4:00pm&lt;/Time&gt;&lt;Change&gt;-9.056&lt;/Change&gt;&lt;Open&gt;456.80&lt;/Open&gt;&lt;High&gt;456.80&lt;/High&gt;&lt;Low&gt;450.7301&lt;/Low&gt;&lt;Volume&gt;11836042&lt;/Volume&gt;&lt;MktCap&gt;424.5B&lt;/MktCap&gt;&lt;PreviousClose&gt;461.136&lt;/PreviousClose&gt;&lt;PercentageChange&gt;-1.96%&lt;/PercentageChange&gt;&lt;AnnRange&gt;419.00 - 705.07&lt;/AnnRange&gt;&lt;Earns&gt;44.107&lt;/Earns&gt;&lt;P-E&gt;10.45&lt;/P-E&gt;&lt;Name&gt;Apple Inc.&lt;/Name&gt;&lt;/Stock&gt;&lt;/StockQuotes&gt;&lt;/GetQuoteResult>&lt;/GetQuoteResponse>&lt;/soap:Body>&lt;/soap:Envelope></span></code></pre></td></tr></table></div></figure>
+
+
+<p>If you have any problem to run the demo, please check the debug output first.</p>
+
+<p>Now you see the Power of pico framework, you don&#8217;t get troubled with error prone and tedious SOAP/XML parsing or http handling, the generic Pico framework will do these stuff for you, you only need to use a plain old asynchronous interface for service invocation, this can not only accelerate application development, but reduce the long term maintenance cost.</p>
+
+<p>StockQuote is just a bare minimum demo, there are other more featured demos(like Amazon, eBay search demo) in the Examples folder of Pico source project, please try them to better understand how Pico works, then you can begin to develop your own service based applications, using wsdl driven methodology supported by Pico.</p>
+
+<p>See your next great application!</p>
 </div>
 
 
@@ -270,6 +510,8 @@
         <a class="basic-alignment left articlenav" href="/blog/2013/03/27/the-architecture-and-design-of-a-pub-sub-messaging-system/" title="Previous Post: the architecture and design of a publish subscribe messaging system tailored for big data collecting and analytics">&laquo; the architecture and design of a publish subscribe messaging system tailored for big data collecting and analytics</a>
       
       
+        <a class="basic-alignment right articlenav" href="/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/" title="Next Post: Pico Tutorial 2 - a Currency Converter Sample">Pico Tutorial 2 - a Currency Converter Sample &raquo;</a>
+      
     </p>
   </footer>
 </article>
@@ -293,13 +535,21 @@
 <li class='category'><a href='/blog/categories/luxun/'>luxun (1)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
 <li class='category'><a href='/blog/categories/nano/'>nano (9)</a></li>
-<li class='category'><a href='/blog/categories/pico/'>pico (2)</a></li>
+<li class='category'><a href='/blog/categories/pico/'>pico (4)</a></li>
 
   </ul>
 </section>
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/">Pico Tutoiral 3 - Hello eBay Finding</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/">Pico Tutorial 2 - a Currency Converter Sample</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">Pico Tutorial - a StockQuote sample</a>
@@ -311,14 +561,6 @@
     
       <li class="post">
         <a href="/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">wsdl driven development on iOS - the big picture</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/03/25/fanout-queue-tutorial/">fanout queue tutorial</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/">Schema driven web service client development on Android, Part 2: eBay Search App</a>
       </li>
     
   </ul>

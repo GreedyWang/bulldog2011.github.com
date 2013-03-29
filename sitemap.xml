@@ -78,19 +78,31 @@
         <loc>
             http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/
         </loc>
-        <lastmod>2013-03-26T10:57:39+08:00</lastmod>
+        <lastmod>2013-03-29T19:52:24+08:00</lastmod>
     </url>
     <url>
         <loc>
             http://bulldog2011.github.com/blog/2013/03/27/the-architecture-and-design-of-a-pub-sub-messaging-system/
         </loc>
-        <lastmod>2013-03-28T19:46:19+08:00</lastmod>
+        <lastmod>2013-03-29T19:43:57+08:00</lastmod>
     </url>
     <url>
         <loc>
             http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/
         </loc>
-        <lastmod>2013-03-28T13:07:22+08:00</lastmod>
+        <lastmod>2013-03-29T19:52:24+08:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://bulldog2011.github.com/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/
+        </loc>
+        <lastmod>2013-03-29T19:52:24+08:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/
+        </loc>
+        <lastmod>2013-03-29T19:52:24+08:00</lastmod>
     </url>
     <url>
         <loc>http://bulldog2011.github.com/about/</loc>
@@ -98,11 +110,11 @@
     </url>
     <url>
         <loc>http://bulldog2011.github.com/blog/archives/</loc>
-        <lastmod>2013-03-28T19:46:19+08:00</lastmod>
+        <lastmod>2013-03-29T19:52:24+08:00</lastmod>
     </url>
     <url>
         <loc>http://bulldog2011.github.com/</loc>
-        <lastmod>2013-03-28T19:46:19+08:00</lastmod>
+        <lastmod>2013-03-29T19:52:24+08:00</lastmod>
     </url>
     <url>
         <loc>http://bulldog2011.github.com/lab/</loc>

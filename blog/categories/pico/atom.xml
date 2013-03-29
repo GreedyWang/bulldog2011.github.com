@@ -4,7 +4,7 @@
   <title><![CDATA[Category: pico | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/pico/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-28T19:46:24+08:00</updated>
+  <updated>2013-03-29T19:53:16+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -14,11 +14,1321 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Pico Tutoiral 3 - Hello eBay Finding]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/"/>
+    <updated>2013-03-29T10:25:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding</id>
+    <content type="html"><![CDATA[<p>This is the third tutorial of Pico tutorial series, in <a href="http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">first</a> and <a href="">second</a> tutorials, I showed you how to use Pico with simple web serivces like <a href="StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=9">StockQuote</a> and <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=10">CurrencyConverter</a>. These services are quite simple, only support one or two calls, and the request/response structures are fairly simple, supporting these simple services only can't show the full power of Pico. So in this and later tutorials, I will show you how to use Pico with industrial grade services, let's start with <a href="http://developer.ebay.com/DevZone/finding/CallRef/index.html">eBay Finding service</a>, please reivew its official site if you are not familar with this service, bastially, it let you search items on eBay. eBay Finding service supports SOAP12, so I will also show you how to configure Pico to support SOAP12 protocol, also I will show how to set service required HTTP headers on Pico client.</p>
+
+<p>The source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/eBayFinding">here</a></p>
+
+<!--more-->
+
+
+<h2>Step 0 - Prerequisite</h2>
+
+<p>I suppose you have already read Pico tutorial 1 and 2, and basically you should know:</p>
+
+<blockquote><ul>
+<li>The wsdl driven development process supported by Pico.</li>
+<li>How to reference Pico as a static library in your project.</li>
+<li>Or How to reference Pico Source directly in your project.</li>
+</ul>
+</blockquote>
+
+<h2>Step 1 - Generate Objective-C Proxy from WSDL</h2>
+
+<p>Download <a href="https://github.com/bulldog2011/mwsc">mwsc</a> and run following command in terminal to generate the proxy:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>bin/mwsc -pico -d generated -prefix Finding_ -ebaysoa http://developer.ebay.com/webservices/Finding/latest/FindingService.wsdl&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Depends on the network speed, you may need to wait a few moments to let the code generator download the wsdl and generate code, you may also download the wsdl and run the code generator with a local wsdl.</p>
+
+<p>A few comments about the codegen options:</p>
+
+<blockquote><ul>
+<li>I have added a prefix <code>Finding_</code> as codegen option, such that all interfaces/types generated will be prefixed. Adding prefix to Objective-C types is a recommended best practice to avoid possible type name confict with code generated from other services, for example, eBay has a couple of SOA services, and they share a few commons types, without prefixing, you will get confict if you use two or more eBay SOA services in one application.</li>
+<li>I have added a special <code>-ebaysoa</code> codegen option, this is because eBay Finding service needs a per-call operation name HTTP header, I added this special flag in the code generator to let it generate the header form me, since I don't want to add this header everytime I call an eBay Finding service, so this is just a special flag for eBay SOA services and for demo, or a hidden feature, not a generic codegen option.</li>
+</ul>
+</blockquote>
+
+<h2>Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project</h2>
+
+<p>Create a new simple iOS single view application named "HelloeBayFinding", don't choose ARC since Pico does not support ARC yet.</p>
+
+<p>In this tutorial, we will reference Pico as a static library, suppose you have downloaded Pico source project from github site, then:</p>
+
+<blockquote><ol>
+<li>Drag the Pico xcodeproj into your project,</li>
+<li>In the Build Phases of the target,  add <code>libPico.a</code> and <code>libxml2.dylib</code> to "Link Binary With Libraries" section.</li>
+<li>In the Build Setting of the target, add [your path to Pico source] to "User Header Search Paths" setting, choose "recursive" seach path.</li>
+</ol>
+</blockquote>
+
+<p>Build the project to ensure that it can build successfully.</p>
+
+<p>Now drag the proxy generated in step 1 into the project,  choose "Copy items to destination group's folder" and "add to targets" when prompted.</p>
+
+<p>Build the project again to ensure that it can build successfully.</p>
+
+<p>You may now review the eBay Finding service SOAP interface generated from wsdl, to learn what kinds of functions are provided by eBay Finding service, and what kinds of parameters are needed to call the serivce, the interface is posted below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>FindingServicePortType_SOAPClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/client/FindingServicePortType_SOAPClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="c1">// Generated by wsdl compiler for ios/objective-c</span>
+</span><span class='line'><span class="c1">// DO NOT CHANGE!&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Foundation</span><span class="o">/</span><span class="n">Foundation</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;PicoSOAPClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_GetVersionResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsAdvancedRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsAdvancedResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsForFavoriteSearchResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindCompletedItemsRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_GetSearchKeywordsRecommendationResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindCompletedItemsResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsByImageResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsByProductRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsByImageRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsByKeywordsRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsByProductResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsIneBayStoresRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsByCategoryRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_GetHistogramsRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_GetSearchKeywordsRecommendationRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsIneBayStoresResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_GetVersionRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsByCategoryResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsByKeywordsResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_FindItemsForFavoriteSearchRequest.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_GetHistogramsResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="n">This</span> <span class="n">class</span> <span class="n">is</span> <span class="n">the</span> <span class="n">SOAP</span> <span class="n">client</span> <span class="n">to</span> <span class="n">the</span> <span class="n">FindingServicePortType</span> <span class="n">Web</span> <span class="n">Service</span><span class="p">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">FindingServicePortType_SOAPClient</span> : <span class="nc">PicoSOAPClient</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">getSearchKeywordsRecommendation:</span><span class="p">(</span><span class="n">Finding_GetSearchKeywordsRecommendationRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_GetSearchKeywordsRecommendationResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">findItemsByKeywords:</span><span class="p">(</span><span class="n">Finding_FindItemsByKeywordsRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_FindItemsByKeywordsResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">findItemsByCategory:</span><span class="p">(</span><span class="n">Finding_FindItemsByCategoryRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_FindItemsByCategoryResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">findItemsAdvanced:</span><span class="p">(</span><span class="n">Finding_FindItemsAdvancedRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_FindItemsAdvancedResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">findItemsByProduct:</span><span class="p">(</span><span class="n">Finding_FindItemsByProductRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_FindItemsByProductResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">findItemsIneBayStores:</span><span class="p">(</span><span class="n">Finding_FindItemsIneBayStoresRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_FindItemsIneBayStoresResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">findItemsByImage:</span><span class="p">(</span><span class="n">Finding_FindItemsByImageRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_FindItemsByImageResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">getHistograms:</span><span class="p">(</span><span class="n">Finding_GetHistogramsRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_GetHistogramsResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">findCompletedItems:</span><span class="p">(</span><span class="n">Finding_FindCompletedItemsRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_FindCompletedItemsResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">getVersion:</span><span class="p">(</span><span class="n">Finding_GetVersionRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_GetVersionResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">findItemsForFavoriteSearch:</span><span class="p">(</span><span class="n">Finding_FindItemsForFavoriteSearchRequest</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Finding_FindItemsForFavoriteSearchResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@end</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>All the methods in the interface follow same calling paradigm - you call the service with required request object and register success callback(for success handling logic) and failure callback(for error handling logic) using Objective-C block.</p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>First, create a shared serivice client as below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>EBayFindingServiceClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/EBayFindingServiceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;FindingServicePortType_SOAPClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@interface</span> <span class="nc">EBayFindingServiceClient</span> : <span class="nc">FindingServicePortType_SOAPClient</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="p">(</span><span class="n">EBayFindingServiceClient</span> <span class="o">*</span><span class="p">)</span><span class="n">sharedClient</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@end</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>EBayFindingServiceClient.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/EBayFindingServiceClient.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;EBayFindingServiceClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">eBayAppId</span> <span class="o">=</span> <span class="s">@&quot;YOUR APPID HERE&quot;</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="c1">// production</span>
+</span><span class='line'><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">eBayFindingServiceURLString</span> <span class="o">=</span> <span class="s">@&quot;http://svcs.ebay.com/services/search/FindingService/v1&quot;</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="c1">// sandbox</span>
+</span><span class='line'><span class="c1">//static NSString *const eBayFindingServiceURLString = @&quot;http://svcs.sandbox.ebay.com/services/search/FindingService/v1&quot;;&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@implementation</span> <span class="nc">EBayFindingServiceClient</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">(</span><span class="n">EBayFindingServiceClient</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span><span class="n">sharedClient</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">static</span> <span class="n">EBayFindingServiceClient</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">_sharedClient</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="n">_sharedClient</span> <span class="o">=</span> <span class="p">[[</span><span class="n">EBayFindingServiceClient</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithEndpointURL:</span><span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">eBayFindingServiceURLString</span><span class="p">]];</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">});</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="n">_sharedClient</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nl">initWithEndpointURL:</span><span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="n">URL</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nl">initWithEndpointURL:</span><span class="n">URL</span><span class="p">];</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="n">self</span><span class="p">.</span><span class="n">soapVersion</span> <span class="o">=</span> <span class="n">SOAP12</span><span class="p">;</span> <span class="c1">// eBay finding service supports SOAP 12</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">self</span> <span class="nl">setDefaultHeader:</span><span class="s">@&quot;Accept&quot;</span> <span class="nl">value:</span><span class="s">@&quot;application/soap+xml&quot;</span><span class="p">];</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">self</span> <span class="nl">setDefaultHeader:</span><span class="s">@&quot;Content-Type&quot;</span> <span class="nl">value:</span><span class="s">@&quot;application/soap+xml&quot;</span><span class="p">];</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">[</span><span class="n">super</span> <span class="nl">setDefaultHeader:</span><span class="s">@&quot;X-EBAY-SOA-SECURITY-APPNAME&quot;</span> <span class="nl">value:</span><span class="n">eBayAppId</span><span class="p">];</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">super</span> <span class="nl">setDefaultHeader:</span><span class="s">@&quot;X-EBAY-SOA-MESSAGE-PROTOCOL&quot;</span> <span class="nl">value:</span><span class="s">@&quot;SOAP12&quot;</span><span class="p">];</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">super</span> <span class="nl">setDefaultHeader:</span><span class="s">@&quot;X-EBAY-SOA-REQUEST-DATA-FORMAT&quot;</span> <span class="nl">value:</span><span class="s">@&quot;SOAP&quot;</span><span class="p">];</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@end</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The shared client for eBay Finding service is a little more complex than the simple serivce client in tutorial 1 and 2, this is because that eBay Finding service needs a few HTTP headers set to work, let me give more comments:</p>
+
+<blockquote><ol>
+<li>eBay Finding service support SOAP12, so we set the client to use <code>SOAP12</code> protocol, this is not necessary since eBay Finding serivce also support SOAP11(which is Pico default), we use SOAP12 here just for demo and to show the capability of Pico.</li>
+<li>eBay Finding service needs to set a few HTTP headers to work, for a list of required headers, please refer to doc <a href="http://developer.ebay.com/DevZone/finding/Concepts/MakingACall.html">here</a>.</li>
+<li>One mandatory header for eBay Finding service is <code>eBayAppId</code>, you need to register on eBay developer site as an eBay developer then get this id, before your can run this demo, you must fill in your own eBayAppId in the shared client.</li>
+</ol>
+</blockquote>
+
+<p>Now the UI part, for this hello world like sample, we just need a UITextField for keyword input and UIButton to trigger eBay search by invoking method <code>searchButtonPressed</code> which will indirectly call eBay Finding service through the proxy, fairly simple, see definition in header file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/ViewController.h">ViewController.h</a> and instantiation in implementation file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/ViewController.m">ViewController.m</a>.</p>
+
+<p>Now implement the <code>searchButtonPressed</code> method by invoking service as below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ViewController.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/ViewController.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;ViewController.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;EBayFindingServiceClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Finding_CommonTypes.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;SOAP12Fault.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;SOAP12Faultreason.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;SOAP12Detail.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;SOAP12Reasontext.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Toast+UIView.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">searchButtonPressed:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">sender</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// Hide the keyboard.</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">_searchText</span> <span class="n">resignFirstResponder</span><span class="p">];</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">if</span> <span class="p">(</span><span class="n">_searchText</span><span class="p">.</span><span class="n">text</span><span class="p">.</span><span class="n">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="c1">// start progress activity</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">makeToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// Get shared service client</span>
+</span><span class='line'>  <span class="n">EBayFindingServiceClient</span> <span class="o">*</span><span class="n">findingClient</span> <span class="o">=</span> <span class="p">[</span><span class="n">EBayFindingServiceClient</span> <span class="n">sharedClient</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">findingClient</span><span class="p">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span> <span class="c1">// enable request/response message logging</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// Build request object</span>
+</span><span class='line'>  <span class="n">Finding_FindItemsByKeywordsRequest</span> <span class="o">*</span><span class="n">request</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">Finding_FindItemsByKeywordsRequest</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">keywords</span> <span class="o">=</span> <span class="n">_searchText</span><span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// only need one item for demo</span>
+</span><span class='line'>  <span class="n">Finding_PaginationInput</span> <span class="o">*</span><span class="n">pagination</span> <span class="o">=</span> <span class="p">[[</span><span class="n">Finding_PaginationInput</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">pagination</span><span class="p">.</span><span class="n">pageNumber</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSNumber</span> <span class="nl">numberWithInt:</span><span class="mi">1</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">pagination</span><span class="p">.</span><span class="n">entriesPerPage</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSNumber</span> <span class="nl">numberWithInt:</span><span class="mi">1</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">paginationInput</span> <span class="o">=</span> <span class="n">pagination</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">pagination</span> <span class="n">release</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// make API call and register callbacks</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">findingClient</span> <span class="nl">findItemsByKeywords:</span><span class="n">request</span> <span class="nl">success:</span><span class="o">^</span><span class="p">(</span><span class="n">Finding_FindItemsByKeywordsResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// stop progress activity</span>
+</span><span class='line'>      <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span> <span class="p">([</span><span class="n">Finding_AckValue_SUCCESS</span> <span class="nl">isEqualToString:</span><span class="n">responseObject</span><span class="p">.</span><span class="n">ack</span><span class="p">])</span> <span class="p">{</span>
+</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="n">responseObject</span><span class="p">.</span><span class="n">searchResult</span><span class="p">.</span><span class="n">count</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>              <span class="c1">// show the title of the first found item</span>
+</span><span class='line'>              <span class="n">Finding_SearchItem</span> <span class="o">*</span><span class="n">item</span> <span class="o">=</span> <span class="p">[</span><span class="n">responseObject</span><span class="p">.</span><span class="n">searchResult</span><span class="p">.</span><span class="n">item</span> <span class="nl">objectAtIndex:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>              <span class="c1">// start image downloading progress activity</span>
+</span><span class='line'>              <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">makeToastActivity</span><span class="p">];</span>
+</span><span class='line'>              <span class="c1">// get gallery image</span>
+</span><span class='line'>              <span class="n">NSURL</span> <span class="o">*</span><span class="n">imageURL</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">item</span><span class="p">.</span><span class="n">galleryURL</span><span class="p">];</span>
+</span><span class='line'>              <span class="n">NSData</span> <span class="o">*</span><span class="n">imageData</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSData</span> <span class="nl">dataWithContentsOfURL:</span><span class="n">imageURL</span><span class="p">];</span>
+</span><span class='line'>              <span class="c1">// stop progress activity</span>
+</span><span class='line'>              <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>              <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIImage</span> <span class="nl">imageWithData:</span><span class="n">imageData</span><span class="p">];</span>
+</span><span class='line'>              <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="n">item</span><span class="p">.</span><span class="n">title</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Success&quot;</span> <span class="nl">image:</span><span class="n">image</span><span class="p">];</span>
+</span><span class='line'>          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>              <span class="c1">// no result</span>
+</span><span class='line'>              <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="s">@&quot;No result&quot;</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span><span class="p">];</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span> <span class="c1">// response residenet error</span>
+</span><span class='line'>          <span class="n">Finding_ErrorData</span> <span class="o">*</span><span class="n">errorData</span> <span class="o">=</span> <span class="p">[</span><span class="n">responseObject</span><span class="p">.</span><span class="n">errorMessage</span><span class="p">.</span><span class="n">error</span> <span class="nl">objectAtIndex:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="n">errorData</span><span class="p">.</span><span class="n">message</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Error&quot;</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span> <span class="nl">failure:</span><span class="o">^</span><span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// stop progress activity</span>
+</span><span class='line'>      <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="p">[</span><span class="n">error</span> <span class="n">localizedDescription</span><span class="p">]</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Error&quot;</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="n">SOAP12Fault</span> <span class="o">*</span><span class="n">soap12Fault</span> <span class="o">=</span> <span class="p">(</span><span class="n">SOAP12Fault</span> <span class="o">*</span><span class="p">)</span><span class="n">soapFault</span><span class="p">;</span>
+</span><span class='line'>          <span class="n">SOAP12Reasontext</span> <span class="o">*</span><span class="n">reasonText</span> <span class="o">=</span> <span class="p">[</span><span class="n">soap12Fault</span><span class="p">.</span><span class="n">reason</span><span class="p">.</span><span class="n">text</span> <span class="nl">objectAtIndex:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="n">reasonText</span><span class="p">.</span><span class="n">value</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;SOAP Fault&quot;</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}];</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>More comments to the serivce call code:</p>
+
+<blockquote><ol>
+<li>I've added comments in the code so the whole service call flow should be easy to understand.</li>
+<li>We used the eBay Finding <code>FindItemsByKeywords</code> call, which takes a keyword as input, and will return a list of matched items, for demo, we just need one item to display, so we set entries per page to 1.</li>
+<li>In the success handling logic, we show the title and the image of the returned item, for demo, the image is downloaded synchronously, but in practice, you should download image asynchronously in order not to block main UI.</li>
+<li>Since we set the client to use SOAP12 protocol, in the error handling logic, we need to cast the soapFault variable to type <code>SOAP12Fault</code> and handle it accordingly.</li>
+<li>eBay Finding service support response resident error(RRE), so even we get a success response, we still need to check the response for resident error and handle it accordingly.</li>
+<li>We used a thrid party library called "Toast" for producing toast like message, this is just for the convenience of demo, not necessary in your real project.</li>
+</ol>
+</blockquote>
+
+<p>Please don't forget to include the shared client and SOAP12 related header files, it's a best practice to include the generated Finding_CommonTypes.h file which can free you from writing many import statements required by request building and response handling.</p>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>This time let's run the demo on a real iPod Touch 4 device with iOS 4.3.3, see a sceen shot below:</p>
+
+<p><img class="center" src="/images/pico/tutorial03/screen_shot1.png" width="300" height="500"></p>
+
+<p>and the debug output:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>2013-03-29 12:21:53.963 HelloeBayFinding[180:607] Sending request to : http://svcs.ebay.com/services/search/FindingService/v1
+</span><span class='line'>2013-03-29 12:21:53.979 HelloeBayFinding[180:607] Request message:
+</span><span class='line'>2013-03-29 12:21:53.981 HelloeBayFinding[180:607] &lt;?xml version="1.0" encoding="UTF-8" ?>
+</span><span class='line'>&lt;soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.ebay.com/marketplace/search/v1/services">&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>&lt;soapenv:Body&gt;
+</span><span class='line'>    &lt;findItemsByKeywordsRequest&gt;
+</span><span class='line'>        &lt;paginationInput&gt;
+</span><span class='line'>            &lt;pageNumber&gt;1&lt;/pageNumber&gt;
+</span><span class='line'>            &lt;entriesPerPage&gt;1&lt;/entriesPerPage&gt;
+</span><span class='line'>        &lt;/paginationInput&gt;
+</span><span class='line'>        &lt;keywords&gt;iPad 3&lt;/keywords&gt;
+</span><span class='line'>    &lt;/findItemsByKeywordsRequest&gt;
+</span><span class='line'>&lt;/soapenv:Body&gt;
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&lt;/soapenv:Envelope>
+</span><span class='line'>2013-03-29 12:21:53.989 HelloeBayFinding[180:607] Request HTTP Headers :
+</span><span class='line'>{&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>Accept = "application/soap+xml";
+</span><span class='line'>"Accept-Language" = "zh-Hans, en, fr, de, ja, nl, it, es, pt, pt-PT, da, fi, nb, sv, ko, zh-Hant, ru, pl, tr, uk, ar, hr, cs, el, he, ro, sk, th, id, ms, en-GB, ca, hu, vi, en-us;q=0.8";
+</span><span class='line'>"Content-Type" = "application/soap+xml";
+</span><span class='line'>"User-Agent" = "HelloeBayFinding/1.0 (iPod touch; iOS 4.3.3; Scale/2.00)";
+</span><span class='line'>"X-Ebay-Soa-Message-Protocol" = SOAP12;
+</span><span class='line'>"X-Ebay-Soa-Operation-Name" = findItemsByKeywords;
+</span><span class='line'>"X-Ebay-Soa-Request-Data-Format" = SOAP;
+</span><span class='line'>"X-Ebay-Soa-Security-Appname" = ************;
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}
+</span><span class='line'>2013-03-29 12:21:55.446 HelloeBayFinding[180:1a03] Response HTTP status :
+</span><span class='line'>200
+</span><span class='line'>2013-03-29 12:21:55.452 HelloeBayFinding[180:1a03] Response HTTP headers :
+</span><span class='line'>{&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>Connection = "keep-alive";
+</span><span class='line'>"Content-Encoding" = gzip;
+</span><span class='line'>"Content-Type" = "application/soap+xml;charset=UTF-8";
+</span><span class='line'>Date = "Fri, 29 Mar 2013 04:21:59 GMT";
+</span><span class='line'>Server = "Apache-Coyote/1.1";
+</span><span class='line'>"Transfer-Encoding" = Identity;
+</span><span class='line'>"X-Ebay-Esb-Endpointurl" = "/Root/ESBFunctions/Services/Ports/7002/profile/search/v1/FindingService/destination_default/address_synapse";
+</span><span class='line'>"X-Ebay-Esb-Guid" = "urn:uuid:E626354F8F2A3156CE1365170887318";
+</span><span class='line'>"X-Ebay-Soa-Locale-List" = "en-US_US";
+</span><span class='line'>"X-Ebay-Soa-Message-Protocol" = SOAP12;
+</span><span class='line'>"X-Ebay-Soa-Operation-Name" = findItemsByKeywords;
+</span><span class='line'>"X-Ebay-Soa-Request-Id" = "13db4617-6bd0-a0a2-2d44-7514ffcfbc4b!FindingService!10.10.34.212!v3apifindingcore[!FindItemServiceNextGen!10.10.34.212!v3apifindingcore[!MetadataDependencyService!10.86.122.59!v3mddscore[]]]";
+</span><span class='line'>"X-Ebay-Soa-Response-Data-Format" = XML;
+</span><span class='line'>"X-Ebay-Soa-Service-Metrics" = 266275234;
+</span><span class='line'>"X-Ebay-Soa-Service-Name" = "{http://www.ebay.com/marketplace/search/v1/services}FindingService";
+</span><span class='line'>"X-Ebay-Soa-Service-Version" = "1.12.0";
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}
+</span><span class='line'>2013-03-29 12:21:55.460 HelloeBayFinding[180:650f] Response message :
+</span><span class='line'>2013-03-29 12:21:55.467 HelloeBayFinding[180:650f] &lt;?xml version='1.0' encoding='utf-8'?>&lt;soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope">&lt;soapenv:Header/>&lt;soapenv:Body>&lt;findItemsByKeywordsResponse xmlns="http://www.ebay.com/marketplace/search/v1/services">&lt;ack>Success&lt;/ack>&lt;version>1.12.0&lt;/version>&lt;timestamp>2013-03-29T04:21:59.429Z&lt;/timestamp>&lt;searchResult count="1">&lt;item>&lt;itemId>200910323546&lt;/itemId>&lt;title>Apple iPad 3rd Generation 16GB, Wi-Fi, 9.7in - White Grade B&lt;/title>&lt;globalId>EBAY-US&lt;/globalId>&lt;primaryCategory>&lt;categoryId>171485&lt;/categoryId>&lt;categoryName>iPads, Tablets &amp; eBook Readers&lt;/categoryName>&lt;/primaryCategory>&lt;galleryURL>http://thumbs3.ebaystatic.com/m/mdIP8tQ1uohjPjsWmhz9q8w/140.jpg&lt;/galleryURL>&lt;viewItemURL>http://www.ebay.com/itm/Apple-iPad-3rd-Generation-16GB-Wi-Fi-9-7in-White-Grade-B-/200910323546?pt=US_Tablets&lt;/viewItemURL>&lt;productId type="ReferenceID">109304845&lt;/productId>&lt;paymentMethod>CashOnPickup&lt;/paymentMethod>&lt;paymentMethod>PayPal&lt;/paymentMethod>&lt;autoPay>false&lt;/autoPay>&lt;postalCode>08753&lt;/postalCode>&lt;location>Toms River,NJ,USA&lt;/location>&lt;country>US&lt;/country>&lt;shippingInfo>&lt;shippingServiceCost currencyId="USD">0.0&lt;/shippingServiceCost>&lt;shippingType>Free&lt;/shippingType>&lt;shipToLocations>US&lt;/shipToLocations>&lt;expeditedShipping>false&lt;/expeditedShipping>&lt;oneDayShippingAvailable>false&lt;/oneDayShippingAvailable>&lt;handlingTime>1&lt;/handlingTime>&lt;/shippingInfo>&lt;sellingStatus>&lt;currentPrice currencyId="USD">402.99&lt;/currentPrice>&lt;convertedCurrentPrice currencyId="USD">402.99&lt;/convertedCurrentPrice>&lt;sellingState>Active&lt;/sellingState>&lt;timeLeft>P29DT10H4M7S&lt;/timeLeft>&lt;/sellingStatus>&lt;listingInfo>&lt;bestOfferEnabled>false&lt;/bestOfferEnabled>&lt;buyItNowAvailable>false&lt;/buyItNowAvailable>&lt;startTime>2013-03-28T14:21:06.000Z&lt;/startTime>&lt;endTime>2013-04-27T14:26:06.000Z&lt;/endTime>&lt;listingType>FixedPrice&lt;/listingType>&lt;gift>false&lt;/gift>&lt;/listingInfo>&lt;returnsAccepted>true&lt;/returnsAccepted>&lt;condition>&lt;conditionId>2500&lt;/conditionId>&lt;conditionDisplayName>Seller refurbished&lt;/conditionDisplayName>&lt;/condition>&lt;isMultiVariationListing>false&lt;/isMultiVariationListing>&lt;topRatedListing>true&lt;/topRatedListing>&lt;/item>&lt;/searchResult>&lt;paginationOutput>&lt;pageNumber>1&lt;/pageNumber>&lt;entriesPerPage>1&lt;/entriesPerPage>&lt;totalPages>113843&lt;/totalPages>&lt;totalEntries>113843&lt;/totalEntries>&lt;/paginationOutput>&lt;itemSearchURL>http://www.ebay.com/sch/i.html?&lt;em>nkw=iPad+3&amp;&lt;/em>ddo=1&amp;&lt;em>ipg=1&amp;&lt;/em>pgn=1&lt;/itemSearchURL>&lt;/findItemsByKeywordsResponse>&lt;/soapenv:Body>&lt;/soapenv:Envelope>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>let's also try a soap fault case, for example, if you forget to fill in your <code>eBayAppId</code> in the shared client, then you will get:
+<img class="center" src="/images/pico/tutorial03/screen_shot2.png" width="300" height="500"></p>
+
+<p>This is just a bare minimum eBay Finding service based application, for a demo with more functions, please see the eBayDemoApp sample in the <code>Examples</code> folder of Pico source, eBayDemoApp is a composite app which calls two eBay serivces behind, this app searches eBay by calling eBay Fining service, showes a list of matched items on UI, when an item is clicked, it will show item details by calling eBay Shopping service, see a screen shot below.</p>
+
+<p><img class="center" src="/images/pico/tutorial03/screen_shot3.png" width="300" height="500"></p>
+
+<p>Now it's your turn to create iOS applications based on eBay Finding web serivce, see your next great serivce based app.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Pico Tutorial 2 - a Currency Converter Sample]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/"/>
+    <updated>2013-03-28T20:38:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample</id>
+    <content type="html"><![CDATA[<p>This is the second tutorial of Pico Tutorial series, in the <a href="http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">first tutorial</a>, I showed how to use Pico with a service called <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=9">StockQuote</a> from webserivceX.NET. Today I will show you how to use Pico with another service called <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=10">CurrencyConverter</a>, also from webserviceX.NET, in first tutorial, I showed you how to reference Pico as a static library, in this tutorial, I will show you how to reference the Pico source in your project. By the way, since the wsdl driven development process in both tutorials are quite similar, I won't repeat too much details in this tutorial, I suppose you have already read tutorial one and basically understand the wsdl driven development process supported by Pico.</p>
+
+<p>The whole source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/CurrencyConverter">here</a>.</p>
+
+<p>Let's cut to to the point:</p>
+
+<!--more-->
+
+
+<h2>Step 1 - Generate Objective-C Proxy from WSDL</h2>
+
+<p>Download <a href="https://github.com/bulldog2011/mwsc">mwsc</a> and run following command in terminal to generate the proxy:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>bin/mwsc -pico -d generated http://www.webservicex.net/CurrencyConvertor.asmx?WSDL&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>A few comments to the generated code:</p>
+
+<blockquote><ul>
+<li>By default, the proxy code will be generated in the sub-folder corresponding to the target namespace of the wsdl.</li>
+<li>There is a geneated folder called <code>client</code>, the SOAP and XML proxy interface will be generated in this folder.</li>
+<li>There is a generted folder called <code>common</code>, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request or handle response needed by service call.</li>
+</ul>
+</blockquote>
+
+<h2>Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project</h2>
+
+<p>Create a new simple iOS single view application named "CurrencyConverter", don't choose ARC, download Pico source and drag the whole <code>PicoSource</code> folder into the project, choose "Copy items to destination group's folder" and "add to targets" when prompted. Then do following settings to the project:</p>
+
+<blockquote><ol>
+<li>In Target Build Setting, add the <code>-ObjC</code> flag to your "Other Linker flags".</li>
+<li>In Target Build Setting, add <code>/usr/include/libxml2</code> to your "Header Search Paths"</li>
+<li>In Target Build Phases, link binary with library <code>libxml2.dylib</code></li>
+</ol>
+</blockquote>
+
+<p>Build the the project to ensure that it can build successfully.</p>
+
+<p>Now drag the proxy generated in step 1 into the project,  choose "Copy items to destination group's folder" and "add to targets" when prompted.</p>
+
+<p>Build the the project again to ensure that it can build successfully.</p>
+
+<p>The finished project should look like the screen shot below:</p>
+
+<p><img class="center" src="/images/pico/tutorial02/screen_shot1.png" width="600" height="800"></p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>First, create a shared serivice client as below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>CurrencyConverterSerivceClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/CurrencyConverterSerivceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CurrencyConvertorSoap_SOAPClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@interface</span> <span class="nc">CurrencyConverterSerivceClient</span> : <span class="nc">CurrencyConvertorSoap_SOAPClient</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="p">(</span><span class="n">CurrencyConverterSerivceClient</span> <span class="o">*</span><span class="p">)</span><span class="n">sharedClient</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@end</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>CurrencyConverterSerivceClient.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/CurrencyConverterSerivceClient.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CurrencyConverterSerivceClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">currencyConverterServiceURLString</span> <span class="o">=</span> <span class="s">@&quot;http://www.webservicex.net/CurrencyConvertor.asmx&quot;</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@implementation</span> <span class="nc">CurrencyConverterSerivceClient</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="p">(</span><span class="n">CurrencyConverterSerivceClient</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span><span class="n">sharedClient</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">static</span> <span class="n">CurrencyConverterSerivceClient</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">_sharedClient</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="n">_sharedClient</span> <span class="o">=</span> <span class="p">[[</span><span class="n">CurrencyConverterSerivceClient</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithEndpointURL:</span><span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">currencyConverterServiceURLString</span><span class="p">]];</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">});</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="n">_sharedClient</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@end</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Now open ViewController_iPhone.xib in interface builder, then add a few UI components like following screen shot:</p>
+
+<p><img class="center" src="/images/pico/tutorial02/ui.png" width="300" height="500"></p>
+
+<p>Add <code>IBOutlet</code> properties and <code>IBAction</code> method in <a href="https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/ViewController.h">ViewController.h</a>, then wire the properties and method with UI components accordingly, bascially, the application will convert the <code>From</code> currency to <code>To</code> currency and show conversion rate, when the <code>Convert</code> button is clicked(which will trigger <code>onConvertClicked</code> method internally).</p>
+
+<p>Now implement the <code>onConvertClicked</code> method by invoking service as below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ViewController.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/ViewController.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;ViewController.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CurrencyConverterSerivceClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;SOAP11Fault.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">pragma</span> <span class="n">mark</span> <span class="o">-</span> <span class="n">UI</span> <span class="n">Event</span> <span class="n">Handlers</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nl">onConvertClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">sender</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">self</span><span class="p">.</span><span class="n">fromCurrencyTextField</span><span class="p">.</span><span class="n">text</span><span class="p">.</span><span class="n">length</span> <span class="o">||</span> <span class="o">!</span><span class="n">self</span><span class="p">.</span><span class="n">toCurrencyTextField</span><span class="p">.</span><span class="n">text</span><span class="p">.</span><span class="n">length</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="n">UIAlertView</span><span class="o">*</span> <span class="n">alert</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAlertView</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithTitle:</span><span class="s">@&quot;Invalid Parameters&quot;</span> <span class="nl">message:</span><span class="s">@&quot;Please enter valid from and to currency types and try again&quot;</span> <span class="nl">delegate:</span><span class="n">self</span> <span class="nl">cancelButtonTitle:</span><span class="s">@&quot;OK&quot;</span> <span class="nl">otherButtonTitles:</span> <span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">alert</span> <span class="n">show</span><span class="p">];</span>
+</span><span class='line'>  <span class="k">return</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">activityIndicator</span> <span class="nl">setHidden:</span><span class="n">NO</span><span class="p">];</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">activityIndicator</span> <span class="n">startAnimating</span><span class="p">];</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="c1">// Get shared client</span>
+</span><span class='line'>  <span class="n">CurrencyConverterSerivceClient</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">[</span><span class="n">CurrencyConverterSerivceClient</span> <span class="n">sharedClient</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span> <span class="c1">// enable message logging</span>
+</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">timeoutInverval</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">// http timeout in seconds&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="c1">// build request</span>
+</span><span class='line'>  <span class="n">ConversionRate</span> <span class="o">*</span><span class="n">request</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">ConversionRate</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">fromCurrency</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">fromCurrencyTextField</span><span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">toCurrency</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">toCurrencyTextField</span><span class="p">.</span><span class="n">text</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="c1">// make API call</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">client</span> <span class="nl">conversionRate:</span><span class="n">request</span> <span class="nl">success:</span><span class="o">&lt;</span><span class="n">sup</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ConversionRateResponse</span><span class="o">&lt;/</span><span class="n">sup</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="c1">// success handling logic</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">activityIndicator</span> <span class="n">stopAnimating</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">UIAlertView</span><span class="o">*</span> <span class="n">alert</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAlertView</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithTitle:</span><span class="s">@&quot;Success!&quot;</span> <span class="nl">message:</span><span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;Currency Conversion Rate is %@&quot;</span><span class="p">,</span><span class="n">responseObject</span><span class="p">.</span><span class="n">conversionRateResult</span><span class="p">]</span> <span class="nl">delegate:</span><span class="n">self</span> <span class="nl">cancelButtonTitle:</span><span class="s">@&quot;OK&quot;</span> <span class="nl">otherButtonTitles:</span> <span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">alert</span> <span class="n">show</span><span class="p">];</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">}</span> <span class="nl">failure:</span><span class="o">&lt;</span><span class="n">sup</span><span class="o">&gt;</span><span class="p">(</span><span class="n">NSError</span><span class="o">&lt;/</span><span class="n">sup</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&lt;</span><span class="n">PicoBindable</span><span class="o">&gt;</span> <span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">activityIndicator</span> <span class="n">stopAnimating</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// error handling logic</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// http or parsing error</span>
+</span><span class='line'>      <span class="n">UIAlertView</span><span class="o">*</span> <span class="n">alert</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAlertView</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithTitle:</span><span class="s">@&quot;Error&quot;</span> <span class="nl">message:</span><span class="n">error</span><span class="p">.</span><span class="n">localizedDescription</span> <span class="nl">delegate:</span><span class="n">self</span> <span class="nl">cancelButtonTitle:</span><span class="s">@&quot;OK&quot;</span> <span class="nl">otherButtonTitles:</span> <span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">[</span><span class="n">alert</span> <span class="n">show</span><span class="p">];</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// soap fault</span>
+</span><span class='line'>      <span class="n">SOAP11Fault</span> <span class="o">*</span><span class="n">soap11Fault</span> <span class="o">=</span> <span class="p">(</span><span class="n">SOAP11Fault</span> <span class="o">*</span><span class="p">)</span><span class="n">soapFault</span><span class="p">;</span>
+</span><span class='line'>      <span class="n">UIAlertView</span><span class="o">*</span> <span class="n">alert</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAlertView</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithTitle:</span><span class="s">@&quot;SOAP Fault&quot;</span> <span class="nl">message:</span><span class="n">soap11Fault</span><span class="p">.</span><span class="n">faultstring</span> <span class="nl">delegate:</span><span class="n">self</span> <span class="nl">cancelButtonTitle:</span><span class="s">@&quot;OK&quot;</span> <span class="nl">otherButtonTitles:</span> <span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">[</span><span class="n">alert</span> <span class="n">show</span><span class="p">];</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">}];</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Please don't forget to include the shared CurrencyConverterSerivceClient.</p>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>See a sceen shot below:</p>
+
+<p><img class="center" src="/images/pico/tutorial02/screen_shot2.png" width="300" height="500"></p>
+
+<p>And the debug output:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>2013-03-28 21:45:27.641 CurrencyConverter[2153:c07] Sending request to : http://www.webservicex.net/CurrencyConvertor.asmx
+</span><span class='line'>2013-03-28 21:45:27.642 CurrencyConverter[2153:c07] Request message:
+</span><span class='line'>2013-03-28 21:45:27.643 CurrencyConverter[2153:c07] &lt;?xml version="1.0" encoding="UTF-8" ?>
+</span><span class='line'>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.webserviceX.NET/">&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>&lt;soapenv:Body&gt;
+</span><span class='line'>    &lt;ConversionRate&gt;
+</span><span class='line'>        &lt;FromCurrency&gt;USD&lt;/FromCurrency&gt;
+</span><span class='line'>        &lt;ToCurrency&gt;CAD&lt;/ToCurrency&gt;
+</span><span class='line'>    &lt;/ConversionRate&gt;
+</span><span class='line'>&lt;/soapenv:Body&gt;
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&lt;/soapenv:Envelope>
+</span><span class='line'>2013-03-28 21:45:27.643 CurrencyConverter[2153:c07] Request HTTP Headers :
+</span><span class='line'>{&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>Accept = "text/xml";
+</span><span class='line'>"Accept-Language" = "en, fr, de, ja, nl, it, es, pt, pt-PT, da, fi, nb, sv, ko, zh-Hans, zh-Hant, ru, pl, tr, uk, ar, hr, cs, el, he, ro, sk, th, id, ms, en-GB, ca, hu, vi, en-us;q=0.8";
+</span><span class='line'>"Content-Type" = "text/xml";
+</span><span class='line'>SOAPAction = "http://www.webserviceX.NET/ConversionRate";
+</span><span class='line'>"User-Agent" = "CurrencyConverter/1.0 (iPhone Simulator; iOS 6.0; Scale/1.00)";
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}
+</span><span class='line'>2013-03-28 21:45:28.495 CurrencyConverter[2153:1b03] Response HTTP status :
+</span><span class='line'>200
+</span><span class='line'>2013-03-28 21:45:28.495 CurrencyConverter[2153:1b03] Response HTTP headers :
+</span><span class='line'>{&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>"Cache-Control" = "private, max-age=0";
+</span><span class='line'>"Content-Encoding" = gzip;
+</span><span class='line'>"Content-Length" = 316;
+</span><span class='line'>"Content-Type" = "text/xml; charset=utf-8";
+</span><span class='line'>Date = "Thu, 28 Mar 2013 13:45:47 GMT";
+</span><span class='line'>Server = "Microsoft-IIS/7.0";
+</span><span class='line'>Vary = "Accept-Encoding";
+</span><span class='line'>"X-AspNet-Version" = "4.0.30319";
+</span><span class='line'>"X-Powered-By" = "ASP.NET";
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}
+</span><span class='line'>2013-03-28 21:45:28.495 CurrencyConverter[2153:5503] Response message :
+</span><span class='line'>2013-03-28 21:45:28.495 CurrencyConverter[2153:5503] &lt;?xml version="1.0" encoding="utf-8"?>&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">&lt;soap:Body>&lt;ConversionRateResponse xmlns="http://www.webserviceX.NET/">&lt;ConversionRateResult>1.0167&lt;/ConversionRateResult>&lt;/ConversionRateResponse>&lt;/soap:Body>&lt;/soap:Envelope>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>There are other similar demos in the <a href="https://github.com/bulldog2011/pico/tree/master/Examples">Examples</a> folder of Pico source, like the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/BarCode">BarCode</a> demo which calls web service that will return base64 encoded barcode data and the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/Weather">Weather</a> demo which shows the weather given a zip code, see screen shots below, I won't create tuturials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.</p>
+
+<p>The screen shot of barcode demo:
+<img class="center" src="/images/pico/tutorial02/screen_shot3.png" width="300" height="500"></p>
+
+<p>The screen shot of weather demo:
+<img class="center" src="/images/pico/tutorial02/screen_shot4.png" width="300" height="500"></p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Pico Tutorial - a StockQuote sample]]></title>
     <link href="http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/"/>
     <updated>2013-03-27T20:07:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample</id>
-    <content type="html"><![CDATA[<p>This is the first post of Pico Tutorial serices, in this post, I will show you how easy to use <a href="https://github.com/bulldog2011/pico">Pico framework</a> to carry out WSDL driven application development on iOS platform. If this is the first time you get to know Pico, then after this tutorial, you will bascially understand what Pico can do for you, and the basic development flow when using Pico to carry out WSDL driven development on iOS. If you want to see the big picture, plese read <a href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">this post</a> first.</p>
+    <content type="html"><![CDATA[<p>This is the first post of Pico Tutorial series, in this post, I will show you how easy to use <a href="https://github.com/bulldog2011/pico">Pico framework</a> to put WSDL driven application development on iOS platform into practice. If this is the first time you get to know Pico, then after this tutorial, you will bascially understand what Pico can do for you, and the basic development process when using Pico to run WSDL driven development on iOS. If you want to see the big picture, plese read <a href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">this post</a> first.</p>
+
+<p>The whole source of this demo is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/StockQuote">here</a>.</p>
 
 <p>WSDL driven development using Pico framework has following steps:</p>
 
@@ -34,12 +1344,12 @@
 <!--more-->
 
 
-<h2>Step 1 - Generate Objective-c Proxy from WSDL</h2>
+<h2>Step 1 - Generate Objective-C Proxy from WSDL</h2>
 
-<p>Pico has an accompanying code generator which can generate Objective-C proxy from wsdl, the tool is called <a href="https://github.com/bulldog2011/mwsc">mwsc</a>, please download the latest zip package <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/mwsc/0.5.0/mwsc-0.5.0-bin.zip">here</a> then extract it into you local folder.
+<p>Pico has an accompanying code generator which can generate Objective-C proxy from wsdl, the tool is called <a href="https://github.com/bulldog2011/mwsc">mwsc</a>, please download the latest zip package <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/mwsc/0.5.0/mwsc-0.5.0-bin.zip">here</a> then extract it into your local folder.
 <strong><em>Note</em></strong> : mwsc code generator needs Java 1.6 or above to run, so please ensure Java is installed on your MacOS, if not, please install it first.</p>
 
-<p>The command line script <code>mwsc</code> is in the bin folder, please add executable right to it before you run it, you may optionally created a folder as your code generation target(for example, <code>generated</code>), otherwise, mwsc will generate code in current folder, now lets generte code from wsdl by running flowing command in the terminal:</p>
+<p>The command line script <code>mwsc</code> is in the bin folder, please add executable right to it before you run it, you may optionally create a folder as your code generation target(for example, <code>generated</code>), otherwise, mwsc will generate code in current folder, now lets generte code from wsdl by running flowing command in the terminal:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -52,32 +1362,32 @@
 </span><span class='line'>
 </span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
-<p>If everything works fine, you will see the code generator output <code>generating code…</code> and <code>done</code> in the end, the target proxy will be generated in the <code>generated</code> folder, the code generator may throw a few warnings, asking us to add extension options for some ports, since we won't use those ports, so just ignore them right now, it's all right as long as the SOAP port is generated correctly.</p>
+<p>If everything works fine, you will see the code generator output <code>generating code…</code> and <code>done</code> at the end, the target proxy will be generated in the <code>generated</code> folder, the code generator may throw a few warnings, asking us to add extension options for some ports, since we won't use those ports, just ignore them right now, it's all right as long as the SOAP port is generated correctly.</p>
 
 <h2>Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project</h2>
 
 <p>For this demo, we just create a simple iOS single view application, please don't choose ARC when you create the project, since Pico does not support ARC yet.</p>
 
-<p>Now we need to import Pico library into the project first, there are two options, you can either include all Pico source into your project, or add Pico as static library into your project, in this tutorial, I just show you the second option, if you want to include the whole Pico source, please see Pico github site for instructions.</p>
+<p>Now we need to import Pico library into the project first, there are two options, you can either include all Pico source into your project, or add Pico as a static library into your project, in this tutorial, I just show you the second option, if you want to include the whole Pico source, please see Pico github site for instructions.</p>
 
 <p>Suppose you have downloaded Pico source project from github site, then:</p>
 
 <blockquote><ol>
 <li>Drag the Pico xcodeproj into your project,</li>
 <li>In the Build Phases of the target,  add <code>libPico.a</code> and <code>libxml2.dylib</code> to "Link Binary With Libraries" section.</li>
-<li>In the Build Setting of the target, add [path to Pico source] to your "User Header Search Paths", choose "recursive" seach path.</li>
+<li>In the Build Setting of the target, add [your path to Pico source] to "User Header Search Paths" setting, choose "recursive" seach path.</li>
 </ol>
 </blockquote>
 
-<p>Now create a group in your project called <code>Proxy</code>(or other meaningful name you choose), then drap the step 1 generated proxy into this group, choose "Copy items to destination group's folder" and "add to targets" when prompted.</p>
+<p>Now create a group in your project called <code>Proxy</code>(or other meaningful name you choose), then drag the proxy generated in step 1 into this group, choose "Copy items to destination group's folder" and "add to targets" when prompted.</p>
 
 <p>Now since both Pico library and the StockQuote web service proxy have been added in the project, you can try to build the project, if no build error, job well done, you can continue to the next step, otherwise, please do some toubleshooting, or check the source of this tutourial(in the Examples folder of Pico).</p>
 
-<p>Below is a screenshot after finish this step:</p>
+<p>Below is an Xcode screenshot after finish this step(please save the screenshot to local then view if the web version is not large enough to view clearly):</p>
 
 <p><img class="center" src="/images/pico/tutorial01/screen_shot1.png" width="600" height="800"></p>
 
-<p>Note, in the demo project, I also added a third part library called Toast which can generate toast style message, this is just for the convenience of demo, it is not necessary to do so in your real project.</p>
+<p>Note, in the demo project, I also added a third party library called Toast which can produce toast style message, this is just for the convenience of demo, it is not necessary for you to do so in your real project.</p>
 
 <h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
 
@@ -169,9 +1479,300 @@
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
-<p>The code is quite self-explanatory, the <code>shareClient</code> static factory method just returns a StockQuoteServiceClient(SOAP proxy generated from wsdl, you can find it in the <code>Proxy</code> group) with specified target service endpoint address, and there will be only one client instance within the applicaiton.</p>
+<p>The code is quite self-explanatory, the <code>shareClient</code> static factory method just returns a StockQuoteServiceClient(which extends StockQuoteSoap_SOAPClient generated from wsdl, you can find StockQuoteSoap_SOAPClient in the <code>Proxy</code> group) instance with specified target service endpoint address, and there will be only one such client instance within the applicaiton.</p>
 
-<p>//to be continue</p>
+<p>Now time to the UI part, for this simple Demo, we only need an UITextField for company symbol input, an UIButton to triget getQuote service call and an UITextView for result dislay, quite simple, see definition in header file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/ViewController.h">ViewController.h</a> and instantiation in implementation file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/ViewController.m">ViewController.m</a>, in method <code>viewDidLoad</code>.</p>
+
+<p>Now let's implement application logic by calling the getQuote service, with the help of the StockQuote service proxy generated from WSDL, web service call through Pico is extremely simple, let's review and understand the generated getQuote proxy interface first before writing calling logic:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>StockQuoteSoap_SOAPClient.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/Proxy/client/StockQuoteSoap_SOAPClient.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="c1">// Generated by wsdl compiler for ios/objective-c</span>
+</span><span class='line'><span class="c1">// DO NOT CHANGE!&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Foundation</span><span class="o">/</span><span class="n">Foundation</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;PicoSOAPClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;GetQuoteResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;GetQuote.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="n">This</span> <span class="n">class</span> <span class="n">is</span> <span class="n">the</span> <span class="n">SOAP</span> <span class="n">client</span> <span class="n">to</span> <span class="n">the</span> <span class="n">StockQuoteSoap</span> <span class="n">Web</span> <span class="n">Service</span><span class="p">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">StockQuoteSoap_SOAPClient</span> : <span class="nc">PicoSOAPClient</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">Get</span> <span class="n">Stock</span> <span class="n">quote</span> <span class="k">for</span> <span class="n">a</span> <span class="n">company</span> <span class="n">Symbol</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">getQuote:</span><span class="p">(</span><span class="n">GetQuote</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">GetQuoteResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@end</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>This is just a plain old interface generated from wsdl, unlike normal interface, this interface is asynchronous, when you call <code>getQuote</code> service, you need to provide a request of type <code>GetQuote</code> as first parameter, also you need to provide(or register) one <code>success</code> and one <code>failure</code> callbacks using Objective-C block, success callback will be called if the service invocation succeed, and you will get a response object of type <code>GetQuoteResponse</code>, usually, in success callback, you implement response handling logic and update UI according to the reasponse; failure callback will be called if the service invocation fail, or there is any HTTP or Pico parsing error, you may either get a <code>NSError</code>(indicationg HTTP or Pico parsing error), or get a <code>SOAPFault</code>(indicating service call fail), usually, you implement error handling logic in failure callback and update UI accordingly.</p>
+
+<p>By the way, although not necessary, I suggest you to review the proxy code generated by mwsc, this will help you better understand the inner working of Pico.</p>
+
+<p>Let's see the service call implementation of the demo, it's in the <code>getQuotePressed</code> method in the ViewController implementation, <code>getQuotePressed</code> will be triggered when you click the GetQuote button on the UI:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ViewController.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/ViewController.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">getQuotePressed:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">sender</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// Hide the keyboard.</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">_symbolText</span> <span class="n">resignFirstResponder</span><span class="p">];</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">if</span> <span class="p">(</span><span class="n">_symbolText</span><span class="p">.</span><span class="n">text</span><span class="p">.</span><span class="n">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="c1">// start progress activity</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">makeToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// Get shared service client</span>
+</span><span class='line'>  <span class="n">StockQuoteServiceClient</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">[</span><span class="n">StockQuoteServiceClient</span> <span class="n">sharedClient</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span> <span class="c1">// enable request/response message logging</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// Build request object</span>
+</span><span class='line'>  <span class="n">GetQuote</span> <span class="o">*</span><span class="n">request</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">GetQuote</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">_symbolText</span><span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// make API call and register callbacks</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">client</span> <span class="nl">getQuote:</span><span class="n">request</span> <span class="nl">success:</span><span class="o">^</span><span class="p">(</span><span class="n">GetQuoteResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// stop progress activity</span>
+</span><span class='line'>      <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// show result</span>
+</span><span class='line'>      <span class="n">_resultText</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">responseObject</span><span class="p">.</span><span class="n">getQuoteResult</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span> <span class="nl">failure:</span><span class="o">^</span><span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// stop progress activity</span>
+</span><span class='line'>      <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// http or parsing error</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="p">[</span><span class="n">error</span> <span class="n">localizedDescription</span><span class="p">]</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Error&quot;</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="n">SOAP11Fault</span> <span class="o">*</span><span class="n">soap11Fault</span> <span class="o">=</span> <span class="p">(</span><span class="n">SOAP11Fault</span> <span class="o">*</span><span class="p">)</span><span class="n">soapFault</span><span class="p">;</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="n">soap11Fault</span><span class="p">.</span><span class="n">faultstring</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;SOAP Fault&quot;</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}];</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The call logic can't simpler, I've added comments in the service call code for you to better understand the call flow. Also, I've enabled the debug mode of the proxy, so you can see the detailed request/response messages when you run the demo, this feature is extremely useful for troubleshooting.</p>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>Now it's time to run the demo, let's try it in the simulator(you may use a real device of cause ), I just want to see the stock quote of Apple(company symbol AAPL), belew is a screenshot of the simulator.</p>
+
+<p><img class="center" src="/images/pico/tutorial01/screen_shot2.png" width="300" height="500"></p>
+
+<p>The StockQuote web service just return stock quote information in XML format, so you see the result in xml.</p>
+
+<p>You can also find the debug output in the XCode, like below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>2013-03-28 11:33:35.793 StockQuoteDemo[761:c07] Sending request to : http://www.webservicex.net/stockquote.asmx
+</span><span class='line'>2013-03-28 11:33:35.794 StockQuoteDemo[761:c07] Request message:
+</span><span class='line'>2013-03-28 11:33:35.794 StockQuoteDemo[761:c07] &lt;?xml version="1.0" encoding="UTF-8" ?>
+</span><span class='line'>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.webserviceX.NET/">&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>&lt;soapenv:Body&gt;
+</span><span class='line'>    &lt;GetQuote&gt;
+</span><span class='line'>        &lt;symbol&gt;AAPL&lt;/symbol&gt;
+</span><span class='line'>    &lt;/GetQuote&gt;
+</span><span class='line'>&lt;/soapenv:Body&gt;
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&lt;/soapenv:Envelope>
+</span><span class='line'>2013-03-28 11:33:35.795 StockQuoteDemo[761:c07] Request HTTP Headers :
+</span><span class='line'>{&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>Accept = "text/xml";
+</span><span class='line'>"Accept-Language" = "en, fr, de, ja, nl, it, es, pt, pt-PT, da, fi, nb, sv, ko, zh-Hans, zh-Hant, ru, pl, tr, uk, ar, hr, cs, el, he, ro, sk, th, id, ms, en-GB, ca, hu, vi, en-us;q=0.8";
+</span><span class='line'>"Content-Type" = "text/xml";
+</span><span class='line'>SOAPAction = "http://www.webserviceX.NET/GetQuote";
+</span><span class='line'>"User-Agent" = "StockQuoteDemo/1.0 (iPhone Simulator; iOS 6.0; Scale/1.00)";
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}
+</span><span class='line'>2013-03-28 11:33:37.367 StockQuoteDemo[761:4a03] Response HTTP status :
+</span><span class='line'>200
+</span><span class='line'>2013-03-28 11:33:37.367 StockQuoteDemo[761:4a03] Response HTTP headers :
+</span><span class='line'>{&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>"Cache-Control" = "private, max-age=0";
+</span><span class='line'>"Content-Encoding" = gzip;
+</span><span class='line'>"Content-Length" = 634;
+</span><span class='line'>"Content-Type" = "text/xml; charset=utf-8";
+</span><span class='line'>Date = "Thu, 28 Mar 2013 03:33:54 GMT";
+</span><span class='line'>Server = "Microsoft-IIS/7.0";
+</span><span class='line'>Vary = "Accept-Encoding";
+</span><span class='line'>"X-AspNet-Version" = "4.0.30319";
+</span><span class='line'>"X-Powered-By" = "ASP.NET";
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}
+</span><span class='line'>2013-03-28 11:33:37.367 StockQuoteDemo[761:1c03] Response message :
+</span><span class='line'>2013-03-28 11:33:37.367 StockQuoteDemo[761:1c03] &lt;?xml version="1.0" encoding="utf-8"?>&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">&lt;soap:Body>&lt;GetQuoteResponse xmlns="http://www.webserviceX.NET/">&lt;GetQuoteResult>&lt;StockQuotes&gt;&lt;Stock&gt;&lt;Symbol&gt;AAPL&lt;/Symbol&gt;&lt;Last&gt;452.08&lt;/Last&gt;&lt;Date&gt;3/27/2013&lt;/Date&gt;&lt;Time&gt;4:00pm&lt;/Time&gt;&lt;Change&gt;-9.056&lt;/Change&gt;&lt;Open&gt;456.80&lt;/Open&gt;&lt;High&gt;456.80&lt;/High&gt;&lt;Low&gt;450.7301&lt;/Low&gt;&lt;Volume&gt;11836042&lt;/Volume&gt;&lt;MktCap&gt;424.5B&lt;/MktCap&gt;&lt;PreviousClose&gt;461.136&lt;/PreviousClose&gt;&lt;PercentageChange&gt;-1.96%&lt;/PercentageChange&gt;&lt;AnnRange&gt;419.00 - 705.07&lt;/AnnRange&gt;&lt;Earns&gt;44.107&lt;/Earns&gt;&lt;P-E&gt;10.45&lt;/P-E&gt;&lt;Name&gt;Apple Inc.&lt;/Name&gt;&lt;/Stock&gt;&lt;/StockQuotes&gt;&lt;/GetQuoteResult>&lt;/GetQuoteResponse>&lt;/soap:Body>&lt;/soap:Envelope>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>If you have any problem to run the demo, please check the debug output first.</p>
+
+<p>Now you see the Power of pico framework, you don't get troubled with error prone and tedious SOAP/XML parsing or http handling, the generic Pico framework will do these stuff for you, you only need to use a plain old asynchronous interface for service invocation, this can not only accelerate application development, but reduce the long term maintenance cost.</p>
+
+<p>StockQuote is just a bare minimum demo, there are other more featured demos(like Amazon, eBay search demo) in the Examples folder of Pico source project, please try them to better understand how Pico works, then you can begin to develop your own service based applications, using wsdl driven methodology supported by Pico.</p>
+
+<p>See your next great application!</p>
 ]]></content>
   </entry>
   
@@ -180,14 +1781,14 @@
     <link href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/"/>
     <updated>2013-03-25T20:03:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture</id>
-    <content type="html"><![CDATA[<p>WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with OO object directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost.</p>
+    <content type="html"><![CDATA[<p>WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost.</p>
 
 <!--more-->
 
 
-<p>Although nowadays there a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it's very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
+<p>Although nowadays there is a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it's very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
 
-<p>Can WSDL driven development be done on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.</p>
+<p>Can WSDL driven development be put into practice on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.</p>
 
 <p>Let's see the big picture:</p>
 
@@ -239,7 +1840,7 @@
 
 <p>With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.</p>
 
-<p>In later posts, I will show how to carry out WSDL driven iOS app development in a series of tutorials, just stay tuned.</p>
+<p>In later posts, I will show how to put WSDL driven iOS app development into practice in a series of tutorials, just stay tuned.</p>
 ]]></content>
   </entry>
   

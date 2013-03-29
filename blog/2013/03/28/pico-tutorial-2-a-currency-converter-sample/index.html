@@ -1,0 +1,581 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Pico Tutorial 2 - a Currency Converter Sample - Abstraction Builder</title>
+  <meta name="author" content="Bulldog">
+
+  
+  <meta name="description" content="Pico Tutorial 2 - a Currency Converter Sample">
+  <meta name="keywords" content="ios, iphone, soap, wsdl">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Abstraction Builder" type="application/atom+xml">
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <div id="logo">
+  	<div id="logoLeft">{</div>
+  	<div id="logoText">ab</div>
+  	<div id="logoRight">}</div>
+  	<div class="clear"></div>
+  </div>
+  <h1><a href="/">Abstraction Builder</a></h1>
+  
+    <h2>Building simple and elegant programming abstractions</h2>
+  
+  <div class="clear"></div>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:bulldog2011.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/projects">Projects</a></li>
+  <li><a href="/lab">Lab</a></li>
+  <li><a href="/about">About Me</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Pico Tutorial 2 - a Currency Converter Sample</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-28T20:38:00+08:00" pubdate data-updated="true">Mar 28<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>This is the second tutorial of Pico Tutorial series, in the <a href="http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">first tutorial</a>, I showed how to use Pico with a service called <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=9">StockQuote</a> from webserivceX.NET. Today I will show you how to use Pico with another service called <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=10">CurrencyConverter</a>, also from webserviceX.NET, in first tutorial, I showed you how to reference Pico as a static library, in this tutorial, I will show you how to reference the Pico source in your project. By the way, since the wsdl driven development process in both tutorials are quite similar, I won&#8217;t repeat too much details in this tutorial, I suppose you have already read tutorial one and basically understand the wsdl driven development process supported by Pico.</p>
+
+<p>The whole source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/CurrencyConverter">here</a>.</p>
+
+<p>Let&#8217;s cut to to the point:</p>
+
+<!--more-->
+
+
+<h2>Step 1 - Generate Objective-C Proxy from WSDL</h2>
+
+<p>Download <a href="https://github.com/bulldog2011/mwsc">mwsc</a> and run following command in terminal to generate the proxy:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin/mwsc -pico -d generated http://www.webservicex.net/CurrencyConvertor.asmx?WSDL</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A few comments to the generated code:</p>
+
+<blockquote><ul>
+<li>By default, the proxy code will be generated in the sub-folder corresponding to the target namespace of the wsdl.</li>
+<li>There is a geneated folder called <code>client</code>, the SOAP and XML proxy interface will be generated in this folder.</li>
+<li>There is a generted folder called <code>common</code>, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request or handle response needed by service call.</li>
+</ul>
+</blockquote>
+
+<h2>Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project</h2>
+
+<p>Create a new simple iOS single view application named &#8220;CurrencyConverter&#8221;, don&#8217;t choose ARC, download Pico source and drag the whole <code>PicoSource</code> folder into the project, choose &#8220;Copy items to destination group&#8217;s folder&#8221; and &#8220;add to targets&#8221; when prompted. Then do following settings to the project:</p>
+
+<blockquote><ol>
+<li>In Target Build Setting, add the <code>-ObjC</code> flag to your &#8220;Other Linker flags&#8221;.</li>
+<li>In Target Build Setting, add <code>/usr/include/libxml2</code> to your &#8220;Header Search Paths&#8221;</li>
+<li>In Target Build Phases, link binary with library <code>libxml2.dylib</code></li>
+</ol>
+</blockquote>
+
+<p>Build the the project to ensure that it can build successfully.</p>
+
+<p>Now drag the proxy generated in step 1 into the project,  choose &#8220;Copy items to destination group&#8217;s folder&#8221; and &#8220;add to targets&#8221; when prompted.</p>
+
+<p>Build the the project again to ensure that it can build successfully.</p>
+
+<p>The finished project should look like the screen shot below:</p>
+
+<p><img class="center" src="/images/pico/tutorial02/screen_shot1.png" width="600" height="800"></p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>First, create a shared serivice client as below:</p>
+
+<figure class='code'><figcaption><span>CurrencyConverterSerivceClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/CurrencyConverterSerivceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#import &quot;CurrencyConvertorSoap_SOAPClient.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">CurrencyConverterSerivceClient</span> : <span class="nc">CurrencyConvertorSoap_SOAPClient</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">+</span> <span class="p">(</span><span class="n">CurrencyConverterSerivceClient</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedClient</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>CurrencyConverterSerivceClient.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/CurrencyConverterSerivceClient.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#import &quot;CurrencyConverterSerivceClient.h&quot;</span>
+</span><span class='line'><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">currencyConverterServiceURLString</span> <span class="o">=</span> <span class="s">@&quot;http://www.webservicex.net/CurrencyConvertor.asmx&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@implementation</span> <span class="nc">CurrencyConverterSerivceClient</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">+</span> <span class="p">(</span><span class="n">CurrencyConverterSerivceClient</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedClient</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">static</span> <span class="n">CurrencyConverterSerivceClient</span> <span class="o">*</span><span class="n">_sharedClient</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>        <span class="n">_sharedClient</span> <span class="o">=</span> <span class="p">[[</span><span class="n">CurrencyConverterSerivceClient</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithEndpointURL:</span><span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">currencyConverterServiceURLString</span><span class="p">]];</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">_sharedClient</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now open ViewController_iPhone.xib in interface builder, then add a few UI components like following screen shot:</p>
+
+<p><img class="center" src="/images/pico/tutorial02/ui.png" width="300" height="500"></p>
+
+<p>Add <code>IBOutlet</code> properties and <code>IBAction</code> method in <a href="https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/ViewController.h">ViewController.h</a>, then wire the properties and method with UI components accordingly, bascially, the application will convert the <code>From</code> currency to <code>To</code> currency and show conversion rate, when the <code>Convert</code> button is clicked(which will trigger <code>onConvertClicked</code> method internally).</p>
+
+<p>Now implement the <code>onConvertClicked</code> method by invoking service as below:</p>
+
+<figure class='code'><figcaption><span>ViewController.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/ViewController.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#import &quot;ViewController.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;CurrencyConverterSerivceClient.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;SOAP11Fault.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#pragma mark - UI Event Handlers</span>
+</span><span class='line'><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">onConvertClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">self</span><span class="p">.</span><span class="n">fromCurrencyTextField</span><span class="p">.</span><span class="n">text</span><span class="p">.</span><span class="n">length</span> <span class="o">||</span> <span class="o">!</span><span class="n">self</span><span class="p">.</span><span class="n">toCurrencyTextField</span><span class="p">.</span><span class="n">text</span><span class="p">.</span><span class="n">length</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">UIAlertView</span><span class="o">*</span> <span class="n">alert</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAlertView</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithTitle:</span><span class="s">@&quot;Invalid Parameters&quot;</span> <span class="nl">message:</span><span class="s">@&quot;Please enter valid from and to currency types and try again&quot;</span> <span class="nl">delegate:</span><span class="n">self</span> <span class="nl">cancelButtonTitle:</span><span class="s">@&quot;OK&quot;</span> <span class="nl">otherButtonTitles:</span> <span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">alert</span> <span class="n">show</span><span class="p">];</span>
+</span><span class='line'>        <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">activityIndicator</span> <span class="nl">setHidden:</span><span class="n">NO</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">activityIndicator</span> <span class="n">startAnimating</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Get shared client</span>
+</span><span class='line'>    <span class="n">CurrencyConverterSerivceClient</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">[</span><span class="n">CurrencyConverterSerivceClient</span> <span class="n">sharedClient</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">client</span><span class="p">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span> <span class="c1">// enable message logging</span>
+</span><span class='line'>    <span class="n">client</span><span class="p">.</span><span class="n">timeoutInverval</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">// http timeout in seconds</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// build request</span>
+</span><span class='line'>    <span class="n">ConversionRate</span> <span class="o">*</span><span class="n">request</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">ConversionRate</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">fromCurrency</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">fromCurrencyTextField</span><span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">request</span><span class="p">.</span><span class="n">toCurrency</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">toCurrencyTextField</span><span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// make API call</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">client</span> <span class="nl">conversionRate:</span><span class="n">request</span> <span class="nl">success:</span><span class="o">^</span><span class="p">(</span><span class="n">ConversionRateResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// success handling logic</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">activityIndicator</span> <span class="n">stopAnimating</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">UIAlertView</span><span class="o">*</span> <span class="n">alert</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAlertView</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithTitle:</span><span class="s">@&quot;Success!&quot;</span> <span class="nl">message:</span><span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;Currency Conversion Rate is %@&quot;</span><span class="p">,</span><span class="n">responseObject</span><span class="p">.</span><span class="n">conversionRateResult</span><span class="p">]</span> <span class="nl">delegate:</span><span class="n">self</span> <span class="nl">cancelButtonTitle:</span><span class="s">@&quot;OK&quot;</span> <span class="nl">otherButtonTitles:</span> <span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">alert</span> <span class="n">show</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">}</span> <span class="nl">failure:</span><span class="o">^</span><span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&lt;</span><span class="n">PicoBindable</span><span class="o">&gt;</span> <span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">activityIndicator</span> <span class="n">stopAnimating</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// error handling logic</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// http or parsing error</span>
+</span><span class='line'>            <span class="n">UIAlertView</span><span class="o">*</span> <span class="n">alert</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAlertView</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithTitle:</span><span class="s">@&quot;Error&quot;</span> <span class="nl">message:</span><span class="n">error</span><span class="p">.</span><span class="n">localizedDescription</span> <span class="nl">delegate:</span><span class="n">self</span> <span class="nl">cancelButtonTitle:</span><span class="s">@&quot;OK&quot;</span> <span class="nl">otherButtonTitles:</span> <span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">alert</span> <span class="n">show</span><span class="p">];</span>
+</span><span class='line'>        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// soap fault</span>
+</span><span class='line'>            <span class="n">SOAP11Fault</span> <span class="o">*</span><span class="n">soap11Fault</span> <span class="o">=</span> <span class="p">(</span><span class="n">SOAP11Fault</span> <span class="o">*</span><span class="p">)</span><span class="n">soapFault</span><span class="p">;</span>
+</span><span class='line'>            <span class="n">UIAlertView</span><span class="o">*</span> <span class="n">alert</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAlertView</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithTitle:</span><span class="s">@&quot;SOAP Fault&quot;</span> <span class="nl">message:</span><span class="n">soap11Fault</span><span class="p">.</span><span class="n">faultstring</span> <span class="nl">delegate:</span><span class="n">self</span> <span class="nl">cancelButtonTitle:</span><span class="s">@&quot;OK&quot;</span> <span class="nl">otherButtonTitles:</span> <span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">alert</span> <span class="n">show</span><span class="p">];</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}];</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Please don&#8217;t forget to include the shared CurrencyConverterSerivceClient.</p>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>See a sceen shot below:</p>
+
+<p><img class="center" src="/images/pico/tutorial02/screen_shot2.png" width="300" height="500"></p>
+
+<p>And the debug output:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>2013-03-28 21:45:27.641 CurrencyConverter[2153:c07] Sending request to : http://www.webservicex.net/CurrencyConvertor.asmx
+</span><span class='line'>2013-03-28 21:45:27.642 CurrencyConverter[2153:c07] Request message:
+</span><span class='line'>2013-03-28 21:45:27.643 CurrencyConverter[2153:c07] &lt;?xml version="1.0" encoding="UTF-8" ?>
+</span><span class='line'>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.webserviceX.NET/">
+</span><span class='line'>  &lt;soapenv:Body>
+</span><span class='line'>      &lt;ConversionRate>
+</span><span class='line'>          &lt;FromCurrency>USD&lt;/FromCurrency>
+</span><span class='line'>          &lt;ToCurrency>CAD&lt;/ToCurrency>
+</span><span class='line'>      &lt;/ConversionRate>
+</span><span class='line'>  &lt;/soapenv:Body>
+</span><span class='line'>&lt;/soapenv:Envelope>
+</span><span class='line'>2013-03-28 21:45:27.643 CurrencyConverter[2153:c07] Request HTTP Headers : 
+</span><span class='line'>{
+</span><span class='line'>    Accept = "text/xml";
+</span><span class='line'>    "Accept-Language" = "en, fr, de, ja, nl, it, es, pt, pt-PT, da, fi, nb, sv, ko, zh-Hans, zh-Hant, ru, pl, tr, uk, ar, hr, cs, el, he, ro, sk, th, id, ms, en-GB, ca, hu, vi, en-us;q=0.8";
+</span><span class='line'>    "Content-Type" = "text/xml";
+</span><span class='line'>    SOAPAction = "http://www.webserviceX.NET/ConversionRate";
+</span><span class='line'>    "User-Agent" = "CurrencyConverter/1.0 (iPhone Simulator; iOS 6.0; Scale/1.00)";
+</span><span class='line'>}
+</span><span class='line'>2013-03-28 21:45:28.495 CurrencyConverter[2153:1b03] Response HTTP status : 
+</span><span class='line'>200
+</span><span class='line'>2013-03-28 21:45:28.495 CurrencyConverter[2153:1b03] Response HTTP headers : 
+</span><span class='line'>{
+</span><span class='line'>    "Cache-Control" = "private, max-age=0";
+</span><span class='line'>    "Content-Encoding" = gzip;
+</span><span class='line'>    "Content-Length" = 316;
+</span><span class='line'>    "Content-Type" = "text/xml; charset=utf-8";
+</span><span class='line'>    Date = "Thu, 28 Mar 2013 13:45:47 GMT";
+</span><span class='line'>    Server = "Microsoft-IIS/7.0";
+</span><span class='line'>    Vary = "Accept-Encoding";
+</span><span class='line'>    "X-AspNet-Version" = "4.0.30319";
+</span><span class='line'>    "X-Powered-By" = "ASP.NET";
+</span><span class='line'>}
+</span><span class='line'>2013-03-28 21:45:28.495 CurrencyConverter[2153:5503] Response message : 
+</span><span class='line'>2013-03-28 21:45:28.495 CurrencyConverter[2153:5503] &lt;?xml version="1.0" encoding="utf-8"?>&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">&lt;soap:Body>&lt;ConversionRateResponse xmlns="http://www.webserviceX.NET/">&lt;ConversionRateResult>1.0167&lt;/ConversionRateResult>&lt;/ConversionRateResponse>&lt;/soap:Body>&lt;/soap:Envelope></span></code></pre></td></tr></table></div></figure>
+
+
+<p>There are other similar demos in the <a href="https://github.com/bulldog2011/pico/tree/master/Examples">Examples</a> folder of Pico source, like the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/BarCode">BarCode</a> demo which calls web service that will return base64 encoded barcode data and the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/Weather">Weather</a> demo which shows the weather given a zip code, see screen shots below, I won&#8217;t create tuturials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.</p>
+
+<p>The screen shot of barcode demo:
+<img class="center" src="/images/pico/tutorial02/screen_shot3.png" width="300" height="500"></p>
+
+<p>The screen shot of weather demo:
+<img class="center" src="/images/pico/tutorial02/screen_shot4.png" width="300" height="500"></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bulldog</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-03-28T20:38:00+08:00" pubdate data-updated="true">Mar 28<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/pico/'>pico</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left articlenav" href="/blog/2013/03/27/pico-tutorial-a-stockquote-sample/" title="Previous Post: Pico Tutorial - a StockQuote sample">&laquo; Pico Tutorial - a StockQuote sample</a>
+      
+      
+        <a class="basic-alignment right articlenav" href="/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/" title="Next Post: Pico Tutoiral 3 - Hello eBay Finding">Pico Tutoiral 3 - Hello eBay Finding &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Categories</h1>
+  <ul id="categories">
+    <li class='category'><a href='/blog/categories/big-queue/'>big queue (7)</a></li>
+<li class='category'><a href='/blog/categories/design/'>design (2)</a></li>
+<li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
+<li class='category'><a href='/blog/categories/luxun/'>luxun (1)</a></li>
+<li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
+<li class='category'><a href='/blog/categories/nano/'>nano (9)</a></li>
+<li class='category'><a href='/blog/categories/pico/'>pico (4)</a></li>
+
+  </ul>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/">Pico Tutoiral 3 - Hello eBay Finding</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/">Pico Tutorial 2 - a Currency Converter Sample</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">Pico Tutorial - a StockQuote sample</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/27/the-architecture-and-design-of-a-pub-sub-messaging-system/">the architecture and design of a publish subscribe messaging system tailored for big data collecting and analytics</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">wsdl driven development on iOS - the big picture</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Bulldog -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'bulldogtech';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

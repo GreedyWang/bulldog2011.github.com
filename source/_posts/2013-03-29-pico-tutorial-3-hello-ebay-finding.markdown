@@ -428,6 +428,12 @@ This is just a bare minimum eBay Finding service based application, for a demo w
 Now it's your turn to create iOS applications based on eBay Finding web serivce, see your next great serivce based app.
 
 
+### Update 1
+The eBay Finding Service Proxy has been extracted as a standalone project, hosted [here](https://github.com/bulldog2011/PicoEBayFindingClient), and the corresponding appledoc is hosted [here](http://bulldog2011.github.com/PicoEBayFindingClient/), the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.
+
+
+
+
 
 
 

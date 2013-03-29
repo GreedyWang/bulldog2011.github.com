@@ -8,7 +8,7 @@ keywords: ios, iphone, soap, wsdl
 description: Pico Tutorial 2 - a Currency Converter Sample
 ---
 
-This is the second tutorial of Pico Tutorial series, in the [first tutorial](http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/), I showed how to use Pico with a service called [StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=9) from webserivceX.NET. StockQuote is quite simple, it's only a read only service, today I will show you how to use Pico with another service called [CurrencyConverter](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=10), also from webserviceX.NET, this is a read/writable serivce, means you need to provide input and the serivce will send you output. Also in first tutorial, I showed you how to reference Pico as a static library, in this tutorial, I will show you how to reference the Pico source in your project. By the way, since the wsdl driven development flow in both tutorials are quite similar, I won't repeat too much details in this tutorial, I suppose you have already read tutorial one and basically understand the wsdl driven development flow supported by Pico.
+This is the second tutorial of Pico Tutorial series, in the [first tutorial](http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/), I showed how to use Pico with a service called [StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=9) from webserivceX.NET. Today I will show you how to use Pico with another service called [CurrencyConverter](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=10), also from webserviceX.NET, in first tutorial, I showed you how to reference Pico as a static library, in this tutorial, I will show you how to reference the Pico source in your project. By the way, since the wsdl driven development process in both tutorials are quite similar, I won't repeat too much details in this tutorial, I suppose you have already read tutorial one and basically understand the wsdl driven development process supported by Pico.
 
 The whole source of this tutorial is [here](https://github.com/bulldog2011/pico/tree/master/Examples/CurrencyConverter).
 
@@ -31,16 +31,16 @@ A few comments to the generated code:
 
 >* By default, the proxy code will be generated in the sub-folder corresponding to the target namespace of the wsdl.
 * There is a geneated folder called `client`, the SOAP and XML proxy interface will be generated in this folder.
-* There is a generted folder called `common`, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request/response needed by service call.
+* There is a generted folder called `common`, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request or handle response needed by service call.
 
 ##Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project
 
 Create a new simple iOS single view application named "CurrencyConverter", don't choose ARC, download Pico source and drag the whole `PicoSource` folder into the project, choose "Copy items to destination group's folder" and "add to targets" when prompted. Then do following settings to the project:
 
 
->1. In Target Build Setting, add the -ObjC flag to your "Other Linker flags".
-2. In Target Build Setting, add /usr/include/libxml2 to your "Header Search Paths"
-3. In Target Build Phases, link binary with library libxml2.dylib
+>1. In Target Build Setting, add the `-ObjC` flag to your "Other Linker flags".
+2. In Target Build Setting, add `/usr/include/libxml2` to your "Header Search Paths"
+3. In Target Build Phases, link binary with library `libxml2.dylib`
 
 Build the the project to ensure that it can build successfully.
 
@@ -54,7 +54,7 @@ The finished project should look like the screen shot below:
 
 ##Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.
 
-First, create the share serivice client instance as below:
+First, create a shared serivice client as below:
 
 {% codeblock CurrencyConverterSerivceClient.h lang:objc https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/CurrencyConverterSerivceClient.h source %}
 
@@ -93,9 +93,9 @@ Now open ViewController_iPhone.xib in interface builder, then add a few UI compo
 
 {% img center /images/pico/tutorial02/ui.png 300 500 %}
 
-Add `IBOutlet` properties and `IBAction` method in [ViewController.h](https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/ViewController.h), then wire the properties and method with UI components accordingly, bascially, the application will convert the `From` currency to `To` currency and show converstion rate, when the `Convert` button is clicked(which will trigger onConvertClicked method internally).
+Add `IBOutlet` properties and `IBAction` method in [ViewController.h](https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/ViewController.h), then wire the properties and method with UI components accordingly, bascially, the application will convert the `From` currency to `To` currency and show conversion rate, when the `Convert` button is clicked(which will trigger `onConvertClicked` method internally).
 
-Now implement application logic by invoking service as below:
+Now implement the `onConvertClicked` method by invoking service as below:
 
 {% codeblock ViewController.m lang:objc https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/ViewController.m source  %}
 
@@ -206,7 +206,7 @@ And the debug output:
 
 {% endcodeblock %}
 
-There are other similar demos in the [Examples](https://github.com/bulldog2011/pico/tree/master/Examples) folder of Pico source, like the [BarCode](https://github.com/bulldog2011/pico/tree/master/Examples/BarCode) demo which calls web service that will return base64 encoded bardcode data and the [Weather](https://github.com/bulldog2011/pico/tree/master/Examples/Weather) demo which shows the weather given a zip code, see screen shots below, I won't create tuturials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.
+There are other similar demos in the [Examples](https://github.com/bulldog2011/pico/tree/master/Examples) folder of Pico source, like the [BarCode](https://github.com/bulldog2011/pico/tree/master/Examples/BarCode) demo which calls web service that will return base64 encoded barcode data and the [Weather](https://github.com/bulldog2011/pico/tree/master/Examples/Weather) demo which shows the weather given a zip code, see screen shots below, I won't create tuturials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.
 
 The screen shot of barcode demo:
 {% img center /images/pico/tutorial02/screen_shot3.png 300 500 %}

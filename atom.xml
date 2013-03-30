@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-29T19:53:16+08:00</updated>
+  <updated>2013-03-30T19:07:53+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -14,10 +14,812 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Pico Tutoiral 3 - Hello eBay Finding]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/"/>
+    <title type="html"><![CDATA[Pico Tutorial 4 - Hello eBay Shopping]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/03/30/pico-tutorial-4-hello-ebay-shopping/"/>
+    <updated>2013-03-30T10:06:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/03/30/pico-tutorial-4-hello-ebay-shopping</id>
+    <content type="html"><![CDATA[<p>This is the fourth tutorial of Pico tutorial series, in this tutorial, I will show you how to integrate <a href="https://github.com/bulldog2011/pico">Pico</a> with <a href="https://www.x.com/developers/ebay/products/shopping-api">eBay Shopping Web Service</a>, if you are not familar with this service, just have a quick reivew on its official site, basically, eBay Shopping service allows you to search for eBay items, products and reviews, user info, and popular items and searches. In previous tutorials, I showed you how to integrate Pico with SOAP based services, while in this tutorial, I will show you how to interate Pico with XML based service, the eBay Shopping service just support XML message format.</p>
+
+<p>The source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/eBayShopping">here</a>.</p>
+
+<!--more-->
+
+
+<h2>Step 0 - Prerequisite</h2>
+
+<p>I suppose you have already read previous Pico tutorials, at least 1 and 2, and basically you should know:</p>
+
+<blockquote><ul>
+<li>The wsdl driven development process supported by Pico.</li>
+<li>How to reference Pico as a static library in your project.</li>
+<li>Or How to reference Pico Source directly in your project.</li>
+</ul>
+</blockquote>
+
+<h2>Step 1 - Generate Objective-C Proxy from WSDL</h2>
+
+<p>Download <a href="https://github.com/bulldog2011/mwsc">mwsc</a> and run following command in terminal to generate the proxy:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin/mwsc -pico -d generated -prefix Shopping_ -ebayshopping http://developer.ebay.com/webservices/latest/ShoppingService.wsdl</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Depends on the network speed, you may need to wait a few moments to let the code generator download the wsdl and generate code, you may also download the wsdl and run the code generator with a local wsdl.</p>
+
+<p>A few comments about the codegen options:</p>
+
+<blockquote><ul>
+<li>The code generator will throw many warnings, say that the wsdl violates some schema rule, just ignore them, it&#8217;s ok as long as the final code is generated correctly.</li>
+<li>I have added a prefix <code>Shopping_</code> as codegen option, such that all interfaces/types generated will be prefixed with <code>Shopping_</code>. Adding prefix to Objective-C types is a recommended best practice to avoid possible type name conflict with code generated from other services, for example, eBay has a couple of services, and they share a few commons types, without prefixing, you may get conflict if you use two or more eBay services in one application.</li>
+<li>I have added a special <code>-ebayshopping</code> codegen option, this is because eBay Shopping service needs a per-call operation name HTTP header(eBay Finding service also needs a similar but different header), I added this special flag in the code generator to let it generate the header for me, since I don&#8217;t want to add this header everytime I call an eBay Shopping service, so this is just a special flag for eBay Shopping services and for demo only, or a hidden feature, not a generic codegen option.</li>
+</ul>
+</blockquote>
+
+<h2>Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project</h2>
+
+<p>Create a new simple iOS single view application named &#8220;HelloeBayShopping&#8221;, don&#8217;t choose ARC since Pico does not support ARC yet.</p>
+
+<p>In this tutorial, we will reference Pico as a static library, suppose you have downloaded Pico source project from github site, then:</p>
+
+<blockquote><ol>
+<li>Drag the Pico xcodeproj into your project,</li>
+<li>In the Build Phases of the target,  add <code>libPico.a</code> and <code>libxml2.dylib</code> to &#8220;Link Binary With Libraries&#8221; section.</li>
+<li>In the Build Setting of the target, add [your path to Pico source] to &#8220;User Header Search Paths&#8221; setting, choose &#8220;recursive&#8221; seach path.</li>
+</ol>
+</blockquote>
+
+<p>Build the project to ensure that it can build successfully.</p>
+
+<p>Now drag the proxy generated in step 1 into the project,  choose &#8220;Copy items to destination group&#8217;s folder&#8221; and &#8220;add to targets&#8221; when prompted.</p>
+
+<p>Build the project again to ensure that it can build successfully.</p>
+
+<p>The code generation will genenrate both SOAP and XML based interfaces from eBay Shopping wsdl for us,
+since we will use XML based interface in this tutorial, you may now review the generated eBay Shopping service XML interface to learn what kinds of functions are provided by eBay Shopping service, and what kinds of parameters are needed to call the serivce, the interface is posted below:</p>
+
+<figure class='code'><figcaption><span>ShoppingInterface_XMLClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayShopping/eBayShopping/Proxy/client/ShoppingInterface_XMLClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">// Generated by wsdl compiler for ios/objective-c</span>
+</span><span class='line'><span class="c1">// DO NOT CHANGE!</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+</span><span class='line'><span class="cp">#import &quot;PicoXMLClient.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetCategoryInfoResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetSingleItemResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetMultipleItemsResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindProductsRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetMultipleItemsRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindReviewsAndGuidesResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindHalfProductsRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindPopularSearchesResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindProductsResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetCategoryInfoRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetUserProfileRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GeteBayTimeResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetShippingCostsRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetItemStatusResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetUserProfileResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindHalfProductsResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetItemStatusRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindPopularSearchesRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetShippingCostsResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindReviewsAndGuidesRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindPopularItemsResponseType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GetSingleItemRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_GeteBayTimeRequestType.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_FindPopularItemsRequestType.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> This class is the XML client to the ShoppingInterface Web Service.</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">ShoppingInterface_XMLClient</span> : <span class="nc">PicoXMLClient</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">findHalfProducts:</span><span class="p">(</span><span class="n">Shopping_FindHalfProductsRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_FindHalfProductsResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">findPopularItems:</span><span class="p">(</span><span class="n">Shopping_FindPopularItemsRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_FindPopularItemsResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">findPopularSearches:</span><span class="p">(</span><span class="n">Shopping_FindPopularSearchesRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_FindPopularSearchesResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">findProducts:</span><span class="p">(</span><span class="n">Shopping_FindProductsRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_FindProductsResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">findReviewsAndGuides:</span><span class="p">(</span><span class="n">Shopping_FindReviewsAndGuidesRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_FindReviewsAndGuidesResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">getCategoryInfo:</span><span class="p">(</span><span class="n">Shopping_GetCategoryInfoRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_GetCategoryInfoResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">getItemStatus:</span><span class="p">(</span><span class="n">Shopping_GetItemStatusRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_GetItemStatusResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">getMultipleItems:</span><span class="p">(</span><span class="n">Shopping_GetMultipleItemsRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_GetMultipleItemsResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">getShippingCosts:</span><span class="p">(</span><span class="n">Shopping_GetShippingCostsRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_GetShippingCostsResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">getSingleItem:</span><span class="p">(</span><span class="n">Shopping_GetSingleItemRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_GetSingleItemResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">getUserProfile:</span><span class="p">(</span><span class="n">Shopping_GetUserProfileRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_GetUserProfileResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">geteBayTime:</span><span class="p">(</span><span class="n">Shopping_GeteBayTimeRequestType</span> <span class="o">*</span><span class="p">)</span> <span class="n">requestObject</span>
+</span><span class='line'>      <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">Shopping_GeteBayTimeResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>      <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>All the methods in the interface follow same calling paradigm - you call the service with required request object and register success callback(for success handling logic) and failure callback(for error handling logic) using Objective-C block.</p>
+
+<p>You may also compare the XML interface with the SOAP interface, they are almost similar, except that SOAP interface will give you an additional SOAPFault object in the failure callback, this is obvious, since XML based service has no concept of SOAPFault, usually, the error is returned as response resident error(RRE) in the XML response message.</p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>First, create a shared service client as below:</p>
+
+<figure class='code'><figcaption><span>ShoppingInterface_XMLClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayShopping/eBayShopping/EBayShoppingServiceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#import &quot;ShoppingInterface_XMLClient.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">EBayShoppingServiceClient</span> : <span class="nc">ShoppingInterface_XMLClient</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">+</span> <span class="p">(</span><span class="n">EBayShoppingServiceClient</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedClient</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong><em>Note</em></strong>, unlike shared clients created in previous tutorials, the <code>EBayShoppingServiceClient</code> extends <code>ShoppingInterface_XMLClient</code>, which means we are using XML service interface supported by Pico.</p>
+
+<figure class='code'><figcaption><span>ShoppingInterface_XMLClient.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayShopping/eBayShopping/EBayShoppingServiceClient.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#import &quot;EBayShoppingServiceClient.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">eBayAppId</span> <span class="o">=</span> <span class="s">@&quot;YOUR APPID HERE&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// production</span>
+</span><span class='line'><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">eBayShoppingServiceURLString</span> <span class="o">=</span> <span class="s">@&quot;http://open.api.ebay.com/shopping?&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="c1">// sandbox</span>
+</span><span class='line'><span class="c1">//static NSString *const eBayShoppingServiceURLString = @&quot;http://open.api.sandbox.ebay.com/shopping&quot;;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">targetAPIVersion</span> <span class="o">=</span> <span class="s">@&quot;809&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> for site id list, see http://developer.ebay.com/DevZone/shopping/docs/CallRef/types/SiteCodeType.html</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">targetSiteId</span> <span class="o">=</span> <span class="s">@&quot;0&quot;</span><span class="p">;</span> <span class="c1">// 0 for US</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@implementation</span> <span class="nc">EBayShoppingServiceClient</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">+</span> <span class="p">(</span><span class="n">EBayShoppingServiceClient</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedClient</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">static</span> <span class="n">EBayShoppingServiceClient</span> <span class="o">*</span><span class="n">_sharedClient</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>        <span class="n">_sharedClient</span> <span class="o">=</span> <span class="p">[[</span><span class="n">EBayShoppingServiceClient</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithEndpointURL:</span><span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">eBayShoppingServiceURLString</span><span class="p">]];</span>
+</span><span class='line'>    <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">_sharedClient</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithEndpointURL:</span><span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">URL</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nl">initWithEndpointURL:</span><span class="n">URL</span><span class="p">];</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">[</span><span class="n">super</span> <span class="nl">setDefaultHeader:</span><span class="s">@&quot;X-EBAY-API-APP-ID&quot;</span> <span class="nl">value:</span><span class="n">eBayAppId</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">super</span> <span class="nl">setDefaultHeader:</span><span class="s">@&quot;X-EBAY-API-REQUEST-ENCODING&quot;</span> <span class="nl">value:</span><span class="s">@&quot;XML&quot;</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">super</span> <span class="nl">setDefaultHeader:</span><span class="s">@&quot;X-EBAY-API-VERSION&quot;</span> <span class="nl">value:</span><span class="n">targetAPIVersion</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">super</span> <span class="nl">setDefaultHeader:</span><span class="s">@&quot;X-EBAY-API-SITE-ID&quot;</span><span class="nl">value:</span><span class="n">targetSiteId</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Like eBay Finding service, the eBay Shopping service needs a few HTTP headers set to work, let me give more comments:</p>
+
+<blockquote><ol>
+<li>eBay Shopping service needs to set a few HTTP headers to work, for a list of required headers, please refer to doc <a href="http://developer.ebay.com/DevZone/shopping/docs/Concepts/ShoppingAPI_FormatOverview.html">here</a>.</li>
+<li>One mandatory header for eBay Shopping service is <code>eBayAppId</code>, you need to register on eBay developer site as an eBay developer then get this id, before your can run this demo, you must fill in your own eBayAppId in the shared client.</li>
+<li>Another mandatory header for eBay Shopping service is <code>targetAPIVersion</code>, aka the API version you want to use, usually, you use the latest one, at the time of this writing, the latest version is <code>809</code>, you may update this according to your real needs.</li>
+<li>We also set <code>X-EBAY-API-REQUEST-ENCODING</code> to <code>XML</code>, indicating we want to call XML service supported by eBay Shopping service.</li>
+</ol>
+</blockquote>
+
+<p>Now the UI part, we will find one popular item from eBay by keywords, since this is a hello world like sample, we just need a UITextField for keyword input and UIButton to trigger eBay search by invoking method <code>searchButtonPressed</code> which will indirectly call eBay Shopping <code>findPopularItems</code> API through the proxy, fairly simple, see definition in header file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/eBayShopping/eBayShopping/ViewController.h">ViewController.h</a> and instantiation in implementation file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/eBayShopping/eBayShopping/ViewController.m">ViewController.m</a>.</p>
+
+<p>Now implement the <code>searchButtonPressed</code> method by invoking service as below:</p>
+
+<figure class='code'><figcaption><span>ViewController.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayShopping/eBayShopping/ViewController.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#import &quot;ViewController.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Shopping_CommonTypes.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;EBayShoppingServiceClient.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;Toast+UIView.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">searchButtonPressed:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Hide the keyboard.</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">_searchText</span> <span class="n">resignFirstResponder</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">_searchText</span><span class="p">.</span><span class="n">text</span><span class="p">.</span><span class="n">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// start progress activity</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">makeToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// Get shared service client</span>
+</span><span class='line'>        <span class="n">EBayShoppingServiceClient</span> <span class="o">*</span><span class="n">shoppingClient</span> <span class="o">=</span> <span class="p">[</span><span class="n">EBayShoppingServiceClient</span> <span class="n">sharedClient</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">shoppingClient</span><span class="p">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span> <span class="c1">// enable request/response message logging</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// Build request object</span>
+</span><span class='line'>        <span class="n">Shopping_FindPopularItemsRequestType</span> <span class="o">*</span><span class="n">request</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">Shopping_FindPopularItemsRequestType</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">request</span><span class="p">.</span><span class="n">queryKeywords</span> <span class="o">=</span> <span class="n">_searchText</span><span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span><span class='line'>        <span class="c1">// only need one item for demo</span>
+</span><span class='line'>        <span class="n">request</span><span class="p">.</span><span class="n">maxEntries</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSNumber</span> <span class="nl">numberWithInt:</span><span class="mi">1</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// make API call and register callbacks</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">shoppingClient</span> <span class="nl">findPopularItems:</span><span class="n">request</span> <span class="nl">success:</span><span class="o">^</span><span class="p">(</span><span class="n">Shopping_FindPopularItemsResponseType</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// stop progress activity</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="k">if</span> <span class="p">([</span><span class="n">Shopping_AckCodeType_SUCCESS</span> <span class="nl">isEqualToString:</span><span class="n">responseObject</span><span class="p">.</span><span class="n">ack</span><span class="p">])</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="k">if</span> <span class="p">(</span><span class="n">responseObject</span><span class="p">.</span><span class="n">itemArray</span><span class="p">.</span><span class="n">item</span><span class="p">.</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                    <span class="c1">// show the title of the first found item</span>
+</span><span class='line'>                    <span class="n">Shopping_SimpleItemType</span> <span class="o">*</span><span class="n">item</span> <span class="o">=</span> <span class="p">[</span><span class="n">responseObject</span><span class="p">.</span><span class="n">itemArray</span><span class="p">.</span><span class="n">item</span> <span class="nl">objectAtIndex:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>                    <span class="c1">// start image downloading progress activity</span>
+</span><span class='line'>                    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">makeToastActivity</span><span class="p">];</span>
+</span><span class='line'>                    <span class="c1">// get gallery image</span>
+</span><span class='line'>                    <span class="n">NSURL</span> <span class="o">*</span><span class="n">imageURL</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">item</span><span class="p">.</span><span class="n">galleryURL</span><span class="p">];</span>
+</span><span class='line'>                    <span class="n">NSData</span> <span class="o">*</span><span class="n">imageData</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSData</span> <span class="nl">dataWithContentsOfURL:</span><span class="n">imageURL</span><span class="p">];</span>
+</span><span class='line'>                    <span class="c1">// stop progress activity</span>
+</span><span class='line'>                    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>                    <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIImage</span> <span class="nl">imageWithData:</span><span class="n">imageData</span><span class="p">];</span>
+</span><span class='line'>                    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="n">item</span><span class="p">.</span><span class="n">title</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Success&quot;</span> <span class="nl">image:</span><span class="n">image</span><span class="p">];</span>
+</span><span class='line'>                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>                    <span class="c1">// no result</span>
+</span><span class='line'>                    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="s">@&quot;No result&quot;</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span><span class="p">];</span>
+</span><span class='line'>                <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span> <span class="c1">// response resident error</span>
+</span><span class='line'>                <span class="n">Shopping_ErrorType</span> <span class="o">*</span><span class="n">error</span> <span class="o">=</span> <span class="p">[</span><span class="n">responseObject</span><span class="p">.</span><span class="n">errors</span> <span class="nl">objectAtIndex:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>                <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="n">error</span><span class="p">.</span><span class="n">shortMessage</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Error&quot;</span><span class="p">];</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span> <span class="nl">failure:</span><span class="o">^</span><span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="p">[</span><span class="n">error</span> <span class="n">localizedDescription</span><span class="p">]</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Error&quot;</span><span class="p">];</span>
+</span><span class='line'>        <span class="p">}];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>More comments to the serivce call code:</p>
+
+<blockquote><ol>
+<li>I&#8217;ve added comments in the code so the whole service call flow should be easy to understand.</li>
+<li>We used the eBay Shopping <code>findPopularItems</code> call, which takes a keyword as input, and will return a list of matched popular items on eBay, for demo, we just need one item to display, so we set <code>maxEntries</code> to 1.</li>
+<li>In the success handling logic, we show the title and the image of the returned item, for demo, the image is downloaded synchronously, but in practice, you should download image asynchronously in order not to block main UI.</li>
+<li>eBay Shopping service supports response resident error(RRE), so even we get a success response, we still need to check the response for resident error and handle it accordingly.</li>
+<li>We used a thrid party library called &#8220;Toast&#8221; for producing toast like message, this is just for the convenience of demo, not necessary in your real project.</li>
+<li>The <code>maxEntries</code> property of <code>Shopping_FindPopularItemsRequestType</code> is of type <code>NSNumber</code>,  you may get confused what kind of number should be put in maxEntries, short, int or long? please just consult the source of  <code>Shopping_FindPopularItemsRequestType.h</code>, it provides type hint as code comments, see [NSNumber type hint] below. Indeed, every type generated from wsdl has sufficient type hint to assist your development. Xsd annotations in wsdl/schema are also generated into corresponding interfaces/types, further facilitating your development.</li>
+<li>Similarly, in response handling, the <code>item</code> property of <code>Shopping_SimpleItemArrayType</code> is of type <code>NSMutableArray</code>, you may get confused what is the actual entry type? please just consult the source of <code>Shopping_SimpleItemArrayType.h</code> for type hint, see [NSMuatableArray entry type hint] below.</li>
+<li>Xsd enumeration is mapped to Objective-C <code>NSString</code> in Pico framework, for example, the <code>ack</code> property of <code>Shopping_FindPopularItemsResponseType</code> is of type <code>NSString</code>, in wsdl, it&#8217;s an xsd enumeration of type <code>AckCodeType</code>, the type hint in <code>Shopping_AbstractResponseType.h</code>(from which <code>Shopping_FindPopularItemsResponseType.h</code> extends) will tell you where to find the enum constants allowed by <code>ack</code> property, in this case, the allowed enum constants are in <code>Shopping_AckCodeType.h</code>, see [Enum type hint below] :</li>
+</ol>
+</blockquote>
+
+<p>NSNumber type hint:</p>
+
+<figure class='code'><figcaption><span>Shopping_FindPopularItemsRequestType.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayShopping/eBayShopping/Proxy/Shopping_FindPopularItemsRequestType.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">Specifies the maximum number of entries to return in a single call.</span>
+</span><span class='line'><span class="cm">type : NSNumber, wrapper for primitive int</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">maxEntries</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>NSMutableArray entry type hint:</p>
+
+<figure class='code'><figcaption><span>Shopping_SimpleItemArrayType.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayShopping/eBayShopping/Proxy/Shopping_SimpleItemArrayType.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">Contains data for an item listing.</span>
+</span><span class='line'><span class="cm">entry type : class Shopping_SimpleItemType</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSMutableArray</span> <span class="o">*</span><span class="n">item</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Enum type hint:</p>
+
+<figure class='code'><figcaption><span>Shopping_AbstractResponseType.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayShopping/eBayShopping/Proxy/Shopping_AbstractResponseType.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'> <span class="cm">/**</span>
+</span><span class='line'><span class="cm">  </span>
+</span><span class='line'><span class="cm">  Indicates whether the call was successfully processed by eBay.</span>
+</span><span class='line'><span class="cm">  </span>
+</span><span class='line'><span class="cm">  </span>
+</span><span class='line'><span class="cm">  type: string constant in Shopping_AckCodeType.h</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'>  <span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">ack</span><span class="p">;</span>
+</span><span class='line'>  
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Please don&#8217;t forget to include the shared client header file, it&#8217;s a best practice to include the generated Shopping_CommonTypes.h file which can free you from writing many import statements required by request building and response handling.</p>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>Let&#8217;s run the demo in iPhone simulator, see a sceen shot below:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/pico/tutorial04/screen_shot1.png" width="300" height="500"></p>
+
+<p>and the debug output:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>2013-03-30 11:50:48.084 HelloeBayShopping[3746:c07] Sending request to : http://open.api.ebay.com/shopping?
+</span><span class='line'>2013-03-30 11:50:48.086 HelloeBayShopping[3746:c07] Request message:
+</span><span class='line'>2013-03-30 11:50:48.086 HelloeBayShopping[3746:c07] &lt;?xml version="1.0" encoding="UTF-8" ?>
+</span><span class='line'>&lt;FindPopularItemsRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+</span><span class='line'>  &lt;QueryKeywords>Ipad mini&lt;/QueryKeywords>
+</span><span class='line'>  &lt;MaxEntries>1&lt;/MaxEntries>
+</span><span class='line'>&lt;/FindPopularItemsRequest>
+</span><span class='line'>2013-03-30 11:50:48.086 HelloeBayShopping[3746:c07] Request HTTP Headers : 
+</span><span class='line'>{
+</span><span class='line'>    Accept = "text/xml";
+</span><span class='line'>    "Accept-Language" = "en, fr, de, ja, nl, it, es, pt, pt-PT, da, fi, nb, sv, ko, zh-Hans, zh-Hant, ru, pl, tr, uk, ar, hr, cs, el, he, ro, sk, th, id, ms, en-GB, ca, hu, vi, en-us;q=0.8";
+</span><span class='line'>    "Content-Type" = "text/xml";
+</span><span class='line'>    "User-Agent" = "HelloeBayShopping/1.0 (iPhone Simulator; iOS 6.0; Scale/1.00)";
+</span><span class='line'>    "X-EBAY-API-APP-ID" = **************;
+</span><span class='line'>    "X-EBAY-API-CALL-NAME" = FindPopularItems;
+</span><span class='line'>    "X-EBAY-API-REQUEST-ENCODING" = XML;
+</span><span class='line'>    "X-EBAY-API-SITE-ID" = 0;
+</span><span class='line'>    "X-EBAY-API-VERSION" = 809;
+</span><span class='line'>}
+</span><span class='line'>2013-03-30 11:50:49.057 HelloeBayShopping[3746:1a03] Response HTTP headers : 
+</span><span class='line'>{
+</span><span class='line'>    "Cache-Control" = "no-cache";
+</span><span class='line'>    Connection = "keep-alive";
+</span><span class='line'>    "Content-Type" = "text/xml;charset=utf-8";
+</span><span class='line'>    Date = "Sat, 30 Mar 2013 03:50:59 GMT";
+</span><span class='line'>    Expires = "Sat, 25 Dec 1999 00:00:00 GMT";
+</span><span class='line'>    "Last-Modified" = "Sat, 30 Mar 2013 03:51:00 GMT";
+</span><span class='line'>    Pragma = "no-cache";
+</span><span class='line'>    Server = "Apache-Coyote/1.1";
+</span><span class='line'>    "Transfer-Encoding" = Identity;
+</span><span class='line'>    "X-EBAY-API-BUILD-TAG" = "E817_CORE_APILW2_15902151_R1";
+</span><span class='line'>    "X-EBAY-API-POOL-NAME" = "___cDRidW9rdDdlaHFg";
+</span><span class='line'>    "X-EBAY-API-SERVER-NAME" = "___dWtgMWQ3MmYrNTE1YygyNSg+Nys3MDUrNDM5PTY/Mw==";
+</span><span class='line'>    "X-EBAY-ESB-GUID" = "urn:uuid:A94C3221C939E291D6329443603678959471486594422";
+</span><span class='line'>}
+</span><span class='line'>2013-03-30 11:50:49.057 HelloeBayShopping[3746:4303] Response message : 
+</span><span class='line'>2013-03-30 11:50:49.057 HelloeBayShopping[3746:4303] &lt;?xml version="1.0" encoding="UTF-8"?>
+</span><span class='line'>
+</span><span class='line'>  &lt;FindPopularItemsResponse xmlns="urn:ebay:apis:eBLBaseComponents">
+</span><span class='line'>   &lt;Timestamp>2013-03-30T03:51:00.322Z&lt;/Timestamp>
+</span><span class='line'>   &lt;Ack>Success&lt;/Ack>
+</span><span class='line'>   &lt;Build>E817_CORE_APILW2_15902151_R1&lt;/Build>
+</span><span class='line'>   &lt;Version>817&lt;/Version>
+</span><span class='line'>   &lt;ItemArray>
+</span><span class='line'>    &lt;Item>
+</span><span class='line'>     &lt;ItemID>350692808075&lt;/ItemID>
+</span><span class='line'>     &lt;EndTime>2013-04-15T17:23:27.000Z&lt;/EndTime>
+</span><span class='line'>     &lt;ViewItemURLForNaturalSearch>http://www.ebay.com/itm/Apple-iPad-Mini-NEW-360-Degree-Rotating-PU-Leather-Case-Cover-w-Swivel-Stand-/350692808075&lt;/ViewItemURLForNaturalSearch>
+</span><span class='line'>     &lt;ListingType>StoresFixedPrice&lt;/ListingType>
+</span><span class='line'>     &lt;GalleryURL>http://thumbs4.ebaystatic.com/pict/3506928080758080_4.jpg&lt;/GalleryURL>
+</span><span class='line'>     &lt;PrimaryCategoryID>176973&lt;/PrimaryCategoryID>
+</span><span class='line'>     &lt;PrimaryCategoryName>Computers/Tablets &amp; Networking:iPad/Tablet/eBook Accessories:Cases, Covers, Keyboard Folios&lt;/PrimaryCategoryName>
+</span><span class='line'>     &lt;BidCount>9529&lt;/BidCount>
+</span><span class='line'>     &lt;ConvertedCurrentPrice currencyID="USD">7.75&lt;/ConvertedCurrentPrice>
+</span><span class='line'>     &lt;ListingStatus>Active&lt;/ListingStatus>
+</span><span class='line'>     &lt;TimeLeft>P16DT13H32M27S&lt;/TimeLeft>
+</span><span class='line'>     &lt;Title>For Apple iPad Mini NEW 360 Degree Rotating PU Leather Case Cover w Swivel Stand&lt;/Title>
+</span><span class='line'>     &lt;ShippingCostSummary>
+</span><span class='line'>      &lt;ShippingServiceCost currencyID="USD">0.0&lt;/ShippingServiceCost>
+</span><span class='line'>      &lt;ShippingType>Flat&lt;/ShippingType>
+</span><span class='line'>      &lt;ListedShippingServiceCost currencyID="USD">0.0&lt;/ListedShippingServiceCost>
+</span><span class='line'>     &lt;/ShippingCostSummary>
+</span><span class='line'>     &lt;WatchCount>1681&lt;/WatchCount>
+</span><span class='line'>    &lt;/Item>
+</span><span class='line'>   &lt;/ItemArray>
+</span><span class='line'>  &lt;/FindPopularItemsResponse></span></code></pre></td></tr></table></div></figure>
+
+
+<p>let&#8217;s also try a error case, for example, if you forget to fill in your <code>eBayAppId</code> in the shared client, then you will get:
+<img class="center" src="http://bulldog2011.github.com/images/pico/tutorial04/screen_shot2.png" width="300" height="500"></p>
+
+<p>This is just a bare minimum eBay Shopping service based application, for a demo with more functions, please see the eBayDemoApp sample in the <code>Examples</code> folder of Pico source, eBayDemoApp is a composite app which calls two eBay serivces behind, this app searches eBay by calling eBay Fining service, showes a list of matched items on UI, when an item is clicked, it will show item details by calling eBay Shopping service, see a screen shot below.</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/pico/tutorial04/screen_shot3.png" width="300" height="500"></p>
+
+<p>Now it&#8217;s your turn to create iOS applications based on eBay Shopping and eBay Finding web serivces, see your next great serivce based app.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Pico Tutorial 3 - Hello eBay Finding]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/"/>
     <updated>2013-03-29T10:25:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding</id>
+    <id>http://bulldog2011.github.com/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding</id>
     <content type="html"><![CDATA[<p>This is the third tutorial of Pico tutorial series, in <a href="http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">first</a> and <a href="">second</a> tutorials, I showed you how to use Pico with simple web serivces like <a href="StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=9">StockQuote</a> and <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=10">CurrencyConverter</a>. These services are quite simple, only support one or two calls, and the request/response structures are fairly simple, supporting these simple services only can&#8217;t show the full power of Pico. So in this and later tutorials, I will show you how to use Pico with industrial grade services, let&#8217;s start with <a href="http://developer.ebay.com/DevZone/finding/CallRef/index.html">eBay Finding service</a>, please reivew its official site if you are not familar with this service, bastially, it let you search items on eBay. eBay Finding service supports SOAP12, so I will also show you how to configure Pico to support SOAP12 protocol, also I will show how to set service required HTTP headers on Pico client.</p>
 
 <p>The source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/eBayFinding">here</a></p>
@@ -49,8 +851,8 @@
 <p>A few comments about the codegen options:</p>
 
 <blockquote><ul>
-<li>I have added a prefix <code>Finding_</code> as codegen option, such that all interfaces/types generated will be prefixed. Adding prefix to Objective-C types is a recommended best practice to avoid possible type name confict with code generated from other services, for example, eBay has a couple of SOA services, and they share a few commons types, without prefixing, you will get confict if you use two or more eBay SOA services in one application.</li>
-<li>I have added a special <code>-ebaysoa</code> codegen option, this is because eBay Finding service needs a per-call operation name HTTP header, I added this special flag in the code generator to let it generate the header form me, since I don&#8217;t want to add this header everytime I call an eBay Finding service, so this is just a special flag for eBay SOA services and for demo, or a hidden feature, not a generic codegen option.</li>
+<li>I have added a prefix <code>Finding_</code> as codegen option, such that all interfaces/types generated will be prefixed. Adding prefix to Objective-C types is a recommended best practice to avoid possible type name conflict with code generated from other services, for example, eBay has a couple of SOA services, and they share a few commons types, without prefixing, you may get conflict if you use two or more eBay SOA services in one application.</li>
+<li>I have added a special <code>-ebaysoa</code> codegen option, this is because eBay Finding service needs a per-call operation name HTTP header, I added this special flag in the code generator to let it generate the header for me, since I don&#8217;t want to add this header everytime I call an eBay Finding service, so this is just a special flag for eBay SOA services and for demo, or a hidden feature, not a generic codegen option.</li>
 </ul>
 </blockquote>
 
@@ -314,7 +1116,7 @@
 
 <h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
 
-<p>First, create a shared serivice client as below:</p>
+<p>First, create a shared service client as below:</p>
 
 <figure class='code'><figcaption><span>EBayFindingServiceClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/EBayFindingServiceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -608,7 +1410,82 @@
 </ol>
 </blockquote>
 
-<p>Please don&#8217;t forget to include the shared client and SOAP12 related header files, it&#8217;s a best practice to include the generated Finding_CommonTypes.h file which can free you from writing many import statements required by request building and response handling.</p>
+<p>Regarding type hint:</p>
+
+<p>The <code>pageNumber</code> property of <code>Finding_PaginationInput</code> is of type <code>NSNumber</code>, you may get confused what kind of number should be put in PageNumber, short, int or long? Please just consult the source of <code>Finding_PaginationInput.h</code>, it provides type hint as code comments, see sample below. Indeed, every type generated from wsdl has sufficient type hint to assist your development. Xsd annotations in wsdl/schema are also generated into corresponding interfaces/types, further facilitating your development</p>
+
+<figure class='code'><figcaption><span>Finding_PaginationInput.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/Finding_PaginationInput.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">Specifies which subset of data (or &quot;page&quot;) to return in the call</span>
+</span><span class='line'><span class="cm">response. The number of data pages is determined by the total number of</span>
+</span><span class='line'><span class="cm">items matching the request search criteria (returned in</span>
+</span><span class='line'><span class="cm">paginationOutput.totalEntries) divided by the number of entries to</span>
+</span><span class='line'><span class="cm">display in each response (entriesPerPage). You can return up to the first</span>
+</span><span class='line'><span class="cm">100 pages of the result set by issuing multiple requests and specifying,</span>
+</span><span class='line'><span class="cm">in sequence, the pages to return.</span>
+</span><span class='line'><span class="cm">type : NSNumber, wrapper for primitive int</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">pageNumber</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In response handling, the <code>item</code> property of <code>Finding_SearchResult</code> is of type <code>NSMutableArray</code>, you may get confused what is the actual entry type? please just consult the source of <code>Finding_SearchResult.h</code> for type hint, see sample below:</p>
+
+<figure class='code'><figcaption><span>Finding_SearchResult.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/Finding_SearchResult.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> Container for the data of a single item that matches the search criteria.</span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> entry type : class Finding_SearchItem</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSMutableArray</span> <span class="o">*</span><span class="n">item</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Xsd enumeration is mapped to Objective-C <code>NSString</code> in Pico framework, for example, the <code>ack</code> property of <code>Finding_FindItemsByKeywordsResponse</code> is of type <code>NSString</code>, in wsdl, it&#8217;s an xsd enumeration of type <code>AckValue</code>, the type hint in <code>Finding_BaseServiceResponse.h</code>(from which <code>Finding_FindItemsByKeywordsResponse.h</code> extends) will tell you where to find the enum constants allowed by <code>ack</code> property, in this case, the allowed enum constants are in <code>Finding_AckValue.h</code>, see sample below :</p>
+
+<figure class='code'><figcaption><span>Finding_BaseServiceResponse.h</span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/Finding_BaseServiceResponse.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> Indicates whether or not errors or warnings were generated during the</span>
+</span><span class='line'><span class="cm"> processing of the request.</span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> type: string constant in Finding_AckValue.h</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">ack</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>At last, please don&#8217;t forget to include the shared client and SOAP12 related header files, it&#8217;s a best practice to include the generated Finding_CommonTypes.h file which can free you from writing many import statements required by request building and response handling.</p>
 
 <h2>Final Step - Run the Demo</h2>
 
@@ -724,6 +1601,10 @@
 <p><img class="center" src="http://bulldog2011.github.com/images/pico/tutorial03/screen_shot3.png" width="300" height="500"></p>
 
 <p>Now it&#8217;s your turn to create iOS applications based on eBay Finding web serivce, see your next great serivce based app.</p>
+
+<h3>Update 1</h3>
+
+<p>The eBay Finding Service Proxy has been extracted as a standalone project, hosted <a href="https://github.com/bulldog2011/PicoEBayFindingClient">here</a>, and the corresponding appledoc is hosted <a href="http://bulldog2011.github.com/PicoEBayFindingClient/">here</a>, the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.</p>
 ]]></content>
   </entry>
   
@@ -1610,7 +2491,7 @@ Pointers 1 &amp; 2 are persisted in memory mapped file, while pointers 3 &amp; 4
 <blockquote><ol>
 <li>At the top is the <strong><em>Fanout Queue</em></strong> abstraction layer, Luxun interacts with this layer directly for queue operations like enqueue and dequeue.</li>
 <li><strong><em>Fanout Queue</em></strong> is built on the <strong><em>Append Only Big Array</em></strong> structure, just as we explained in the logical and physical view above.</li>
-<li>The <strong><em>Append Only Big Array</em></strong> structure is built on <strong><em>Mapped Page Factory</em></strong> which are response for mapped page management, like page creation, on-demand load, caching, swapping, etc.</li>
+<li>The <strong><em>Append Only Big Array</em></strong> structure is built on <strong><em>Mapped Page Factory</em></strong> which are responsible for mapped page management, like page creation, on-demand load, caching, swapping, etc.</li>
 <li>At the lowest level are the <strong><em>Mapped Page</em></strong> which is the object model of memory mapped file, and the <strong><em>LRU Cache</em></strong> which are responsible for the page cache and swapping, for efficient memory usage.</li>
 </ol>
 </blockquote>
@@ -1629,11 +2510,307 @@ Pointers 1 &amp; 2 are persisted in memory mapped file, while pointers 3 &amp; 4
 
 <p>Only the current active page files are mapped into memory, and they will be unloaded from memory if they are inactive in a specified time window, then new active page(s) will be loaded into memory as needed. The access pattern of queue((rear append and front read)) has very good locality, as long as we keep the current working set in memory, we&#8217;ll obtain both fast read/write performance and persistence, while at the same time the memory usage is efficient.</p>
 
-<h3>Other Design Decisions</h3>
+<h3>Other Design Consideration</h3>
 
-<p>// TODO</p>
+<h4>The Queue Interface</h4>
+
+<p>The persistent queue exposes following interfaces for queue operations, monitoring and maintenance:</p>
+
+<blockquote><ol>
+<li><strong><em>enqueue(byte[] item)</em></strong> : append(or produce) binary data into the queue.</li>
+<li><strong><em>byte[] dequeue</em></strong> : read(or consume) binary data from the queue.</li>
+<li><strong><em>isEmpty</em></strong> : check if the queue is empty.</li>
+<li><strong><em>getSize</em></strong> : total number of items remaining in the queue</li>
+<li><strong><em>removeBefore(long timestamp)</em></strong> : remove index and data pages before a given timestamp, this may delete back files and advance the queue front pointer accordingly. This interface is useful to remove expired data files, to clean up already consumed data or to avoid too much disk space being used up. Luxun supports a <code>log.retention.hours</code> setting, internally, Luxun will periodically check data files outside the retention window, and remove them using the <code>removeBefore</code> interface.</li>
+<li><strong><em>limitBackFileSize(long sizeLimit)</em></strong> : limit the total size of back index and data page files, this may delete back files and advance the queue front pointer accordingly. This interface is useful to limit the total size of back files, to clean up already consumed data or to avoid too much disk space being used up.  Luxun supports a <code>log.retention.size</code> setting, internally, Luxun will periodically check the total size of back files and use <code>limitBackFileSize</code> interface to prune some old back files to maintain size.</li>
+<li><strong><em>getBackFileSize</em></strong> : Get current total size of back files of a queue.</li>
+<li><strong><em>findClosestIndex(long timestamp)</em></strong> : find index closest to a given timestamp, this interface is useful in some cases that user want to consume by index and from a specific timestamp.</li>
+<li><strong><em>flush</em></strong> : force to persist newly appended data, usually, this interface is not needed since OS will be responsible for the persistence of memory mapped buffer. We leave this interface to user in case they may need transactional reliability and they are aware of the cost to performance.</li>
+</ol>
+</blockquote>
+
+<p>Note, in our queue design, enqueue only accept binary data as input, and dequeue only returns binary data, serialization and deserialization are outside the consideration of big queue design, in other word, Luxun can only see plain and raw bytes, we choose this design because:</p>
+
+<blockquote><ol>
+<li>This can simplify the queue design and implementation.</li>
+<li>There are already a couple of mature and high performance serialization frameworks out there, such as protobuf, thrift, avro, just name a few, We can&#8217;t do better than these already established frameworks.</li>
+<li>We give the flexibility to user to choose their preferred serialization framework.</li>
+</ol>
+</blockquote>
+
+<h4>Reusability</h4>
 
 <p>The big array structure(aka the persistent queue) is implemented as a standalone library, since its usage it not limited to Luxun only, any applications that need a fast, big and persistent queue can reuse the big array library, the source of this library is <a href="https://github.com/bulldog2011/bigqueue">here</a>.</p>
+
+<h1>The Design of Thrift based Communication Layer</h1>
+
+<h3>Rationality</h3>
+
+<p>We choosed Thrift to implement the communication layer of Luxun, because:</p>
+
+<blockquote><ol>
+<li>Thrift is <strong><em>stable and mature</em></strong>, it was created by Facebook, now it&#8217;s an Apache project, it has been successfully used by famous projects like Cassandra and HBase.</li>
+<li>Thrift has <strong><em>high performance</em></strong>, it provides highly effective serialization protocols like <code>TBinaryProtocol</code> and server model like <code>TNonBlockingServer</code>(so you won&#8217;t get troubled with building your own NIO server which is very tricky and error prone). High performance binary RPC support and non blocking server model are main attractive features that lead us to choose Thrift, since <strong><em>Fast Wire Serialization, High Throughput, Highly Concurrent and NonBlocking Communication</em></strong> are top priority architecture and design objectives of Luxun.</li>
+<li>Thrift is <strong><em>simple and light-weight</em></strong>, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but later upgrading effort - you just need to update the IDL then re-generate.</li>
+<li>Thrift has good <strong><em>cross-language</em></strong> support, supported platforms include but not limited to Java, CSharp, C++, PHP, Ruby, Python. One big factor we choose Thrift is - after we build the Thrift based Luxun queue service, clients for different language platforms are basically ready, If We need a client for languge X, We can easily generate one using its universal code generator.</li>
+<li>Thrift is <strong><em>flexible</em></strong>, Thrift has a pluggable architecture, transport protocols(like tcp or http), serialization protocol(like TBinaryProtocol, TJSONProtocol) and server models(like TNonBlockingServer, TThreadPoolServer) are all changeable according to your real needs.</li>
+</ol>
+</blockquote>
+
+<p>Basically, We think guys at Facebook have made a really cool RPC framework, greatly simplified service development.</p>
+
+<h3>Components View</h3>
+
+<p>Programming with Thrift just like playing with building blocks, see components view of the Luxun client and server below:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/luxun/communication_components.png" width="600" height="800"></p>
+
+<blockquote><ol>
+<li>At the lowest layer is the underlying IO supported by Java language platform.</li>
+<li>In the middle layer are components provided by Thrift, in Luxun implementation,
+on server side, we chosen:
+
+<ul>
+<li><code>TnonblockingServerSocket</code> as <code>TTransport</code> protocol;</li>
+<li><code>TBinaryProtocol</code> as <code>TProtocol</code> serialization protocol;</li>
+<li>and <code>TNonblockingServer</code> as server model.<br/>
+on client side, we chosen:</li>
+<li><code>TSocket</code> as <code>TTransport</code> protocol;</li>
+<li><code>TBinaryProtocol</code> as <code>TProtocol</code> serialization protocol.</li>
+</ul>
+</li>
+<li>The <code>QueueService.Processor</code> and <code>QueueService.Client</code> are proxy auto-generated from Luxun service IDL, will be elaborated on later.</li>
+<li>On top layer are the Luxun implementation of the queue service interface, on server side, we implement <code>QueueService.Iface</code> in a class called <code>LogManager</code>, which will communicate with clients through the generated <code>QueueService.Processor</code> proxy and delegate the real queue operations to the underlying persistent queue; On client side, we implement producer or consumer specific code, which communicates with the server through the generated <code>QueueService.Client</code> proxy.</li>
+</ol>
+</blockquote>
+
+<h3>Luxun Thrift IDL</h3>
+
+<p>The Luxun Thrift IDL is the messaging contract between Luxun server and clients(producers or consumers), see its formal definition below:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>namespace java com.leansoft.luxun.api.generated
+</span><span class='line'>namespace csharp Leansoft.luxun.Api.Generated
+</span><span class='line'>
+</span><span class='line'>const i32 RANDOM_PARTION = -1;
+</span><span class='line'>
+</span><span class='line'>const string EARLIEST_INDEX_STRING = "earliest";
+</span><span class='line'>const string LATEST_INDEX_STRING = "latest";
+</span><span class='line'>
+</span><span class='line'>const i64 EARLIEST_TIME = -1;
+</span><span class='line'>const i64 LATEST_TIME = -2;
+</span><span class='line'>
+</span><span class='line'>enum ResultCode
+</span><span class='line'>{
+</span><span class='line'>  SUCCESS,
+</span><span class='line'>  FAILURE,
+</span><span class='line'>  TRY_LATER
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>enum ErrorCode
+</span><span class='line'>{
+</span><span class='line'>  INTERNAL_ERROR,
+</span><span class='line'>  TOPIC_NOT_EXIST,
+</span><span class='line'>  INDEX_OUT_OF_BOUNDS,
+</span><span class='line'>  INVALID_TOPIC,
+</span><span class='line'>  TOPIC_IS_EMPTY,
+</span><span class='line'>  AUTHENTICATION_FAILURE,
+</span><span class='line'>  MESSAGE_SIZE_TOO_LARGE,
+</span><span class='line'>  ALL_MESSAGE_CONSUMED
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct Result
+</span><span class='line'>{
+</span><span class='line'>    1: required ResultCode resultCode,
+</span><span class='line'>    2: ErrorCode errorCode,
+</span><span class='line'>    3: string errorMessage
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct ProduceRequest {
+</span><span class='line'>    1: required binary item,
+</span><span class='line'>    2: required string topic,
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct ProduceResponse {
+</span><span class='line'>    1: required Result result,
+</span><span class='line'>    2: i64 index
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct ConsumeRequest {
+</span><span class='line'>    1: required string topic,
+</span><span class='line'>    2: string fanoutId, 
+</span><span class='line'>    3: i64 startIndex,
+</span><span class='line'>    4: i32 maxFetchSize,
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct ConsumeResponse {
+</span><span class='line'>    1: required Result result,
+</span><span class='line'>    2: list&lt;binary> itemList,
+</span><span class='line'>    3: i64 lastConsumedIndex
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct FindClosestIndexByTimeRequest {
+</span><span class='line'>    1: required i64 timestamp,
+</span><span class='line'>    2: required string topic,
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct FindClosestIndexByTimeResponse {
+</span><span class='line'>    1: required Result result,
+</span><span class='line'>    2: i64 index,
+</span><span class='line'>    3: i64 timestampOfIndex
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct DeleteTopicRequest {
+</span><span class='line'>    1: required string topic,
+</span><span class='line'>    2: required string password
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct DeleteTopicResponse {
+</span><span class='line'>    1: required Result result,
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct GetSizeRequest {
+</span><span class='line'>    1: required string topic,
+</span><span class='line'>    3: string fanoutId
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>struct GetSizeResponse {
+</span><span class='line'>    1: required Result result,
+</span><span class='line'>    2: i64 size
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>service QueueService {
+</span><span class='line'>    ProduceResponse produce(1: ProduceRequest produceRequest);
+</span><span class='line'>
+</span><span class='line'>    ConsumeResponse consume(1: ConsumeRequest consumeRequest);
+</span><span class='line'>    
+</span><span class='line'>    FindClosestIndexByTimeResponse findClosestIndexByTime(1: FindClosestIndexByTimeRequest findClosestIndexByTimeRequest);
+</span><span class='line'>    
+</span><span class='line'>    DeleteTopicResponse deleteTopic(1: DeleteTopicRequest deleteTopicRequest);
+</span><span class='line'>    
+</span><span class='line'>    GetSizeResponse getSize(1: GetSizeRequest getSizeRequest);
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is a quite simple and intuitive interface, let&#8217;s elaborate on supported calls one by one:</p>
+
+<blockquote><ol>
+<li>The <strong><em>produce</em></strong> call append binary data into the queue, you need to provide the target topic and the binary data as input, the response will return the operation result and the appended index if the operation is successful.</li>
+<li>The <strong><em>consume</em></strong> call supports to kinds of operation modes,
+
+<ul>
+<li><strong><em>consume by fanout id</em></strong>: this is just the fanout queue semantics support, in such mode, you need to provide target topic, a fanout id and a max fetch size as input, the response will return a list of binary data if the operation is successful.</li>
+<li><strong><em>consume by index</em></strong>: this is a more flexible queue semantics support, in such mode, you need to provide target topic, a start index and a max fetch size as input, the response will return a list of binary data if the operation is successful.    <br/>
+The max fetch size parameter is required to support batch consuming - one consume operation will fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, just set max fetch size to &lt;= 0;</li>
+</ul>
+</li>
+<li>The <strong><em>findClosetIndexByTime</em></strong> call is useful if you want <strong><em>consume by index</em></strong> semantics and want to find an index by a specific timestamp. You need to provide target topic and a timestamp as input, the response will return closet index if the find operation is successful.</li>
+<li>The <strong><em>deleteTopic</em></strong> call is used for deleting any unused topics, you need to provide target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.</li>
+<li>The <strong><em>getSize</em></strong> call just returns the total number of items remaining in a topic, this is a call for queue status query.</li>
+</ol>
+</blockquote>
+
+<p>Simplicity is the main design objective of the Luxun queue IDL, in order to simplify clients implementation, at the sample, future extension is easy because of the flexibility provided by Thrift.</p>
 
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
 
@@ -6290,124 +7467,6 @@ Big array index is incremental, starting from 0, upon successful append, it will
 
 
 <p>Now its your turn to play with the big array, in this tutorial, I just used very small number of data, but actually the big array can hold lage amount of data, normal array has index of type int, but big array has index of type long, the total size is only limit by your avaiable disk space, so just try to append as much data as you can imagine, then randomly read data to find out how fast big array can be used to randomly access huge amout of data on disk. Also, please review test code of big array to learn more advanced usage like <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/test/java/com/leansoft/bigqueue/load">multi-threads producing and consuming cases</a>.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Big Queue Tutorial]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/01/24/big-queue-tutorial/"/>
-    <updated>2013-01-24T20:17:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/01/24/big-queue-tutorial</id>
-    <content type="html"><![CDATA[<p>This is a tutorial to show the basic API usage of big queue, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/BigQueueTutorial.java">here</a>.</p>
-
-<p>The interface of big queue is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IBigQueue.java">here</a>, basically, it&#8217;s as simple as the queue interface we learned in data structure course in college, if you want to refresh the concept of queue ADT, <a href="http://en.wikipedia.org/wiki/Queue_%28abstract_data_type%29">here is the wikipeida link</a>.</p>
-
-<p>You can create(initialize) a new big queue in just one statement:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// create a new big queue</span>
-</span><span class='line'><span class="n">IBigQueue</span> <span class="n">bigQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/bigqueue/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>the first parameter is a directory you want to store the queue data file, the second parameter is the queue name. Now you have a reference to an empty queue.</p>
-
-<!--more-->
-
-
-<p>To add or produce item into the queue, you just call the <strong><em>enqueue</em></strong> method on the queue reference, here we enqueue 10 numbers into the queue:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// enqueue some items</span>
-</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
-</span><span class='line'>  <span class="n">bigQueue</span><span class="o">.</span><span class="na">enqueue</span><span class="o">(</span><span class="n">item</span><span class="o">.</span><span class="na">getBytes</span><span class="o">());</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong><em>Note:</em></strong> the enqueue method only accept byte array data as input, if your object is not byte array data, you are responsible to convert your object into byte array first before enqueue, this is called serialization, when you dequeue later, you are also response to de-serialize the byte array data into your object format.</p>
-
-<p>Now there are 10 items in the queue, and it&#8217;s not empty anymore, to find out the total number of items in the queue, call the <strong><em>size</em></strong> method:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// get current size of the queue</span>
-</span><span class='line'><span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">bigQueue</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The <strong><em>peek</em></strong> method just let you peek item at the front of the queue without removing the item from the queue:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// peek the front of the queue</span>
-</span><span class='line'><span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bigQueue</span><span class="o">.</span><span class="na">peek</span><span class="o">());</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>To remove or consume item from the queue, just call the <strong><em>dequeue</em></strong> method, here we dequeue 5 items from the queue:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// dequeue some items </span>
-</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="n">String</span> <span class="n">item</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bigQueue</span><span class="o">.</span><span class="na">dequeue</span><span class="o">());</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>since the queue is a FIFO queue, the number dequeued will be in FIFO order: 0, 1, 2, 3, 4.</p>
-
-<p>To remove all remaining items from the queue, just do like this:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// dequeue all remaining items</span>
-</span><span class='line'><span class="k">while</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span> <span class="o">=</span> <span class="n">bigQueue</span><span class="o">.</span><span class="na">dequeue</span><span class="o">();</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">data</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">break</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now the queue is empty again, to check it&#8217;s empty, just call <strong><em>isEmpty</em></strong> method:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kt">boolean</span> <span class="n">isEmpty</span> <span class="o">=</span> <span class="n">bigQueue</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">();</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Finally, when you finish with the queue, just call <strong><em>close</em></strong> method to release resource used by the queue, this is not mandatory, just a best practice, call close will release part of used memory immediately. Usually, you initialize big queue in a try block and close it in the finally block, here is the usage paradigm:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// typical queue initialization and closing paradigm</span>
-</span><span class='line'><span class="n">IBigQueue</span> <span class="n">bigQueue</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class='line'><span class="k">try</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">bigQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/bigqueue/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
-</span><span class='line'>    <span class="n">bigQueue</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now its your turn to play with the big queue, in this tutorial, I just used very small number of data, but actually the big queue can hold lage amount of data, the total size is only limit by your avaiable disk space, so just try to enqueue and dequeue as much data as you can imagine, also, please review test code of big queue to learn more advanced usage like <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/test/java/com/leansoft/bigqueue/load">multi-threads producing and consuming cases</a>.</p>
 ]]></content>
   </entry>
   

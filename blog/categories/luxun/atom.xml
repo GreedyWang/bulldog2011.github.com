@@ -4,7 +4,7 @@
   <title><![CDATA[Category: luxun | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/luxun/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-29T19:53:16+08:00</updated>
+  <updated>2013-03-30T19:07:53+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -208,7 +208,7 @@ The divide, mod and multiply operations are further optimized by fast shifting o
 <blockquote><ol>
 <li>At the top is the <strong><em>Fanout Queue</em></strong> abstraction layer, Luxun interacts with this layer directly for queue operations like enqueue and dequeue.</li>
 <li><strong><em>Fanout Queue</em></strong> is built on the <strong><em>Append Only Big Array</em></strong> structure, just as we explained in the logical and physical view above.</li>
-<li>The <strong><em>Append Only Big Array</em></strong> structure is built on <strong><em>Mapped Page Factory</em></strong> which are response for mapped page management, like page creation, on-demand load, caching, swapping, etc.</li>
+<li>The <strong><em>Append Only Big Array</em></strong> structure is built on <strong><em>Mapped Page Factory</em></strong> which are responsible for mapped page management, like page creation, on-demand load, caching, swapping, etc.</li>
 <li>At the lowest level are the <strong><em>Mapped Page</em></strong> which is the object model of memory mapped file, and the <strong><em>LRU Cache</em></strong> which are responsible for the page cache and swapping, for efficient memory usage.</li>
 </ol>
 </blockquote>
@@ -227,11 +227,386 @@ The divide, mod and multiply operations are further optimized by fast shifting o
 
 <p>Only the current active page files are mapped into memory, and they will be unloaded from memory if they are inactive in a specified time window, then new active page(s) will be loaded into memory as needed. The access pattern of queue((rear append and front read)) has very good locality, as long as we keep the current working set in memory, we'll obtain both fast read/write performance and persistence, while at the same time the memory usage is efficient.</p>
 
-<h3>Other Design Decisions</h3>
+<h3>Other Design Consideration</h3>
 
-<p>// TODO</p>
+<h4>The Queue Interface</h4>
+
+<p>The persistent queue exposes following interfaces for queue operations, monitoring and maintenance:</p>
+
+<blockquote><ol>
+<li><strong><em>enqueue(byte[] item)</em></strong> : append(or produce) binary data into the queue.</li>
+<li><strong><em>byte[] dequeue</em></strong> : read(or consume) binary data from the queue.</li>
+<li><strong><em>isEmpty</em></strong> : check if the queue is empty.</li>
+<li><strong><em>getSize</em></strong> : total number of items remaining in the queue</li>
+<li><strong><em>removeBefore(long timestamp)</em></strong> : remove index and data pages before a given timestamp, this may delete back files and advance the queue front pointer accordingly. This interface is useful to remove expired data files, to clean up already consumed data or to avoid too much disk space being used up. Luxun supports a <code>log.retention.hours</code> setting, internally, Luxun will periodically check data files outside the retention window, and remove them using the <code>removeBefore</code> interface.</li>
+<li><strong><em>limitBackFileSize(long sizeLimit)</em></strong> : limit the total size of back index and data page files, this may delete back files and advance the queue front pointer accordingly. This interface is useful to limit the total size of back files, to clean up already consumed data or to avoid too much disk space being used up.  Luxun supports a <code>log.retention.size</code> setting, internally, Luxun will periodically check the total size of back files and use <code>limitBackFileSize</code> interface to prune some old back files to maintain size.</li>
+<li><strong><em>getBackFileSize</em></strong> : Get current total size of back files of a queue.</li>
+<li><strong><em>findClosestIndex(long timestamp)</em></strong> : find index closest to a given timestamp, this interface is useful in some cases that user want to consume by index and from a specific timestamp.</li>
+<li><strong><em>flush</em></strong> : force to persist newly appended data, usually, this interface is not needed since OS will be responsible for the persistence of memory mapped buffer. We leave this interface to user in case they may need transactional reliability and they are aware of the cost to performance.</li>
+</ol>
+</blockquote>
+
+<p>Note, in our queue design, enqueue only accept binary data as input, and dequeue only returns binary data, serialization and deserialization are outside the consideration of big queue design, in other word, Luxun can only see plain and raw bytes, we choose this design because:</p>
+
+<blockquote><ol>
+<li>This can simplify the queue design and implementation.</li>
+<li>There are already a couple of mature and high performance serialization frameworks out there, such as protobuf, thrift, avro, just name a few, We can't do better than these already established frameworks.</li>
+<li>We give the flexibility to user to choose their preferred serialization framework.</li>
+</ol>
+</blockquote>
+
+<h4>Reusability</h4>
 
 <p>The big array structure(aka the persistent queue) is implemented as a standalone library, since its usage it not limited to Luxun only, any applications that need a fast, big and persistent queue can reuse the big array library, the source of this library is <a href="https://github.com/bulldog2011/bigqueue">here</a>.</p>
+
+<h1>The Design of Thrift based Communication Layer</h1>
+
+<h3>Rationality</h3>
+
+<p>We choosed Thrift to implement the communication layer of Luxun, because:</p>
+
+<blockquote><ol>
+<li>Thrift is <strong><em>stable and mature</em></strong>, it was created by Facebook, now it's an Apache project, it has been successfully used by famous projects like Cassandra and HBase.</li>
+<li>Thrift has <strong><em>high performance</em></strong>, it provides highly effective serialization protocols like <code>TBinaryProtocol</code> and server model like <code>TNonBlockingServer</code>(so you won't get troubled with building your own NIO server which is very tricky and error prone). High performance binary RPC support and non blocking server model are main attractive features that lead us to choose Thrift, since <strong><em>Fast Wire Serialization, High Throughput, Highly Concurrent and NonBlocking Communication</em></strong> are top priority architecture and design objectives of Luxun.</li>
+<li>Thrift is <strong><em>simple and light-weight</em></strong>, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but later upgrading effort - you just need to update the IDL then re-generate.</li>
+<li>Thrift has good <strong><em>cross-language</em></strong> support, supported platforms include but not limited to Java, CSharp, C++, PHP, Ruby, Python. One big factor we choose Thrift is - after we build the Thrift based Luxun queue service, clients for different language platforms are basically ready, If We need a client for languge X, We can easily generate one using its universal code generator.</li>
+<li>Thrift is <strong><em>flexible</em></strong>, Thrift has a pluggable architecture, transport protocols(like tcp or http), serialization protocol(like TBinaryProtocol, TJSONProtocol) and server models(like TNonBlockingServer, TThreadPoolServer) are all changeable according to your real needs.</li>
+</ol>
+</blockquote>
+
+<p>Basically, We think guys at Facebook have made a really cool RPC framework, greatly simplified service development.</p>
+
+<h3>Components View</h3>
+
+<p>Programming with Thrift just like playing with building blocks, see components view of the Luxun client and server below:</p>
+
+<p><img class="center" src="/images/luxun/communication_components.png" width="600" height="800"></p>
+
+<blockquote><ol>
+<li>At the lowest layer is the underlying IO supported by Java language platform.</li>
+<li>In the middle layer are components provided by Thrift, in Luxun implementation,
+on server side, we chosen:
+
+<ul>
+<li><code>TnonblockingServerSocket</code> as <code>TTransport</code> protocol;</li>
+<li><code>TBinaryProtocol</code> as <code>TProtocol</code> serialization protocol;</li>
+<li>and <code>TNonblockingServer</code> as server model.<br/>
+on client side, we chosen:</li>
+<li><code>TSocket</code> as <code>TTransport</code> protocol;</li>
+<li><code>TBinaryProtocol</code> as <code>TProtocol</code> serialization protocol.</li>
+</ul>
+</li>
+<li>The <code>QueueService.Processor</code> and <code>QueueService.Client</code> are proxy auto-generated from Luxun service IDL, will be elaborated on later.</li>
+<li>On top layer are the Luxun implementation of the queue service interface, on server side, we implement <code>QueueService.Iface</code> in a class called <code>LogManager</code>, which will communicate with clients through the generated <code>QueueService.Processor</code> proxy and delegate the real queue operations to the underlying persistent queue; On client side, we implement producer or consumer specific code, which communicates with the server through the generated <code>QueueService.Client</code> proxy.</li>
+</ol>
+</blockquote>
+
+<h3>Luxun Thrift IDL</h3>
+
+<p>The Luxun Thrift IDL is the messaging contract between Luxun server and clients(producers or consumers), see its formal definition below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>namespace java com.leansoft.luxun.api.generated
+</span><span class='line'>namespace csharp Leansoft.luxun.Api.Generated&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>const i32 RANDOM_PARTION = -1;&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>const string EARLIEST_INDEX_STRING = "earliest";
+</span><span class='line'>const string LATEST_INDEX_STRING = "latest";&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>const i64 EARLIEST_TIME = -1;
+</span><span class='line'>const i64 LATEST_TIME = -2;&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>enum ResultCode
+</span><span class='line'>{
+</span><span class='line'>  SUCCESS,
+</span><span class='line'>  FAILURE,
+</span><span class='line'>  TRY_LATER
+</span><span class='line'>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>enum ErrorCode
+</span><span class='line'>{
+</span><span class='line'>  INTERNAL_ERROR,
+</span><span class='line'>  TOPIC_NOT_EXIST,
+</span><span class='line'>  INDEX_OUT_OF_BOUNDS,
+</span><span class='line'>  INVALID_TOPIC,
+</span><span class='line'>  TOPIC_IS_EMPTY,
+</span><span class='line'>  AUTHENTICATION_FAILURE,
+</span><span class='line'>  MESSAGE_SIZE_TOO_LARGE,
+</span><span class='line'>  ALL_MESSAGE_CONSUMED
+</span><span class='line'>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct Result
+</span><span class='line'>{&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required ResultCode resultCode,
+</span><span class='line'>2: ErrorCode errorCode,
+</span><span class='line'>3: string errorMessage
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct ProduceRequest {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required binary item,
+</span><span class='line'>2: required string topic,
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct ProduceResponse {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required Result result,
+</span><span class='line'>2: i64 index
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct ConsumeRequest {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required string topic,
+</span><span class='line'>2: string fanoutId, 
+</span><span class='line'>3: i64 startIndex,
+</span><span class='line'>4: i32 maxFetchSize,
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct ConsumeResponse {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required Result result,
+</span><span class='line'>2: list&lt;binary&gt; itemList,
+</span><span class='line'>3: i64 lastConsumedIndex
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct FindClosestIndexByTimeRequest {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required i64 timestamp,
+</span><span class='line'>2: required string topic,
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct FindClosestIndexByTimeResponse {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required Result result,
+</span><span class='line'>2: i64 index,
+</span><span class='line'>3: i64 timestampOfIndex
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct DeleteTopicRequest {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required string topic,
+</span><span class='line'>2: required string password
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct DeleteTopicResponse {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required Result result,
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct GetSizeRequest {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required string topic,
+</span><span class='line'>3: string fanoutId
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>struct GetSizeResponse {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>1: required Result result,
+</span><span class='line'>2: i64 size
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>service QueueService {&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>ProduceResponse produce(1: ProduceRequest produceRequest);
+</span><span class='line'>
+</span><span class='line'>ConsumeResponse consume(1: ConsumeRequest consumeRequest);
+</span><span class='line'>
+</span><span class='line'>FindClosestIndexByTimeResponse findClosestIndexByTime(1: FindClosestIndexByTimeRequest findClosestIndexByTimeRequest);
+</span><span class='line'>
+</span><span class='line'>DeleteTopicResponse deleteTopic(1: DeleteTopicRequest deleteTopicRequest);
+</span><span class='line'>
+</span><span class='line'>GetSizeResponse getSize(1: GetSizeRequest getSizeRequest);
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>This is a quite simple and intuitive interface, let's elaborate on supported calls one by one:</p>
+
+<blockquote><ol>
+<li>The <strong><em>produce</em></strong> call append binary data into the queue, you need to provide the target topic and the binary data as input, the response will return the operation result and the appended index if the operation is successful.</li>
+<li>The <strong><em>consume</em></strong> call supports to kinds of operation modes,
+
+<ul>
+<li><strong><em>consume by fanout id</em></strong>: this is just the fanout queue semantics support, in such mode, you need to provide target topic, a fanout id and a max fetch size as input, the response will return a list of binary data if the operation is successful.</li>
+<li><strong><em>consume by index</em></strong>: this is a more flexible queue semantics support, in such mode, you need to provide target topic, a start index and a max fetch size as input, the response will return a list of binary data if the operation is successful.    <br/>
+The max fetch size parameter is required to support batch consuming - one consume operation will fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, just set max fetch size to &lt;= 0;</li>
+</ul>
+</li>
+<li>The <strong><em>findClosetIndexByTime</em></strong> call is useful if you want <strong><em>consume by index</em></strong> semantics and want to find an index by a specific timestamp. You need to provide target topic and a timestamp as input, the response will return closet index if the find operation is successful.</li>
+<li>The <strong><em>deleteTopic</em></strong> call is used for deleting any unused topics, you need to provide target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.</li>
+<li>The <strong><em>getSize</em></strong> call just returns the total number of items remaining in a topic, this is a call for queue status query.</li>
+</ol>
+</blockquote>
+
+<p>Simplicity is the main design objective of the Luxun queue IDL, in order to simplify clients implementation, at the sample, future extension is easy because of the flexibility provided by Thrift.</p>
 
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
 

@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Pico Tutoiral 3 - Hello eBay Finding - Abstraction Builder</title>
+  <title>Pico Tutorial 3 - Hello eBay Finding - Abstraction Builder</title>
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="Pico Tutoiral 3 - Hello eBay Finding">
+  <meta name="description" content="Pico Tutorial 3 - Hello eBay Finding">
   <meta name="keywords" content="ios, wsdl, soap, ebay finding api">
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/">
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -79,7 +79,7 @@
   <header>
     
       
-        <h1 class="entry-title">Pico Tutoiral 3 - Hello eBay Finding</h1>
+        <h1 class="entry-title">Pico Tutorial 3 - Hello eBay Finding</h1>
       
     
     
@@ -136,8 +136,8 @@
 <p>A few comments about the codegen options:</p>
 
 <blockquote><ul>
-<li>I have added a prefix <code>Finding_</code> as codegen option, such that all interfaces/types generated will be prefixed. Adding prefix to Objective-C types is a recommended best practice to avoid possible type name confict with code generated from other services, for example, eBay has a couple of SOA services, and they share a few commons types, without prefixing, you will get confict if you use two or more eBay SOA services in one application.</li>
-<li>I have added a special <code>-ebaysoa</code> codegen option, this is because eBay Finding service needs a per-call operation name HTTP header, I added this special flag in the code generator to let it generate the header form me, since I don&#8217;t want to add this header everytime I call an eBay Finding service, so this is just a special flag for eBay SOA services and for demo, or a hidden feature, not a generic codegen option.</li>
+<li>I have added a prefix <code>Finding_</code> as codegen option, such that all interfaces/types generated will be prefixed. Adding prefix to Objective-C types is a recommended best practice to avoid possible type name conflict with code generated from other services, for example, eBay has a couple of SOA services, and they share a few commons types, without prefixing, you may get conflict if you use two or more eBay SOA services in one application.</li>
+<li>I have added a special <code>-ebaysoa</code> codegen option, this is because eBay Finding service needs a per-call operation name HTTP header, I added this special flag in the code generator to let it generate the header for me, since I don&#8217;t want to add this header everytime I call an eBay Finding service, so this is just a special flag for eBay SOA services and for demo, or a hidden feature, not a generic codegen option.</li>
 </ul>
 </blockquote>
 
@@ -401,7 +401,7 @@
 
 <h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
 
-<p>First, create a shared serivice client as below:</p>
+<p>First, create a shared service client as below:</p>
 
 <figure class='code'><figcaption><span>EBayFindingServiceClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/EBayFindingServiceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -695,7 +695,82 @@
 </ol>
 </blockquote>
 
-<p>Please don&#8217;t forget to include the shared client and SOAP12 related header files, it&#8217;s a best practice to include the generated Finding_CommonTypes.h file which can free you from writing many import statements required by request building and response handling.</p>
+<p>Regarding type hint:</p>
+
+<p>The <code>pageNumber</code> property of <code>Finding_PaginationInput</code> is of type <code>NSNumber</code>, you may get confused what kind of number should be put in PageNumber, short, int or long? Please just consult the source of <code>Finding_PaginationInput.h</code>, it provides type hint as code comments, see sample below. Indeed, every type generated from wsdl has sufficient type hint to assist your development. Xsd annotations in wsdl/schema are also generated into corresponding interfaces/types, further facilitating your development</p>
+
+<figure class='code'><figcaption><span>Finding_PaginationInput.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/Finding_PaginationInput.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">Specifies which subset of data (or &quot;page&quot;) to return in the call</span>
+</span><span class='line'><span class="cm">response. The number of data pages is determined by the total number of</span>
+</span><span class='line'><span class="cm">items matching the request search criteria (returned in</span>
+</span><span class='line'><span class="cm">paginationOutput.totalEntries) divided by the number of entries to</span>
+</span><span class='line'><span class="cm">display in each response (entriesPerPage). You can return up to the first</span>
+</span><span class='line'><span class="cm">100 pages of the result set by issuing multiple requests and specifying,</span>
+</span><span class='line'><span class="cm">in sequence, the pages to return.</span>
+</span><span class='line'><span class="cm">type : NSNumber, wrapper for primitive int</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">pageNumber</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In response handling, the <code>item</code> property of <code>Finding_SearchResult</code> is of type <code>NSMutableArray</code>, you may get confused what is the actual entry type? please just consult the source of <code>Finding_SearchResult.h</code> for type hint, see sample below:</p>
+
+<figure class='code'><figcaption><span>Finding_SearchResult.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/Finding_SearchResult.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> Container for the data of a single item that matches the search criteria.</span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> entry type : class Finding_SearchItem</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSMutableArray</span> <span class="o">*</span><span class="n">item</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Xsd enumeration is mapped to Objective-C <code>NSString</code> in Pico framework, for example, the <code>ack</code> property of <code>Finding_FindItemsByKeywordsResponse</code> is of type <code>NSString</code>, in wsdl, it&#8217;s an xsd enumeration of type <code>AckValue</code>, the type hint in <code>Finding_BaseServiceResponse.h</code>(from which <code>Finding_FindItemsByKeywordsResponse.h</code> extends) will tell you where to find the enum constants allowed by <code>ack</code> property, in this case, the allowed enum constants are in <code>Finding_AckValue.h</code>, see sample below :</p>
+
+<figure class='code'><figcaption><span>Finding_BaseServiceResponse.h</span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/Finding_BaseServiceResponse.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> Indicates whether or not errors or warnings were generated during the</span>
+</span><span class='line'><span class="cm"> processing of the request.</span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> </span>
+</span><span class='line'><span class="cm"> type: string constant in Finding_AckValue.h</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">ack</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>At last, please don&#8217;t forget to include the shared client and SOAP12 related header files, it&#8217;s a best practice to include the generated Finding_CommonTypes.h file which can free you from writing many import statements required by request building and response handling.</p>
 
 <h2>Final Step - Run the Demo</h2>
 
@@ -811,6 +886,10 @@
 <p><img class="center" src="/images/pico/tutorial03/screen_shot3.png" width="300" height="500"></p>
 
 <p>Now it&#8217;s your turn to create iOS applications based on eBay Finding web serivce, see your next great serivce based app.</p>
+
+<h3>Update 1</h3>
+
+<p>The eBay Finding Service Proxy has been extracted as a standalone project, hosted <a href="https://github.com/bulldog2011/PicoEBayFindingClient">here</a>, and the corresponding appledoc is hosted <a href="http://bulldog2011.github.com/PicoEBayFindingClient/">here</a>, the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.</p>
 </div>
 
 
@@ -847,7 +926,7 @@
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/" >Tweet</a>
   
   
   
@@ -858,6 +937,8 @@
       
         <a class="basic-alignment left articlenav" href="/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/" title="Previous Post: Pico Tutorial 2 - a Currency Converter Sample">&laquo; Pico Tutorial 2 - a Currency Converter Sample</a>
       
+      
+        <a class="basic-alignment right articlenav" href="/blog/2013/03/30/pico-tutorial-4-hello-ebay-shopping/" title="Next Post: Pico Tutorial 4 - Hello eBay Shopping">Pico Tutorial 4 - Hello eBay Shopping &raquo;</a>
       
     </p>
   </footer>
@@ -882,7 +963,7 @@
 <li class='category'><a href='/blog/categories/luxun/'>luxun (1)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
 <li class='category'><a href='/blog/categories/nano/'>nano (9)</a></li>
-<li class='category'><a href='/blog/categories/pico/'>pico (4)</a></li>
+<li class='category'><a href='/blog/categories/pico/'>pico (5)</a></li>
 
   </ul>
 </section>
@@ -891,7 +972,11 @@
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/">Pico Tutoiral 3 - Hello eBay Finding</a>
+        <a href="/blog/2013/03/30/pico-tutorial-4-hello-ebay-shopping/">Pico Tutorial 4 - Hello eBay Shopping</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">Pico Tutorial 3 - Hello eBay Finding</a>
       </li>
     
       <li class="post">
@@ -904,10 +989,6 @@
     
       <li class="post">
         <a href="/blog/2013/03/27/the-architecture-and-design-of-a-pub-sub-messaging-system/">the architecture and design of a publish subscribe messaging system tailored for big data collecting and analytics</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">wsdl driven development on iOS - the big picture</a>
       </li>
     
   </ul>
@@ -937,8 +1018,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/';
-        var disqus_url = 'http://bulldog2011.github.com/blog/2013/03/29/pico-tutoiral-3-hello-ebay-finding/';
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/';
         var disqus_script = 'embed.js';
       
     (function () {

@@ -488,6 +488,9 @@ This is just a bare minimum eBay Shopping service based application, for a demo 
 Now it's your turn to create iOS applications based on eBay Shopping and eBay Finding web serivces, see your next great serivce based app.
 
 
+### Update 1
+The eBay Shopping Service Proxy has been extracted as a standalone project, hosted [here](https://github.com/bulldog2011/PicoEBayShoppingClient), and the corresponding appledoc is hosted [here](http://bulldog2011.github.com/PicoEBayShoppingClient/), the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.
+
 
 
 

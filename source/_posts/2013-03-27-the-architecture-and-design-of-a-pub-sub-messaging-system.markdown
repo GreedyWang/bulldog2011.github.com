@@ -162,7 +162,7 @@ Luxun persistent queue consists of following components:
 
 >1. At the top is the ***Fanout Queue*** abstraction layer, Luxun interacts with this layer directly for queue operations like enqueue and dequeue.
 2. ***Fanout Queue*** is built on the ***Append Only Big Array*** structure, just as we explained in the logical and physical view above.
-3. The ***Append Only Big Array*** structure is built on ***Mapped Page Factory*** which are response for mapped page management, like page creation, on-demand load, caching, swapping, etc.
+3. The ***Append Only Big Array*** structure is built on ***Mapped Page Factory*** which are responsible for mapped page management, like page creation, on-demand load, caching, swapping, etc.
 4. At the lowest level are the ***Mapped Page*** which is the object model of memory mapped file, and the ***LRU Cache*** which are responsible for the page cache and swapping, for efficient memory usage.
 
 
@@ -177,11 +177,183 @@ At runtime, Luxun queue looks just like a memory mapped sliding window:
 
 Only the current active page files are mapped into memory, and they will be unloaded from memory if they are inactive in a specified time window, then new active page(s) will be loaded into memory as needed. The access pattern of queue((rear append and front read)) has very good locality, as long as we keep the current working set in memory, we'll obtain both fast read/write performance and persistence, while at the same time the memory usage is efficient. 
 
-### Other Design Decisions
+### Other Design Consideration
 
-// TODO
+#### The Queue Interface
+The persistent queue exposes following interfaces for queue operations, monitoring and maintenance:
 
+>1. ***enqueue(byte[] item)*** : append(or produce) binary data into the queue.
+2. ***byte[] dequeue*** : read(or consume) binary data from the queue.
+3. ***isEmpty*** : check if the queue is empty.
+4. ***getSize*** : total number of items remaining in the queue
+5. ***removeBefore(long timestamp)*** : remove index and data pages before a given timestamp, this may delete back files and advance the queue front pointer accordingly. This interface is useful to remove expired data files, to clean up already consumed data or to avoid too much disk space being used up. Luxun supports a `log.retention.hours` setting, internally, Luxun will periodically check data files outside the retention window, and remove them using the `removeBefore` interface.
+6. ***limitBackFileSize(long sizeLimit)*** : limit the total size of back index and data page files, this may delete back files and advance the queue front pointer accordingly. This interface is useful to limit the total size of back files, to clean up already consumed data or to avoid too much disk space being used up.  Luxun supports a `log.retention.size` setting, internally, Luxun will periodically check the total size of back files and use `limitBackFileSize` interface to prune some old back files to maintain size.
+7. ***getBackFileSize*** : Get current total size of back files of a queue.
+8. ***findClosestIndex(long timestamp)*** : find index closest to a given timestamp, this interface is useful in some cases that user want to consume by index and from a specific timestamp.
+9. ***flush*** : force to persist newly appended data, usually, this interface is not needed since OS will be responsible for the persistence of memory mapped buffer. We leave this interface to user in case they may need transactional reliability and they are aware of the cost to performance.
+
+Note, in our queue design, enqueue only accept binary data as input, and dequeue only returns binary data, serialization and deserialization are outside the consideration of big queue design, in other word, Luxun can only see plain and raw bytes, we choose this design because:
+
+>1. This can simplify the queue design and implementation.
+2. There are already a couple of mature and high performance serialization frameworks out there, such as protobuf, thrift, avro, just name a few, We can't do better than these already established frameworks.
+3. We give the flexibility to user to choose their preferred serialization framework.
+
+#### Reusability
 The big array structure(aka the persistent queue) is implemented as a standalone library, since its usage it not limited to Luxun only, any applications that need a fast, big and persistent queue can reuse the big array library, the source of this library is [here](https://github.com/bulldog2011/bigqueue).
+
+# The Design of Thrift based Communication Layer
+
+###Rationality
+We choosed Thrift to implement the communication layer of Luxun, because:
+
+>1. Thrift is ***stable and mature***, it was created by Facebook, now it's an Apache project, it has been successfully used by famous projects like Cassandra and HBase.   
+2. Thrift has ***high performance***, it provides highly effective serialization protocols like `TBinaryProtocol` and server model like `TNonBlockingServer`(so you won't get troubled with building your own NIO server which is very tricky and error prone). High performance binary RPC support and non blocking server model are main attractive features that lead us to choose Thrift, since ***Fast Wire Serialization, High Throughput, Highly Concurrent and NonBlocking Communication*** are top priority architecture and design objectives of Luxun.
+3. Thrift is ***simple and light-weight***, you just need to define a simple interface using its light-weight IDL(interface definition language), then you can auto-generate basic server and client proxy code without much effort, this can not only minimize development effort, but later upgrading effort - you just need to update the IDL then re-generate.  
+4. Thrift has good ***cross-language*** support, supported platforms include but not limited to Java, CSharp, C++, PHP, Ruby, Python. One big factor we choose Thrift is - after we build the Thrift based Luxun queue service, clients for different language platforms are basically ready, If We need a client for languge X, We can easily generate one using its universal code generator.  
+5. Thrift is ***flexible***, Thrift has a pluggable architecture, transport protocols(like tcp or http), serialization protocol(like TBinaryProtocol, TJSONProtocol) and server models(like TNonBlockingServer, TThreadPoolServer) are all changeable according to your real needs.  
+  
+Basically, We think guys at Facebook have made a really cool RPC framework, greatly simplified service development.
+
+###Components View
+
+Programming with Thrift just like playing with building blocks, see components view of the Luxun client and server below:
+
+{% img center /images/luxun/communication_components.png 600 800 %}
+
+
+>1. At the lowest layer is the underlying IO supported by Java language platform.
+2. In the middle layer are components provided by Thrift, in Luxun implementation, 
+on server side, we chosen:
+	* `TnonblockingServerSocket` as `TTransport` protocol;
+	* `TBinaryProtocol` as `TProtocol` serialization protocol;
+	* and `TNonblockingServer` as server model.  
+on client side, we chosen:   
+	* `TSocket` as `TTransport` protocol;
+	* `TBinaryProtocol` as `TProtocol` serialization protocol.
+3. The `QueueService.Processor` and `QueueService.Client` are proxy auto-generated from Luxun service IDL, will be elaborated on later.
+4. On top layer are the Luxun implementation of the queue service interface, on server side, we implement `QueueService.Iface` in a class called `LogManager`, which will communicate with clients through the generated `QueueService.Processor` proxy and delegate the real queue operations to the underlying persistent queue; On client side, we implement producer or consumer specific code, which communicates with the server through the generated `QueueService.Client` proxy.
+
+
+###Luxun Thrift IDL
+The Luxun Thrift IDL is the messaging contract between Luxun server and clients(producers or consumers), see its formal definition below:
+
+{% codeblock %}
+
+namespace java com.leansoft.luxun.api.generated
+namespace csharp Leansoft.luxun.Api.Generated
+
+const i32 RANDOM_PARTION = -1;
+
+const string EARLIEST_INDEX_STRING = "earliest";
+const string LATEST_INDEX_STRING = "latest";
+
+const i64 EARLIEST_TIME = -1;
+const i64 LATEST_TIME = -2;
+
+enum ResultCode
+{
+  SUCCESS,
+  FAILURE,
+  TRY_LATER
+}
+
+enum ErrorCode
+{
+  INTERNAL_ERROR,
+  TOPIC_NOT_EXIST,
+  INDEX_OUT_OF_BOUNDS,
+  INVALID_TOPIC,
+  TOPIC_IS_EMPTY,
+  AUTHENTICATION_FAILURE,
+  MESSAGE_SIZE_TOO_LARGE,
+  ALL_MESSAGE_CONSUMED
+}
+
+struct Result
+{
+    1: required ResultCode resultCode,
+    2: ErrorCode errorCode,
+    3: string errorMessage
+}
+
+struct ProduceRequest {
+    1: required binary item,
+    2: required string topic,
+}
+
+struct ProduceResponse {
+    1: required Result result,
+    2: i64 index
+}
+
+struct ConsumeRequest {
+    1: required string topic,
+    2: string fanoutId, 
+    3: i64 startIndex,
+    4: i32 maxFetchSize,
+}
+
+struct ConsumeResponse {
+    1: required Result result,
+    2: list<binary> itemList,
+    3: i64 lastConsumedIndex
+}
+
+struct FindClosestIndexByTimeRequest {
+    1: required i64 timestamp,
+    2: required string topic,
+}
+
+struct FindClosestIndexByTimeResponse {
+    1: required Result result,
+    2: i64 index,
+    3: i64 timestampOfIndex
+}
+
+struct DeleteTopicRequest {
+    1: required string topic,
+    2: required string password
+}
+
+struct DeleteTopicResponse {
+    1: required Result result,
+}
+
+struct GetSizeRequest {
+    1: required string topic,
+    3: string fanoutId
+}
+
+struct GetSizeResponse {
+    1: required Result result,
+    2: i64 size
+}
+
+service QueueService {
+    ProduceResponse produce(1: ProduceRequest produceRequest);
+
+    ConsumeResponse consume(1: ConsumeRequest consumeRequest);
+    
+    FindClosestIndexByTimeResponse findClosestIndexByTime(1: FindClosestIndexByTimeRequest findClosestIndexByTimeRequest);
+    
+    DeleteTopicResponse deleteTopic(1: DeleteTopicRequest deleteTopicRequest);
+    
+    GetSizeResponse getSize(1: GetSizeRequest getSizeRequest);
+}
+
+{% endcodeblock %}
+
+This is a quite simple and intuitive interface, let's elaborate on supported calls one by one:
+>1. The ***produce*** call append binary data into the queue, you need to provide the target topic and the binary data as input, the response will return the operation result and the appended index if the operation is successful.
+2. The ***consume*** call supports to kinds of operation modes,
+	* ***consume by fanout id***: this is just the fanout queue semantics support, in such mode, you need to provide target topic, a fanout id and a max fetch size as input, the response will return a list of binary data if the operation is successful.
+	* ***consume by index***: this is a more flexible queue semantics support, in such mode, you need to provide target topic, a start index and a max fetch size as input, the response will return a list of binary data if the operation is successful.      
+The max fetch size parameter is required to support batch consuming - one consume operation will fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, just set max fetch size to <= 0; 
+3. The ***findClosetIndexByTime*** call is useful if you want ***consume by index*** semantics and want to find an index by a specific timestamp. You need to provide target topic and a timestamp as input, the response will return closet index if the find operation is successful.
+4. The ***deleteTopic*** call is used for deleting any unused topics, you need to provide target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.
+5. The ***getSize*** call just returns the total number of items remaining in a topic, this is a call for queue status query.
+
+Simplicity is the main design objective of the Luxun queue IDL, in order to simplify clients implementation, at the sample, future extension is easy because of the flexibility provided by Thrift.
 
 # Luxun vs Apache Kafka - the Main Differences
 Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:

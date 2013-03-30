@@ -1,11 +1,11 @@
 ---
 layout: post
-title: "Pico Tutoiral 3 - Hello eBay Finding"
+title: "Pico Tutorial 3 - Hello eBay Finding"
 date: 2013-03-29 10:25
 comments: true
 categories: [pico]
 keywords: ios, wsdl, soap, ebay finding api
-description: Pico Tutoiral 3 - Hello eBay Finding
+description: Pico Tutorial 3 - Hello eBay Finding
 ---
 
 This is the third tutorial of Pico tutorial series, in [first](http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/) and [second]() tutorials, I showed you how to use Pico with simple web serivces like [StockQuote](StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=9) and [CurrencyConverter](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=10). These services are quite simple, only support one or two calls, and the request/response structures are fairly simple, supporting these simple services only can't show the full power of Pico. So in this and later tutorials, I will show you how to use Pico with industrial grade services, let's start with [eBay Finding service](http://developer.ebay.com/DevZone/finding/CallRef/index.html), please reivew its official site if you are not familar with this service, bastially, it let you search items on eBay. eBay Finding service supports SOAP12, so I will also show you how to configure Pico to support SOAP12 protocol, also I will show how to set service required HTTP headers on Pico client.

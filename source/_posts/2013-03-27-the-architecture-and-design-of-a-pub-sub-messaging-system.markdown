@@ -103,6 +103,85 @@ In summary, Luxun queue is an append only queue, means at producing side, item c
 
 Note, the Luxun queue service even expose the index based queue access interface to user, in case some user may need more flexible queue semantics, for example, to support transactional queue semantics by committing and saving index in DB or Zookeeper. It's even possible to consume the queue randomly by index, although there may have performance issue in such case.
 
+### Physical View
+Luxun queue is built on a big array abstraction, physically, one big array is implemented by:
+
+>* One ***Index file*** : store fix sized index item, aka pointer to data item in ***Data File***.
+* One ***Data file*** : store actual data item with variable length.
+
+Index file and data file may grow very big, map whole index file or data file into memory may lead to unpredictable memory issue, so both Index file and Data file are further paged into fix sized sub-page files(in current setting, index page is 32M which can index 1M items, data page is 128M), and every sub-page has a corresponding index, at runtime, these sub-page files will be mapped into memory on demand.
+
+{% img center /images/luxun/queue_physical_view.png 700 900 %}
+
+A fix sized ***Index Item*** consists of :
+
+>1. 4 bytes `Data Page Index` - pointing to the data page index where the target data item resides.
+2. 2 bytes `Item Offset` - data item offset within the data page file.
+3. 2 bytes `Item Length` - the length of the data item.
+4. 4 bytes `Item Timestamp` - the timestamp when the data item is appended into the big array.
+
+Besides structures above, every big array has :
+
+>1. An ***Array Header Index Pointer*** : pointing to the next to be appended array index.
+2. An ***Array Tail Index Pointer*** : pointing to the first array index(usually it's 0 if we haven't truncated the array)
+3. A ***Header Data Page Index Pointer*** : pointing to the next to be appended data page index.
+4. A ***Header Data Item Offset Pointer*** : pointing to the next to be appended data item offset within a data page.    
+Pointers 1 & 2 are persisted in memory mapped file, while pointers 3 & 4 are not persisted since they can be derived from pointers 1 & 2.
+
+
+With data and file structures defined above, let's see the simplified data item indexing and appending(producing) flow(we will use number listed above as abbreviated representation of pointer):
+
+>1. Find the header data page file through pointer 3.
+2. Append the data into the data page file, starting offset from pointer 4, then update pointer 4 by adding the data length.
+3. Find the header index item through pointer 1.
+4. Update `Data Page Index`, `Item Offset`, `Item Length` and `Item Timestamp` within the index item.
+5. Advance pointer 1 by plus one(this also has transactional commit effect).
+
+The simplified reading(or consuming) by index flow is even simpler:
+>1. find the index item by the given index
+2. find the data item by inspecting `Data Page Index`, `Item Offset` in the index item
+3. read the data item and then return it.
+
+Algorithm to find index item given an array index:
+
+{% codeblock %}	
+index page index = array index / number of index items per page;
+index item offset = (array index `mod` index items per page) * length of index item
+{% endcodeblock %}
+The divide, mod and multiply operations are further optimized by fast shifting operations.
+
+#### Concurrency Consideration
+In the design above, the append operation must be synchronized in concurrent case, while read operation is thread safe, the ***Array Header Index Pointer*** is just like a read/writer barrier, one and only one append thread will push the barrier, while multiple threads can concurrently read items behind the barrier.
+
+
+### Components View
+
+{% img center /images/luxun/components_view.png 300 400 %}
+
+Luxun persistent queue consists of following components:
+
+>1. At the top is the ***Fanout Queue*** abstraction layer, Luxun interacts with this layer directly for queue operations like enqueue and dequeue.
+2. ***Fanout Queue*** is built on the ***Append Only Big Array*** structure, just as we explained in the logical and physical view above.
+3. The ***Append Only Big Array*** structure is built on ***Mapped Page Factory*** which are response for mapped page management, like page creation, on-demand load, caching, swapping, etc.
+4. At the lowest level are the ***Mapped Page*** which is the object model of memory mapped file, and the ***LRU Cache*** which are responsible for the page cache and swapping, for efficient memory usage.
+
+
+### Dynamic View
+
+{% img center /images/luxun/sliding_window.png 600 800 %}
+
+At runtime, Luxun queue looks just like a memory mapped sliding window:
+
+>1. As new items are appended into the queue, the queue rear index will slide gradually towards the right, and the current appended page will be mapped and kept in memory.
+2. As items are read from the queue, the queue front index will slide gradually towards the right, and the current read page will be mapped and kept in memory.
+
+Only the current active page files are mapped into memory, and they will be unloaded from memory if they are inactive in a specified time window, then new active page(s) will be loaded into memory as needed. The access pattern of queue((rear append and front read)) has very good locality, as long as we keep the current working set in memory, we'll obtain both fast read/write performance and persistence, while at the same time the memory usage is efficient. 
+
+### Other Design Decisions
+
+// TODO
+
+The big array structure(aka the persistent queue) is implemented as a standalone library, since its usage it not limited to Luxun only, any applications that need a fast, big and persistent queue can reuse the big array library, the source of this library is [here](https://github.com/bulldog2011/bigqueue).
 
 # Luxun vs Apache Kafka - the Main Differences
 Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:

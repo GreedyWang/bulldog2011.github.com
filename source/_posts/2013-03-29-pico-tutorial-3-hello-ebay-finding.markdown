@@ -36,8 +36,8 @@ Depends on the network speed, you may need to wait a few moments to let the code
 
 A few comments about the codegen options:
 
->* I have added a prefix `Finding_` as codegen option, such that all interfaces/types generated will be prefixed. Adding prefix to Objective-C types is a recommended best practice to avoid possible type name confict with code generated from other services, for example, eBay has a couple of SOA services, and they share a few commons types, without prefixing, you will get confict if you use two or more eBay SOA services in one application.
-* I have added a special `-ebaysoa` codegen option, this is because eBay Finding service needs a per-call operation name HTTP header, I added this special flag in the code generator to let it generate the header form me, since I don't want to add this header everytime I call an eBay Finding service, so this is just a special flag for eBay SOA services and for demo, or a hidden feature, not a generic codegen option.
+>* I have added a prefix `Finding_` as codegen option, such that all interfaces/types generated will be prefixed. Adding prefix to Objective-C types is a recommended best practice to avoid possible type name conflict with code generated from other services, for example, eBay has a couple of SOA services, and they share a few commons types, without prefixing, you may get conflict if you use two or more eBay SOA services in one application.
+* I have added a special `-ebaysoa` codegen option, this is because eBay Finding service needs a per-call operation name HTTP header, I added this special flag in the code generator to let it generate the header for me, since I don't want to add this header everytime I call an eBay Finding service, so this is just a special flag for eBay SOA services and for demo, or a hidden feature, not a generic codegen option.
 
 
 ##Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project
@@ -183,7 +183,7 @@ All the methods in the interface follow same calling paradigm - you call the ser
 
 ##Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.
 
-First, create a shared serivice client as below:
+First, create a shared service client as below:
 
 {% codeblock EBayFindingServiceClient.h lang:objc https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/EBayFindingServiceClient.h source %}
 
@@ -350,8 +350,59 @@ More comments to the serivce call code:
 5. eBay Finding service support response resident error(RRE), so even we get a success response, we still need to check the response for resident error and handle it accordingly.
 6. We used a thrid party library called "Toast" for producing toast like message, this is just for the convenience of demo, not necessary in your real project.
 
+Regarding type hint:
 
-Please don't forget to include the shared client and SOAP12 related header files, it's a best practice to include the generated Finding_CommonTypes.h file which can free you from writing many import statements required by request building and response handling.
+The `pageNumber` property of `Finding_PaginationInput` is of type `NSNumber`, you may get confused what kind of number should be put in PageNumber, short, int or long? Please just consult the source of `Finding_PaginationInput.h`, it provides type hint as code comments, see sample below. Indeed, every type generated from wsdl has sufficient type hint to assist your development. Xsd annotations in wsdl/schema are also generated into corresponding interfaces/types, further facilitating your development
+
+{% codeblock Finding_PaginationInput.h lang:objc https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/Finding_PaginationInput.h source  %}
+
+/**
+Specifies which subset of data (or "page") to return in the call
+response. The number of data pages is determined by the total number of
+items matching the request search criteria (returned in
+paginationOutput.totalEntries) divided by the number of entries to
+display in each response (entriesPerPage). You can return up to the first
+100 pages of the result set by issuing multiple requests and specifying,
+in sequence, the pages to return.
+type : NSNumber, wrapper for primitive int
+*/
+@property (nonatomic, retain) NSNumber *pageNumber;
+
+{% endcodeblock %}
+
+In response handling, the `item` property of `Finding_SearchResult` is of type `NSMutableArray`, you may get confused what is the actual entry type? please just consult the source of `Finding_SearchResult.h` for type hint, see sample below:
+
+{% codeblock Finding_SearchResult.h lang:objc https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/Finding_SearchResult.h source  %}
+
+/**
+ 
+ Container for the data of a single item that matches the search criteria.
+ 
+ 
+ entry type : class Finding_SearchItem
+*/
+
+@property (nonatomic, retain) NSMutableArray *item;
+
+{% endcodeblock %}
+
+Xsd enumeration is mapped to Objective-C `NSString` in Pico framework, for example, the `ack` property of `Finding_FindItemsByKeywordsResponse` is of type `NSString`, in wsdl, it's an xsd enumeration of type `AckValue`, the type hint in `Finding_BaseServiceResponse.h`(from which `Finding_FindItemsByKeywordsResponse.h` extends) will tell you where to find the enum constants allowed by `ack` property, in this case, the allowed enum constants are in `Finding_AckValue.h`, see sample below :
+
+{% codeblock Finding_BaseServiceResponse.hlang:objc https://github.com/bulldog2011/pico/blob/master/Examples/eBayFinding/eBayFinding/Proxy/Finding_BaseServiceResponse.h source  %}
+
+/**
+ 
+ Indicates whether or not errors or warnings were generated during the
+ processing of the request.
+ 
+ 
+ type: string constant in Finding_AckValue.h
+*/
+@property (nonatomic, retain) NSString *ack;
+
+{% endcodeblock %}
+
+At last, please don't forget to include the shared client and SOAP12 related header files, it's a best practice to include the generated Finding_CommonTypes.h file which can free you from writing many import statements required by request building and response handling.
 
 
 ##Final Step - Run the Demo

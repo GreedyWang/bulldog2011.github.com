@@ -353,7 +353,7 @@ The max fetch size parameter is required to support batch consuming - one consum
 4. The ***deleteTopic*** call is used for deleting any unused topics, you need to provide target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.
 5. The ***getSize*** call just returns the total number of items remaining in a topic, this is a call for queue status query.
 
-Simplicity is the main design objective of the Luxun queue IDL, in order to simplify clients implementation, at the sample, future extension is easy because of the flexibility provided by Thrift.
+Simplicity is the main design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the sample, future extension is easy because of the flexibility and IDL driven development provided by Thrift.
 
 # Luxun vs Apache Kafka - the Main Differences
 Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:

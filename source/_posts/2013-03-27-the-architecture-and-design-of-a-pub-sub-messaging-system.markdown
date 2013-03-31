@@ -88,7 +88,7 @@ The logic view of the persistent queue is fairly simple and intuitive, it's just
 
 {% img center /images/luxun/queue_logical_view.png 400 600 %}
 
-you can access the queue using array like index, one special thing is that the index is of type long(in typical programming language, array index is of type int), so the queue can accomodate huge amount of data, only limited by available disk space. You may also think of the queue as a circular queue as shown in figure above, since the queue will wrap around when the long.max index is reached, (although in practice, we don't think current application will get chance to reach the long.max index:)).
+you can access the queue using array like index, one special thing is that the index is of type long(in typical programming language, array index is of type int), so the queue can accomodate huge amount of data, only limited by available disk space. You may also think of the queue as a circular queue as shown in figure above, since the queue will wrap around when the long.max index is reached(although in practice, we don't think current application will get chance to reach the long.max index:)).
 
 With simple array like abstraction, we can implement queue semantics with ease:
 
@@ -348,12 +348,105 @@ This is a quite simple and intuitive interface, let's elaborate on supported cal
 2. The ***consume*** call supports to kinds of operation modes,
 	* ***consume by fanout id***: this is just the fanout queue semantics support, in such mode, you need to provide target topic, a fanout id and a max fetch size as input, the response will return a list of binary data if the operation is successful.
 	* ***consume by index***: this is a more flexible queue semantics support, in such mode, you need to provide target topic, a start index and a max fetch size as input, the response will return a list of binary data if the operation is successful.      
-The max fetch size parameter is required to support batch consuming - one consume operation will fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, just set max fetch size to <= 0; 
-3. The ***findClosetIndexByTime*** call is useful if you want ***consume by index*** semantics and want to find an index by a specific timestamp. You need to provide target topic and a timestamp as input, the response will return closet index if the find operation is successful.
-4. The ***deleteTopic*** call is used for deleting any unused topics, you need to provide target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.
-5. The ***getSize*** call just returns the total number of items remaining in a topic, this is a call for queue status query.
+Note, if both fanout id and start index are provided, then fanout id will take precedence.
+The max fetch size parameter is required to support batch consuming - one consume operation can fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, set max fetch size to <= 0; 
+3. The ***findClosestIndexByTime*** call is useful if you want ***consume by index*** semantics and want to find an index by a specific timestamp. You need to provide a target topic and a timestamp as input, the response will return closest index if the find operation is successful.
+4. The ***deleteTopic*** call is used for deleting any unused topics, you need to provide a target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.
+5. The ***getSize*** call just returns the total number of items remaining in a topic, this is a call for queue status query, if fanout id is provided, then the size of specific fanout queue will be returned, if no fanout id is provided, then the size of underlying queue(big array) will be returned.
 
-Simplicity is the main design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the sample, future extension is easy because of the flexibility and IDL driven development provided by Thrift.
+Simplicity is the ultimate design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the sample, future extension is easy because of the flexibility and IDL driven development provided by Thrift.
+
+# The Design of the Producer
+
+The raw producer client generated from Luxun queue IDL can be used directly in real application, however, we believe the raw client is too low level for most average developers, so we provided a high-level and feature rich client which is actually a wrapper around the low level raw client generated from IDL. The high level producer not only provides a simpler and intuitive interface for average application developers, but provides advanced features like partitioning, compression, asynchronous batching, further improving the message producing performance. Let's see the main design elements of the producer below.
+
+
+### The Interface
+
+
+{% codeblock IProducer.java lang:java https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/IProducer.java source  %}
+
+/**
+ * Producer interface
+ * 
+ * @author bulldog
+ * @param <K> partition key
+ * @param <V> real message
+ * 
+ */
+public interface IProducer<K, V> extends Closeable {
+
+    /**
+     * Send messages
+     * 
+     * @param data message data
+     * @throws NoBrokersForTopicException no broker for this topic
+     */
+    void send(ProducerData<K, V> data) throws NoBrokersForTopicException;
+
+    /**
+     * get message encoder
+     * 
+     * @return message encoder
+     * @see Encoder
+     */
+    Encoder<V> getEncoder();
+    
+    /**
+     * get partition chooser
+     * 
+     * @return partition chooser
+     * @see IPartitioner
+     */
+    IPartitioner<K> getPartitioner();
+}
+
+{% endcodeblock %}
+
+{% codeblock ProducerData.java lang:java https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/ProducerData.java source  %}
+
+/**
+* Represents the data to be sent using the Producer send API
+*
+* @author bulldog
+* @param<K> partition key
+* @param<V> real data
+*
+*/
+public class ProducerData<K, V> {
+
+    /** the topic under which the message is to be published */
+    private String topic;
+    
+    /** the key used by the partitioner to pick a broker */
+    private K key;
+
+    /** variable length data to be published as Luxun messages under topic */
+    private List<V> data;
+
+	.
+	.
+	.
+
+}
+
+{% endcodeblock %}
+
+This interface is quite self explanatory, a real `IProducer` implementation is [here](https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/Producer.java), to publish data to Luxun server, you just call `send` with target topic and data(or a list of data) as input, optionally, you may :
+
+>* Provide an [Encoder](https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/serializer/Encoder.java) to let the producer know how to convert your data into binary format,
+* Provide an [IPartitioner](https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/IPartitioner.java) to let the producer know how to choose the target Luxun borker, in such case, you may also provide a partition key as part of the data.
+
+### Partitioning
+At producer side, Luxun supports distribution through client side partitioning - the producer will choose a target broker using the default or user specified partitioner, if the default [random partitioner](https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/DefaultPartitioner.java) is used, then the producer will pick a server at random when producing data, this end up with a distributed queue that each server stands alone and is strongly ordered, making the cluster loosely ordered. 
+In many situations, loose ordering is sufficient. Dropping the requirement on cross communication makes it horizontally scale to infinity and beyond: no multicast, not "elections", no coordination at all.
+
+{% img center /images/luxun/partitioning.png 400 600 %}
+
+It's also feasible to use a VIP between the producers and the Luxun cluster, in such case, producers only need to know the address of VIP, the VIP will be responsible for distributing traffic to different brokers.
+
+
+{% img center /images/luxun/vip.png 400 600 %}
 
 # Luxun vs Apache Kafka - the Main Differences
 Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:

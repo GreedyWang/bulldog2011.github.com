@@ -4,7 +4,7 @@
   <title><![CDATA[Category: design | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/design/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-30T19:13:21+08:00</updated>
+  <updated>2013-03-31T18:21:42+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -114,7 +114,7 @@ At the producing side, there are different kinds of producers, such as:</p>
 
 <p><img class="center" src="/images/luxun/queue_logical_view.png" width="400" height="600"></p>
 
-<p>you can access the queue using array like index, one special thing is that the index is of type long(in typical programming language, array index is of type int), so the queue can accomodate huge amount of data, only limited by available disk space. You may also think of the queue as a circular queue as shown in figure above, since the queue will wrap around when the long.max index is reached, (although in practice, we don't think current application will get chance to reach the long.max index:)).</p>
+<p>you can access the queue using array like index, one special thing is that the index is of type long(in typical programming language, array index is of type int), so the queue can accomodate huge amount of data, only limited by available disk space. You may also think of the queue as a circular queue as shown in figure above, since the queue will wrap around when the long.max index is reached(although in practice, we don't think current application will get chance to reach the long.max index:)).</p>
 
 <p>With simple array like abstraction, we can implement queue semantics with ease:</p>
 
@@ -597,16 +597,184 @@ on client side, we chosen:</li>
 <ul>
 <li><strong><em>consume by fanout id</em></strong>: this is just the fanout queue semantics support, in such mode, you need to provide target topic, a fanout id and a max fetch size as input, the response will return a list of binary data if the operation is successful.</li>
 <li><strong><em>consume by index</em></strong>: this is a more flexible queue semantics support, in such mode, you need to provide target topic, a start index and a max fetch size as input, the response will return a list of binary data if the operation is successful.    <br/>
-The max fetch size parameter is required to support batch consuming - one consume operation will fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, just set max fetch size to &lt;= 0;</li>
+Note, if both fanout id and start index are provided, then fanout id will take precedence.
+The max fetch size parameter is required to support batch consuming - one consume operation can fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, set max fetch size to &lt;= 0;</li>
 </ul>
 </li>
-<li>The <strong><em>findClosetIndexByTime</em></strong> call is useful if you want <strong><em>consume by index</em></strong> semantics and want to find an index by a specific timestamp. You need to provide target topic and a timestamp as input, the response will return closet index if the find operation is successful.</li>
-<li>The <strong><em>deleteTopic</em></strong> call is used for deleting any unused topics, you need to provide target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.</li>
-<li>The <strong><em>getSize</em></strong> call just returns the total number of items remaining in a topic, this is a call for queue status query.</li>
+<li>The <strong><em>findClosestIndexByTime</em></strong> call is useful if you want <strong><em>consume by index</em></strong> semantics and want to find an index by a specific timestamp. You need to provide a target topic and a timestamp as input, the response will return closest index if the find operation is successful.</li>
+<li>The <strong><em>deleteTopic</em></strong> call is used for deleting any unused topics, you need to provide a target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.</li>
+<li>The <strong><em>getSize</em></strong> call just returns the total number of items remaining in a topic, this is a call for queue status query, if fanout id is provided, then the size of specific fanout queue will be returned, if no fanout id is provided, then the size of underlying queue(big array) will be returned.</li>
 </ol>
 </blockquote>
 
-<p>Simplicity is the main design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the sample, future extension is easy because of the flexibility and IDL driven development provided by Thrift.</p>
+<p>Simplicity is the ultimate design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the sample, future extension is easy because of the flexibility and IDL driven development provided by Thrift.</p>
+
+<h1>The Design of the Producer</h1>
+
+<p>The raw producer client generated from Luxun queue IDL can be used directly in real application, however, we believe the raw client is too low level for most average developers, so we provided a high-level and feature rich client which is actually a wrapper around the low level raw client generated from IDL. The high level producer not only provides a simpler and intuitive interface for average application developers, but provides advanced features like partitioning, compression, asynchronous batching, further improving the message producing performance. Let's see the main design elements of the producer below.</p>
+
+<h3>The Interface</h3>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>IProducer.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/IProducer.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="o">*</span> <span class="n">Producer</span> <span class="kd">interface</span>
+</span><span class='line'> <span class="err">*</span>
+</span><span class='line'> <span class="o">*</span> <span class="nd">@author</span> <span class="n">bulldog</span>
+</span><span class='line'> <span class="o">*</span> <span class="nd">@param</span> <span class="o">&lt;</span><span class="n">K</span><span class="o">&gt;</span> <span class="n">partition</span> <span class="n">key</span>
+</span><span class='line'> <span class="o">*</span> <span class="nd">@param</span> <span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">real</span> <span class="n">message</span>
+</span><span class='line'> <span class="o">*</span>
+</span><span class='line'> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">IProducer</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Closeable</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Send messages</span>
+</span><span class='line'><span class="cm"> * </span>
+</span><span class='line'><span class="cm"> * @param data message data</span>
+</span><span class='line'><span class="cm"> * @throws NoBrokersForTopicException no broker for this topic</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">send</span><span class="o">(</span><span class="n">ProducerData</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">data</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">NoBrokersForTopicException</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * get message encoder</span>
+</span><span class='line'><span class="cm"> * </span>
+</span><span class='line'><span class="cm"> * @return message encoder</span>
+</span><span class='line'><span class="cm"> * @see Encoder</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="n">Encoder</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">V</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">getEncoder</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * get partition chooser</span>
+</span><span class='line'><span class="cm"> * </span>
+</span><span class='line'><span class="cm"> * @return partition chooser</span>
+</span><span class='line'><span class="cm"> * @see IPartitioner</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="n">IPartitioner</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">K</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">getPartitioner</span><span class="o">();</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ProducerData.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/ProducerData.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'><span class="o">*</span> <span class="n">Represents</span> <span class="n">the</span> <span class="n">data</span> <span class="n">to</span> <span class="n">be</span> <span class="n">sent</span> <span class="n">using</span> <span class="n">the</span> <span class="n">Producer</span> <span class="n">send</span> <span class="n">API</span>
+</span><span class='line'><span class="o">*</span>
+</span><span class='line'><span class="o">*</span> <span class="nd">@author</span> <span class="n">bulldog</span>
+</span><span class='line'><span class="o">*</span> <span class="nd">@param</span><span class="o">&lt;</span><span class="n">K</span><span class="o">&gt;</span> <span class="n">partition</span> <span class="n">key</span>
+</span><span class='line'><span class="o">*</span> <span class="nd">@param</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">real</span> <span class="n">data</span>
+</span><span class='line'><span class="o">*</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ProducerData</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="cm">/** the topic under which the message is to be published */</span>
+</span><span class='line'><span class="kd">private</span> <span class="n">String</span> <span class="n">topic</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/** the key used by the partitioner to pick a broker */</span>
+</span><span class='line'><span class="kd">private</span> <span class="n">K</span> <span class="n">key</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/** variable length data to be published as Luxun messages under topic */</span>
+</span><span class='line'><span class="kd">private</span> <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">V</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">data</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">.</span>
+</span><span class='line'><span class="o">.</span>
+</span><span class='line'><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>This interface is quite self explanatory, a real <code>IProducer</code> implementation is <a href="https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/Producer.java">here</a>, to publish data to Luxun server, you just call <code>send</code> with target topic and data(or a list of data) as input, optionally, you may :</p>
+
+<blockquote><ul>
+<li>Provide an <a href="https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/serializer/Encoder.java">Encoder</a> to let the producer know how to convert your data into binary format,</li>
+<li>Provide an <a href="https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/IPartitioner.java">IPartitioner</a> to let the producer know how to choose the target Luxun borker, in such case, you may also provide a partition key as part of the data.</li>
+</ul>
+</blockquote>
+
+<h3>Partitioning</h3>
+
+<p>At producer side, Luxun supports distribution through client side partitioning - the producer will choose a target broker using the default or user specified partitioner, if the default <a href="https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/DefaultPartitioner.java">random partitioner</a> is used, then the producer will pick a server at random when producing data, this end up with a distributed queue that each server stands alone and is strongly ordered, making the cluster loosely ordered.
+In many situations, loose ordering is sufficient. Dropping the requirement on cross communication makes it horizontally scale to infinity and beyond: no multicast, not "elections", no coordination at all.</p>
+
+<p><img class="center" src="/images/luxun/partitioning.png" width="400" height="600"></p>
+
+<p>It's also feasible to use a VIP between the producers and the Luxun cluster, in such case, producers only need to know the address of VIP, the VIP will be responsible for distributing traffic to different brokers.</p>
+
+<p><img class="center" src="/images/luxun/vip.png" width="400" height="600"></p>
 
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
 
@@ -645,6 +813,74 @@ The max fetch size parameter is required to support batch consuming - one consum
 </blockquote>
 
 <p>Many thanks to the authors of these open source projects!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[wsdl driven development on iOS - the big picture]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/"/>
+    <updated>2013-03-25T20:03:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture</id>
+    <content type="html"><![CDATA[<p>WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost.</p>
+
+<!--more-->
+
+
+<p>Although nowadays there is a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it's very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
+
+<p>Can WSDL driven development be put into practice on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.</p>
+
+<p>Let's see the big picture:</p>
+
+<p><img class="center" src="/images/pico/big_picture.png" width="600" height="800"></p>
+
+<p>The picture above is the blueprint of WSDL driven development on iOS. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can't be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/pico">Pico Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your iOS app, your app issues request on service proxy, the proxy passes the request to the Pico runtime framework which will delegate the object to XML/SOAP marshalling work to Pico binding framework then send XML/SOAP request to external service through AFNetworking HTTP client component, when an XML/SOAP response is received by the HTTP client component, the Pico runtime framework will also delegate the XML/SOAP to object unmarshalling work to Pico binding framework and passes the response object to the proxy which will eventually return the response object back to the calling app.</p>
+
+<p>We used the synchronous flow in the picture just for convenient demonstration, the real call flow in the runtime is asynchronous, by leveraging NSOperation, NSOperationQueue and GCD, in order not to block main UI thread.</p>
+
+<p>The Pico binding framework is the core of the Pico runtime, the real object<->xml binding magic happens here, below is the architecture of the binding runtime:</p>
+
+<p><img class="center" src="/images/pico/binding.png" width="500" height="600"></p>
+
+<p>There are four main components:</p>
+
+<blockquote><ol>
+<li><strong><em>Marshaller</em></strong> - responsible for object to xml marshalling</li>
+<li><strong><em>Unmarshaller</em></strong> - responsible for xml to object unmarshalling</li>
+<li><strong><em>BindingSchema</em></strong> - store object<->xml mapping information, used by both Marshaller and Unmarshaller to guide the marshalling/unmarshalling process at runtime, schema is extracted from classes and is cached for better performance.</li>
+<li><strong><em>Converter</em></strong> - type converter for primitive types or frequently used types.</li>
+</ol>
+</blockquote>
+
+<p>The marshalling/unmarshalling algorithm is recursive in nature:</p>
+
+<blockquote><ol>
+<li>for fields of primitive or frequently used types, use corresponding converter to convert the field directly.</li>
+<li>for fields of object type, convert the fields of the object one by one and recursively.</li>
+</ol>
+</blockquote>
+
+<p>The code generator component is based on <a href="http://docs.oracle.com/javase/6/docs/technotes/tools/share/wsimport.html">JAX-WS Wsimport</a> and <a href="http://freemarker.org/">Freemarker</a> template engine, see the whole architecture below:</p>
+
+<p><img class="center" src="/images/pico/codegen-arch.png" width="600" height="750"></p>
+
+<p>The whole architecture can be summarized as <strong><em>Model + Template = Code</em></strong>, code generation flow as following:</p>
+
+<blockquote><ol>
+<li>WSDL doc is first fed into Wsimport and a JAXB/JAX-WS model is generated.</li>
+<li>The JAXB/JAX-WS model is then transformed into a language independent intermediate codegen model.</li>
+<li>The codegen model and corresponding target language templates(Objective-C or Android) are then fed into the Freemarker template engine.</li>
+<li>The Freemarker template engine will eventually transform the in-memory model into target code, guided by the templates.</li>
+</ol>
+</blockquote>
+
+<p>There are other WSDL to Objective-C code generation tools, like <a href="http://code.google.com/p/wsdl2objc/">wsdl2objc</a> and <a href="http://sudzc.com/">SudzC</a>, it's ok to use these tools to generate code from simple wsdl, but when fed with an industry level wsdl like eBay or Amazon wsdl, seems these tools will always break. Unlike these simple tools, the mwsc code generator provided by Pico framework is backed by JAX-WS Wsimport, which is mature and stable, and can recognize most standard WSDL/Schema components, by delegating the most tricky and complex wsdl model transformation task to Wsimport, the mwsc code generator solved the WSDL to Objective-C(or Android Java) problem in a simple while elegant way.</p>
+
+<p>The mwsc code generator not only generates simple bean classes from WSDL/Schema, but also generates the XML<->object mapping information(schema) and record these information in the class as meta-data, the meta-data will later be leveraged by Pico binding framework to guide the XML<->Object transformation at runtime.</p>
+
+<p>With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.</p>
+
+<p>In later posts, I will show how to put WSDL driven iOS app development into practice in a series of tutorials, just stay tuned.</p>
 ]]></content>
   </entry>
   

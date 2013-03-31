@@ -4,7 +4,7 @@
   <title><![CDATA[Category: pico | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/pico/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-03-30T19:13:21+08:00</updated>
+  <updated>2013-03-31T18:21:42+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,1028 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Pico Tutoiral 5 - Hello Amazon Product Advertising API]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/03/31/pico-tutoiral-5-hello-amazon-product-advertising-api/"/>
+    <updated>2013-03-31T10:09:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/03/31/pico-tutoiral-5-hello-amazon-product-advertising-api</id>
+    <content type="html"><![CDATA[<p>This is the fifth tutorial of Pico tutorial series, in this tutorial, I will show you how to integrate <a href="https://github.com/bulldog2011/pico">Pico</a> with <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising API</a>, if you are not familiar with this API, just have a quick review on its official site, basically, the Product Advertising API provides programmatic access to Amazon's product selection and discovery functionality so that developers like you can advertise Amazon products to monetize your website. In this tutorial, I will show you how to customize binding for <a href="https://github.com/bulldog2011/mwsc">mwsc</a> code generation in case the wsdl does not follow convention, for example, the Amazon Product Advertising wsdl uses many anonymous inner types in its schema, without customized binding, the generated code will have many types with same names, leading to compile-time conflict. Also in this tutorial, I will show you show how to add custom SOAP header which is required by the authentication of Amazon Product Advertising API.</p>
+
+<!--more-->
+
+
+<p><strong><em>NOTE</em></strong></p>
+
+<p>Per Amazon:</p>
+
+<p><blockquote><p>You will not, without our express prior written approval, use any Product Advertising Content on or in connection with any site or application designed or intended for use with a mobile phone or other handheld device.</p></blockquote></p>
+
+<p>So please consult Amazon for permission before you can use its Product Advertising Content on any iOS devices.</p>
+
+<p>The source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/AWSECommerce">here</a>.</p>
+
+<!--more-->
+
+
+<h2>Step 0 - Prerequisite</h2>
+
+<p>I suppose you have already read previous Pico tutorials, at least 1 and 2, and basically you should know:</p>
+
+<blockquote><ul>
+<li>The wsdl driven development process supported by Pico.</li>
+<li>How to reference Pico as a static library in your project.</li>
+<li>Or How to reference Pico Source directly in your project.</li>
+</ul>
+</blockquote>
+
+<h2>Step 1 - Generate Objective-C Proxy from WSDL</h2>
+
+<p>The WSDL of Amazon Product Advertising API uses many <code>anonymous inner type</code> in its schema, this is regarded as an anti-pattern, <a href="http://www.ibm.com/developerworks/webservices/library/ws-avoid-anonymous-types/?ca=drs-">here</a> is an article on IBM developerWorks which explains what is <code>anonymous inner type</code> and why it shoud be avoided.</p>
+
+<p>By default, the <a href="https://github.com/bulldog2011/mwsc">mwsc</a> code generator will have no problem to generate proxy from the WSDL of Amazon Product Advertising API, but there will be many types with same names, leading to compile-time conflict. JAX-WS/JAXB(upon which mwsc is built) can resolve the <code>anonymous inner type</code> issue, by using custom binding, I have provided the custom binding file for you, see its definition below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>jaxws-bindings.xml </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/CustomBinding/jaxws-bindings.xml'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxws:</span><span class="n">bindings</span> <span class="nl">xmlns:</span><span class="n">xs</span><span class="o">=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema&quot;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>                            <span class="nl">xmlns:</span><span class="n">wsdl</span><span class="o">=</span><span class="s">&quot;http://schemas.xmlsoap.org/wsdl/&quot;</span>
+</span><span class='line'>                            <span class="nl">xmlns:</span><span class="n">jaxws</span><span class="o">=</span><span class="s">&quot;http://java.sun.com/xml/ns/jaxws&quot;</span>
+</span><span class='line'>                            <span class="nl">xmlns:</span><span class="n">jaxb</span><span class="o">=</span><span class="s">&quot;http://java.sun.com/xml/ns/jaxb&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxws:</span><span class="n">bindings</span>
+</span><span class='line'>            <span class="n">node</span><span class="o">=</span><span class="s">&quot;wsdl:definitions/wsdl:types/xs:schema[@targetNamespace=&#39;http://webservices.amazon.com/AWSECommerceService/2011-08-01&#39;]&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">bindings</span> <span class="n">node</span><span class="o">=</span><span class="s">&quot;//xs:complexType[@name=&#39;CartAddRequest&#39;]/xs:sequence/xs:element[@name=&#39;Items&#39;]/xs:complexType&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>            <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">class</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;CartAddItems&quot;</span><span class="o">/&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="nl">jaxb:</span><span class="n">bindings</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">bindings</span> <span class="n">node</span><span class="o">=</span><span class="s">&quot;//xs:complexType[@name=&#39;CartAddRequest&#39;]/xs:sequence/xs:element[@name=&#39;Items&#39;]/xs:complexType/xs:sequence/xs:element[@name=&#39;Item&#39;]/xs:complexType&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>            <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">class</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;CartAddItem&quot;</span><span class="o">/&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="nl">jaxb:</span><span class="n">bindings</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">bindings</span> <span class="n">node</span><span class="o">=</span><span class="s">&quot;//xs:complexType[@name=&#39;CartCreateRequest&#39;]/xs:sequence/xs:element[@name=&#39;Items&#39;]/xs:complexType&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>            <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">class</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;CartCreateItems&quot;</span><span class="o">/&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="nl">jaxb:</span><span class="n">bindings</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">bindings</span> <span class="n">node</span><span class="o">=</span><span class="s">&quot;//xs:complexType[@name=&#39;CartCreateRequest&#39;]/xs:sequence/xs:element[@name=&#39;Items&#39;]/xs:complexType/xs:sequence/xs:element[@name=&#39;Item&#39;]/xs:complexType&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>            <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">class</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;CartCreateItem&quot;</span><span class="o">/&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="nl">jaxb:</span><span class="n">bindings</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">bindings</span> <span class="n">node</span><span class="o">=</span><span class="s">&quot;//xs:complexType[@name=&#39;CartCreateRequest&#39;]/xs:sequence/xs:element[@name=&#39;Items&#39;]/xs:complexType/xs:sequence/xs:element[@name=&#39;Item&#39;]/xs:complexType/xs:sequence/xs:element[@name=&#39;MetaData&#39;]/xs:complexType&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>            <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">class</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;ItemMetaData&quot;</span><span class="o">/&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="nl">jaxb:</span><span class="n">bindings</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">bindings</span> <span class="n">node</span><span class="o">=</span><span class="s">&quot;//xs:complexType[@name=&#39;CartModifyRequest&#39;]/xs:sequence/xs:element[@name=&#39;Items&#39;]/xs:complexType&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>            <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">class</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;CartModifyItems&quot;</span><span class="o">/&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="nl">jaxb:</span><span class="n">bindings</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">bindings</span> <span class="n">node</span><span class="o">=</span><span class="s">&quot;//xs:complexType[@name=&#39;CartModifyRequest&#39;]/xs:sequence/xs:element[@name=&#39;Items&#39;]/xs:complexType/xs:sequence/xs:element[@name=&#39;Item&#39;]/xs:complexType&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>            <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="nl">jaxb:</span><span class="n">class</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;CartModifyItem&quot;</span><span class="o">/&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="nl">jaxb:</span><span class="n">bindings</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="nl">jaxws:</span><span class="n">bindings</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="nl">jaxws:</span><span class="n">bindings</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>I won't elaborate on the details of custom binding here, if you are interested, please refer to doc <a href="http://jax-ws.java.net/nonav/customizations/http.java.sun.com.xml.n/element/bindings.html">here</a> and <a href="http://docs.oracle.com/cd/E17802_01/webservices/webservices/docs/2.0/tutorial/doc/JAXBUsing4.html">here</a>. Basically, we need to change the naming of some <code>anonymous inner type</code> to avoid conflict, for example, to change <code>Item</code> in <code>CartAddRequest</code> to <code>CartAddItem</code>, in order to avoid conflict with other <code>Item</code> defined in other places.</p>
+
+<p>Now download <a href="https://github.com/bulldog2011/mwsc">mwsc</a>, etract it into a local folder, copy the custom binding file into the same folder, create a folder called <code>generated</code> in the same folder, then run following command in terminal to generate the proxy:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>bin/mwsc -pico -d generated -b jaxws-bindings.xml  http://webservices.amazon.com/AWSECommerceService/AWSECommerceService.wsdl&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Depends on the network speed, you may need to wait a few moments to let the code generator download the wsdl and generate code, you may also download the wsdl to local and run the code generator with a local wsdl.</p>
+
+<p>The target proxy will be generated in the <code>generated</code> folder you created.</p>
+
+<h2>Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project</h2>
+
+<p>Create a new simple iOS single view application named "HelloAWSECommerce", don't choose ARC since Pico does not support ARC yet.</p>
+
+<p>In this tutorial, we will reference Pico as a static library, suppose you have downloaded Pico source project from github site, then:</p>
+
+<blockquote><ol>
+<li>Drag the Pico xcodeproj into your project,</li>
+<li>In the Build Phases of the target,  add <code>libPico.a</code> and <code>libxml2.dylib</code> to "Link Binary With Libraries" section.</li>
+<li>In the Build Setting of the target, add [your path to Pico source] to "User Header Search Paths" setting, choose "recursive" seach path.</li>
+</ol>
+</blockquote>
+
+<p>Build the project to ensure that it can build successfully.</p>
+
+<p>Now drag the proxy generated in step 1 into the project,  choose "Copy items to destination group's folder" and "add to targets" when prompted.</p>
+
+<p>Build the project again to ensure that it can build successfully. <strong><em>Note</em></strong>, you may get a few compiler warnings, say some property setter does not follow cocoa naming convertion, that's ok, just ignore them.</p>
+
+<p>The code generation will generate both SOAP and XML based interfaces from the WSDL of Amazon Product Advertising for us,
+since we will use SOAP based interface in this tutorial, you may now review the generated Amazon ECommerce service(aka Amazon Product Advertising API) SOAP interface(in the generated <code>client</code> folder) to learn what kinds of functions are provided by Amazon ECommerce service, and what kinds of parameters are needed to call the serivce, the interface is posted below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>AWSECommerceServicePortType_SOAPClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/awsecommerceservice/_2011_08_01/client/AWSECommerceServicePortType_SOAPClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="c1">// Generated by wsdl compiler for ios/objective-c</span>
+</span><span class='line'><span class="c1">// DO NOT CHANGE!&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Foundation</span><span class="o">/</span><span class="n">Foundation</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;PicoSOAPClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartAdd.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;ItemLookupResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartClearResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartClear.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartModify.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartCreateResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartModifyResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;ItemLookup.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;ItemSearchResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;BrowseNodeLookup.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartGet.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartAddResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;ItemSearch.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;SimilarityLookup.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartGetResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CartCreate.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;SimilarityLookupResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;BrowseNodeLookupResponse.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="n">This</span> <span class="n">class</span> <span class="n">is</span> <span class="n">the</span> <span class="n">SOAP</span> <span class="n">client</span> <span class="n">to</span> <span class="n">the</span> <span class="n">AWSECommerceServicePortType</span> <span class="n">Web</span> <span class="n">Service</span><span class="p">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">AWSECommerceServicePortType_SOAPClient</span> : <span class="nc">PicoSOAPClient</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">itemSearch:</span><span class="p">(</span><span class="n">ItemSearch</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">ItemSearchResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">itemLookup:</span><span class="p">(</span><span class="n">ItemLookup</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">ItemLookupResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">browseNodeLookup:</span><span class="p">(</span><span class="n">BrowseNodeLookup</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">BrowseNodeLookupResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">similarityLookup:</span><span class="p">(</span><span class="n">SimilarityLookup</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">SimilarityLookupResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">cartGet:</span><span class="p">(</span><span class="n">CartGet</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">CartGetResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">cartCreate:</span><span class="p">(</span><span class="n">CartCreate</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">CartCreateResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">cartAdd:</span><span class="p">(</span><span class="n">CartAdd</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">CartAddResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">cartModify:</span><span class="p">(</span><span class="n">CartModify</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">CartModifyResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">public</span> <span class="n">method</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">cartClear:</span><span class="p">(</span><span class="n">CartClear</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">requestObject</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="nl">success:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">CartClearResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">))</span><span class="n">success</span>
+</span><span class='line'>  <span class="nl">failure:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">))</span><span class="n">failure</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@end</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>All the methods in the interface follow same calling paradigm - you call the service with required request object and register success callback(for success handling logic) and failure callback(for error handling logic) using Objective-C block.</p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>First, create a shared service client as below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>AWSECommerceServiceClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/AWSECommerceServiceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">UIKit</span><span class="o">/</span><span class="n">UIKit</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;AWSECommerceServicePortType_SOAPClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">extern</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">AWSAccessKeyId</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@interface</span> <span class="nc">AWSECommerceServiceClient</span> : <span class="nc">AWSECommerceServicePortType_SOAPClient</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">(</span><span class="n">AWSECommerceServiceClient</span> <span class="o">*</span><span class="p">)</span><span class="n">sharedClient</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">authenticateRequest:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="n">action</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@end</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>AWSECommerceServiceClient.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/AWSECommerceServiceClient.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;AWSECommerceServiceClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;AmazonAuthUtils.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;PicoXMLElement.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@implementation</span> <span class="nc">AWSECommerceServiceClient</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">update</span> <span class="n">url</span> <span class="n">according</span> <span class="n">to</span> <span class="n">your</span> <span class="n">local</span> <span class="n">location</span><span class="p">,</span> <span class="n">see</span> <span class="n">a</span> <span class="n">list</span> <span class="n">of</span> <span class="n">supported</span> <span class="n">location</span> <span class="n">at</span> <span class="n">the</span> <span class="n">end</span> <span class="n">of</span> <span class="n">the</span> <span class="nl">wsdl:</span>
+</span><span class='line'> <span class="nl">http:</span><span class="c1">//webservices.amazon.com/AWSECommerceService/AWSECommerceService.wsdl</span>
+</span><span class='line'> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="c1">//static NSString &lt;/em&gt;const AWSECServiceURLString = @&quot;https://webservices.amazon.cn/onca/soap?Service=AWSECommerceService&quot;;</span>
+</span><span class='line'><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">AWSECServiceURLString</span> <span class="o">=</span> <span class="s">@&quot;https://webservices.amazon.com/onca/soap?Service=AWSECommerceService&quot;</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">NSString</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="k">const</span> <span class="n">AWSAccessKeyId</span> <span class="o">=</span> <span class="s">@&quot;YOUR AWS ACCESS KEY&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="n">NSString</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="k">const</span> <span class="n">AWSSecureKeyId</span> <span class="o">=</span> <span class="s">@&quot;YOUR AWS SECURE KEY&quot;</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">AuthHeaderNS</span> <span class="o">=</span> <span class="s">@&quot;http://security.amazonaws.com/doc/2007-01-01/&quot;</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="p">(</span><span class="n">AWSECommerceServiceClient</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span><span class="n">sharedClient</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">static</span> <span class="n">AWSECommerceServiceClient</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">_sharedClient</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="n">_sharedClient</span> <span class="o">=</span> <span class="p">[[</span><span class="n">AWSECommerceServiceClient</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithEndpointURL:</span><span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">AWSECServiceURLString</span><span class="p">]];</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">});</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="n">_sharedClient</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;</span><span class="n">em</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="n">Authentication</span> <span class="n">of</span> <span class="n">SOAP</span> <span class="n">request</span>
+</span><span class='line'> <span class="n">see</span> <span class="n">details</span> <span class="nl">here:</span> <span class="nl">http:</span><span class="c1">//docs.aws.amazon.com/AWSECommerceService/latest/DG/NotUsingWSSecurity.html</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">authenticateRequest:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span><span class="n">action</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c1">// build timestamp</span>
+</span><span class='line'><span class="n">NSDateFormatter</span> <span class="o">*</span><span class="n">dataFormatter</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">NSDateFormatter</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'><span class="p">[</span><span class="n">dataFormatter</span> <span class="nl">setDateFormat:</span><span class="s">@&quot;yyyy-MM-dd&#39;T&#39;HH:mm:ss&#39;Z&#39;&quot;</span><span class="p">];</span>
+</span><span class='line'><span class="p">[</span><span class="n">dataFormatter</span> <span class="nl">setTimeZone:</span><span class="p">[</span><span class="n">NSTimeZone</span> <span class="nl">timeZoneWithName:</span><span class="s">@&quot;UTC&quot;</span><span class="p">]];</span>
+</span><span class='line'><span class="n">NSString</span> <span class="o">*</span><span class="n">timestamp</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataFormatter</span> <span class="nl">stringFromDate:</span><span class="p">[</span><span class="n">NSDate</span> <span class="n">date</span><span class="p">]];</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// build signature</span>
+</span><span class='line'><span class="n">NSString</span> <span class="o">*</span><span class="n">signatureInput</span> <span class="o">=</span> <span class="p">[</span><span class="n">action</span> <span class="nl">stringByAppendingString:</span><span class="n">timestamp</span><span class="p">];</span>
+</span><span class='line'><span class="n">NSString</span> <span class="o">*</span><span class="n">signature</span> <span class="o">=</span> <span class="p">[</span><span class="n">AmazonAuthUtils</span> <span class="nl">sha256HMac:</span><span class="p">[</span><span class="n">signatureInput</span> <span class="nl">dataUsingEncoding:</span><span class="n">NSUTF8StringEncoding</span><span class="p">]</span> <span class="nl">withKey:</span><span class="n">AWSSecureKeyId</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// add SOAP headers</span>
+</span><span class='line'><span class="n">self</span><span class="p">.</span><span class="n">customSoapHeaders</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableArray</span> <span class="n">array</span><span class="p">];</span>
+</span><span class='line'><span class="n">PicoXMLElement</span> <span class="o">*</span><span class="n">accessKeyElement</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">PicoXMLElement</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'><span class="n">accessKeyElement</span><span class="p">.</span><span class="n">nsUri</span> <span class="o">=</span> <span class="n">AuthHeaderNS</span><span class="p">;</span>
+</span><span class='line'><span class="n">accessKeyElement</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">@&quot;AWSAccessKeyId&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="n">accessKeyElement</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">AWSAccessKeyId</span><span class="p">;</span>
+</span><span class='line'><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">customSoapHeaders</span> <span class="nl">addObject:</span><span class="n">accessKeyElement</span><span class="p">];</span>
+</span><span class='line'><span class="n">PicoXMLElement</span> <span class="o">*</span><span class="n">timestampElement</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">PicoXMLElement</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'><span class="n">timestampElement</span><span class="p">.</span><span class="n">nsUri</span> <span class="o">=</span> <span class="n">AuthHeaderNS</span><span class="p">;</span>
+</span><span class='line'><span class="n">timestampElement</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">@&quot;Timestamp&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="n">timestampElement</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">timestamp</span><span class="p">;</span>
+</span><span class='line'><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">customSoapHeaders</span> <span class="nl">addObject:</span><span class="n">timestampElement</span><span class="p">];</span>
+</span><span class='line'><span class="n">PicoXMLElement</span> <span class="o">*</span><span class="n">signatureElement</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">PicoXMLElement</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'><span class="n">signatureElement</span><span class="p">.</span><span class="n">nsUri</span> <span class="o">=</span> <span class="n">AuthHeaderNS</span><span class="p">;</span>
+</span><span class='line'><span class="n">signatureElement</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">@&quot;Signature&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="n">signatureElement</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">signature</span><span class="p">;</span>
+</span><span class='line'><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">customSoapHeaders</span> <span class="nl">addObject:</span><span class="n">signatureElement</span><span class="p">];</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@end</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Let me give more comments:</p>
+
+<blockquote><ol>
+<li>Amazon Product Advertising API requires per-call request authentication, see details <a href="http://docs.aws.amazon.com/AWSECommerceService/latest/DG/NotUsingWSSecurity.html">here</a>, the authentication logic is implemented in the <code>(void)authenticateRequest:(NSString *)action</code> method.</li>
+<li>To make the authentication work, you need to fill in your <code>AWSAccessKeyId</code> and <code>AWSSecureKeyId</code> in the shared client, if you are a registed Amazon Product Advertising API developer, you can get these keys from your account on Amazon developer site.</li>
+<li>The authentication info is added in the SOAP request as SOAP header, to add SOAP header, we use <code>PicoXMLElement</code>(XML helper class provided in Pico) to build header element, then add the header element one by one into the <code>customSoapHeader</code> property(which is of type <code>NSMuatableArray</code>) of the client, for example: <code>[self.customSoapHeaders addObject:signatureElement]</code>, at runtime, Pico will add these elements into the SOAP request header.</li>
+<li>The authentication needs to be done on per-call basis, means everytime you call an Amazon ECommerce service, you need to authenticate the request before the service call, see sample later.</li>
+<li>The authentication relies on an utility class called <code>AmazonAuthUtils</code>, copy them from <a href="https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/AmazonAuthUtils.h">here</a> and <a href="https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/AmazonAuthUtils.m">here</a>.</li>
+</ol>
+</blockquote>
+
+<p>Now the UI part, we will search one book from Amazon by keywords, since this is a hello world like sample, we just need a UITextField for keyword input and UIButton to trigger Amazon search by invoking method <code>searchButtonPressed</code> which will indirectly call Amazon ECommerce <code>itemSearch</code> API through the proxy, fairly simple, see definition in header file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/ViewController.h">ViewController.h</a> and instantiation in implementation file <a href="https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/ViewController.m">ViewController.m</a>.</p>
+
+<p>Now implement the <code>searchButtonPressed</code> method by invoking service as below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ViewController.m </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/ViewController.m'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;ViewController.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;AWSECommerceServiceClient.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;CommonTypes.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;Toast+UIView.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">import</span> <span class="s">&quot;SOAP11Fault.h&quot;</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">searchButtonPressed:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">sender</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">// Hide the keyboard.</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">_searchText</span> <span class="n">resignFirstResponder</span><span class="p">];</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">if</span> <span class="p">(</span><span class="n">_searchText</span><span class="p">.</span><span class="n">text</span><span class="p">.</span><span class="n">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="c1">// start progress activity</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">makeToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// get shared client</span>
+</span><span class='line'>  <span class="n">AWSECommerceServiceClient</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">[</span><span class="n">AWSECommerceServiceClient</span> <span class="n">sharedClient</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">client</span><span class="p">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// build request, see details here:</span>
+</span><span class='line'>  <span class="n">ItemSearch</span> <span class="o">*</span><span class="n">request</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">ItemSearch</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">associateTag</span> <span class="o">=</span> <span class="s">@&quot;tag&quot;</span><span class="p">;</span> <span class="c1">// seems any tag is ok</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">shared</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">ItemSearchRequest</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">searchIndex</span> <span class="o">=</span> <span class="s">@&quot;Books&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">responseGroup</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableArray</span> <span class="nl">arrayWithObjects:</span><span class="s">@&quot;Images&quot;</span><span class="p">,</span> <span class="s">@&quot;Small&quot;</span><span class="p">,</span> <span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">ItemSearchRequest</span> <span class="o">*</span><span class="n">itemSearchRequest</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">ItemSearchRequest</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">]</span> <span class="n">autorelease</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">itemSearchRequest</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">_searchText</span><span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">request</span><span class="p">.</span><span class="n">request</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableArray</span> <span class="nl">arrayWithObject:</span><span class="n">itemSearchRequest</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// authenticate the request</span>
+</span><span class='line'>  <span class="c1">// http://docs.aws.amazon.com/AWSECommerceService/latest/DG/NotUsingWSSecurity.html</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">client</span> <span class="nl">authenticateRequest:</span><span class="s">@&quot;ItemSearch&quot;</span><span class="p">];</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">client</span> <span class="nl">itemSearch:</span><span class="n">request</span> <span class="nl">success:</span><span class="o">^</span><span class="p">(</span><span class="n">ItemSearchResponse</span> <span class="o">*</span><span class="n">responseObject</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="c1">// stop progress activity</span>
+</span><span class='line'>      <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// success handling logic</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">responseObject</span><span class="p">.</span><span class="n">items</span><span class="p">.</span><span class="n">count</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="n">Items</span> <span class="o">*</span><span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">responseObject</span><span class="p">.</span><span class="n">items</span> <span class="nl">objectAtIndex:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="n">items</span><span class="p">.</span><span class="n">item</span><span class="p">.</span><span class="n">count</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>              <span class="n">Item</span> <span class="o">*</span><span class="n">item</span> <span class="o">=</span> <span class="p">[</span><span class="n">items</span><span class="p">.</span><span class="n">item</span> <span class="nl">objectAtIndex:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>              <span class="c1">// start image downloading progress activity</span>
+</span><span class='line'>              <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">makeToastActivity</span><span class="p">];</span>
+</span><span class='line'>              <span class="c1">// get gallery image</span>
+</span><span class='line'>              <span class="n">NSURL</span> <span class="o">*</span><span class="n">imageURL</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="n">item</span><span class="p">.</span><span class="n">smallImage</span><span class="p">.</span><span class="n">url</span><span class="p">];</span>
+</span><span class='line'>              <span class="n">NSData</span> <span class="o">*</span><span class="n">imageData</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSData</span> <span class="nl">dataWithContentsOfURL:</span><span class="n">imageURL</span><span class="p">];</span>
+</span><span class='line'>              <span class="c1">// stop progress activity</span>
+</span><span class='line'>              <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>              <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIImage</span> <span class="nl">imageWithData:</span><span class="n">imageData</span><span class="p">];</span>
+</span><span class='line'>              <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="n">item</span><span class="p">.</span><span class="n">itemAttributes</span><span class="p">.</span><span class="n">title</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Success&quot;</span> <span class="nl">image:</span><span class="n">image</span><span class="p">];</span>
+</span><span class='line'>          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>              <span class="c1">// no result</span>
+</span><span class='line'>              <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="s">@&quot;No result&quot;</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span><span class="p">];</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>          <span class="c1">// no result</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="s">@&quot;No result&quot;</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="c1">// TODO</span>
+</span><span class='line'>  <span class="p">}</span> <span class="nl">failure:</span><span class="o">^</span><span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">,</span> <span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PicoBindable</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="c1">// stop progress activity</span>
+</span><span class='line'>      <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">hideToastActivity</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="c1">// error handling logic</span>
+</span><span class='line'>      <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// http or parsing error</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="p">[</span><span class="n">error</span> <span class="n">localizedDescription</span><span class="p">]</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;Error&quot;</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">soapFault</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>          <span class="n">SOAP11Fault</span> <span class="o">*</span><span class="n">soap11Fault</span> <span class="o">=</span> <span class="p">(</span><span class="n">SOAP11Fault</span> <span class="o">*</span><span class="p">)</span><span class="n">soapFault</span><span class="p">;</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">makeToast:</span><span class="n">soap11Fault</span><span class="p">.</span><span class="n">faultstring</span> <span class="nl">duration:</span><span class="mf">3.0</span> <span class="nl">position:</span><span class="s">@&quot;center&quot;</span> <span class="nl">title:</span><span class="s">@&quot;SOAP Fault&quot;</span><span class="p">];</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}];</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>More comments to the serivce call code:</p>
+
+<blockquote><ol>
+<li>I've added comments in the code so the whole service call flow should be easy to understand.</li>
+<li>Before service call, the request must be authenticated by the calling <code>authenticateRequest</code> method, such as <code>[client authenticateRequest:@"ItemSearch"];</code>, <code>ItemSearch</code> is the target action or API name.</li>
+<li>In the success handling logic, we show the title and the image of the returned item, for demo, the image is downloaded synchronously, but in practice, you should download image asynchronously in order not to block main UI.</li>
+<li>In failure handling logic, we need to check both a <code>NSError</code>(indicating http or parsing error) and a <code>SOAPFault</code>(indicating server side returned error), then handle them accordingly.</li>
+<li>Amazon ECommerce service supports response resident error(RRE), so even we get success response, we still need to check response for resident error, in the demo code above, I omitted response resident error checking for abbreviation, but in practice, you should check response resident error to make your app robust.</li>
+<li>The generated code provides type hint as code comments, if you are confused with the type of a property, just consult the corresponding header file, for example, the <code>responseGroup</code> property of <code>ItemSearchRequest</code> type is of type <code>NSMuatableArray</code>, what's the actual entry type? By checking code comments in the <code>ItemSearchRequest.h</code> file, you will find the entry type is <code>NSString</code>, like below:</li>
+</ol>
+</blockquote>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>ItemSearchRequest.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/awsecommerceservice/_2011_08_01/ItemSearchRequest.h'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'><span class="p">(</span><span class="n">public</span> <span class="n">property</span><span class="p">)</span>
+</span><span class='line'><span class="n">entry</span> <span class="n">type</span> <span class="o">:</span> <span class="n">NSString</span><span class="p">,</span> <span class="n">wrapper</span> <span class="k">for</span> <span class="n">primitive</span> <span class="n">string</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">retain</span><span class="p">)</span> <span class="n">NSMutableArray</span> <span class="o">*</span><span class="n">responseGroup</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>At last, please don't forget to include the shared client and SOAP related header files, it's a best practice to include the generated CommonTypes.h file which can free you from writing many import statements required by request building and response handling.</p>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>Let's run the demo in iPhone simulator, see a sceen shot below:</p>
+
+<p><img class="center" src="/images/pico/tutorial05/screen_shot1.png" width="300" height="500"></p>
+
+<p>and the debug output:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>2013-03-31 12:33:14.912 HelloAWSECommerce[2604:c07] Sending request to : https://webservices.amazon.com/onca/soap?Service=AWSECommerceService
+</span><span class='line'>2013-03-31 12:33:14.913 HelloAWSECommerce[2604:c07] Request message:
+</span><span class='line'>2013-03-31 12:33:14.913 HelloAWSECommerce[2604:c07] &lt;?xml version="1.0" encoding="UTF-8" ?>
+</span><span class='line'>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://webservices.amazon.com/AWSECommerceService/2011-08-01">&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>&lt;soapenv:Header xmlns:ns0="http://security.amazonaws.com/doc/2007-01-01/"&gt;
+</span><span class='line'>    &lt;ns0:AWSAccessKeyId&gt;***************&lt;/ns0:AWSAccessKeyId&gt;
+</span><span class='line'>    &lt;ns0:Timestamp&gt;2013-03-31T04:33:14Z&lt;/ns0:Timestamp&gt;
+</span><span class='line'>    &lt;ns0:Signature&gt;***************&lt;/ns0:Signature&gt;
+</span><span class='line'>&lt;/soapenv:Header&gt;
+</span><span class='line'>&lt;soapenv:Body&gt;
+</span><span class='line'>    &lt;ItemSearch&gt;
+</span><span class='line'>        &lt;Request&gt;
+</span><span class='line'>            &lt;Title&gt;Ios programming&lt;/Title&gt;
+</span><span class='line'>        &lt;/Request&gt;
+</span><span class='line'>        &lt;Shared&gt;
+</span><span class='line'>            &lt;ResponseGroup&gt;Images&lt;/ResponseGroup&gt;
+</span><span class='line'>            &lt;ResponseGroup&gt;Small&lt;/ResponseGroup&gt;
+</span><span class='line'>            &lt;SearchIndex&gt;Books&lt;/SearchIndex&gt;
+</span><span class='line'>        &lt;/Shared&gt;
+</span><span class='line'>        &lt;AssociateTag&gt;tag&lt;/AssociateTag&gt;
+</span><span class='line'>    &lt;/ItemSearch&gt;
+</span><span class='line'>&lt;/soapenv:Body&gt;
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>&lt;/soapenv:Envelope>
+</span><span class='line'>2013-03-31 12:33:14.913 HelloAWSECommerce[2604:c07] Request HTTP Headers :
+</span><span class='line'>{&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>Accept = "text/xml";
+</span><span class='line'>"Accept-Language" = "en, fr, de, ja, nl, it, es, pt, pt-PT, da, fi, nb, sv, ko, zh-Hans, zh-Hant, ru, pl, tr, uk, ar, hr, cs, el, he, ro, sk, th, id, ms, en-GB, ca, hu, vi, en-us;q=0.8";
+</span><span class='line'>"Content-Type" = "text/xml";
+</span><span class='line'>SOAPAction = "http://soap.amazon.com/ItemSearch";
+</span><span class='line'>"User-Agent" = "HelloAWSECommerce/1.0 (iPhone Simulator; iOS 6.0; Scale/1.00)";
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}
+</span><span class='line'>2013-03-31 12:33:16.963 HelloAWSECommerce[2604:4533] Response HTTP status :
+</span><span class='line'>200
+</span><span class='line'>2013-03-31 12:33:16.963 HelloAWSECommerce[2604:4533] Response HTTP headers :
+</span><span class='line'>{&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;pre>&lt;code>"Content-Encoding" = gzip;
+</span><span class='line'>"Content-Type" = "text/xml;charset=UTF-8";
+</span><span class='line'>Date = "Sun, 31 Mar 2013 04:33:29 GMT";
+</span><span class='line'>Server = Server;
+</span><span class='line'>"Transfer-Encoding" = Identity;
+</span><span class='line'>Vary = "Accept-Encoding,User-Agent";
+</span><span class='line'>nnCoection = close;
+</span><span class='line'>&lt;/code>&lt;/pre>
+</span><span class='line'>
+</span><span class='line'>&lt;p>}
+</span><span class='line'>2013-03-31 12:33:16.964 HelloAWSECommerce[2604:3e67] Response message :
+</span><span class='line'>2013-03-31 12:33:16.964 HelloAWSECommerce[2604:3e67] &lt;?xml version="1.0" ?>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">&lt;soapenv:Body>&lt;ItemSearchResponse xmlns="http://webservices.amazon.com/AWSECommerceService/2011-08-01">&lt;OperationRequest>&lt;HTTPHeaders>&lt;Header Name="UserAgent" Value="HelloAWSECommerce/1.0 (iPhone Simulator; iOS 6.0; Scale/1.00)">&lt;/Header>&lt;/HTTPHeaders>&lt;RequestId>6d6556d8-ec6f-4d8b-8461-bc25398d1244&lt;/RequestId>&lt;Arguments>&lt;Argument Name="Service" Value="AWSECommerceService">&lt;/Argument>&lt;/Arguments>&lt;RequestProcessingTime>0.0923510000000000&lt;/RequestProcessingTime>&lt;/OperationRequest>&lt;Items>&lt;Request>&lt;IsValid>True&lt;/IsValid>&lt;ItemSearchRequest>&lt;ResponseGroup>Images&lt;/ResponseGroup>&lt;ResponseGroup>Small&lt;/ResponseGroup>&lt;SearchIndex>Books&lt;/SearchIndex>&lt;Title>Ios programming&lt;/Title>&lt;/ItemSearchRequest>&lt;/Request>&lt;TotalResults>113&lt;/TotalResults>&lt;TotalPages>12&lt;/TotalPages>&lt;MoreSearchResultsUrl>http://www.amazon.com/gp/redirect.html?camp=2025&amp;creative=386001&amp;location=http%3A%2F%2Fwww.amazon.com%2Fgp%2Fsearch%3Fkeywords%3DIos%2Bprogramming%26url%3Dsearch-alias%253Dstripbooks&amp;linkCode=sp1&amp;tag=tag&amp;SubscriptionId=AKIAIEKQPISXI6IPHDFQ&lt;/MoreSearchResultsUrl>&lt;Item>&lt;ASIN>0321821521&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/iOS-Programming-Ranch-Edition-Guides/dp/0321821521%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0321821521&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/iOS-Programming-Ranch-Edition-Guides/dp/tech-data/0321821521%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321821521&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D0321821521%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321821521&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D0321821521%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321821521&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D0321821521%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321821521&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/0321821521%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321821521&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/0321821521%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321821521&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/0321821521%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321821521&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41ybikkCyLL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">52&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41ybikkCyLL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">112&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41ybikkCyLL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">349&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/41ybikkCyLL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">21&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41ybikkCyLL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">52&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/41ybikkCyLL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">52&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/41ybikkCyLL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">77&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41ybikkCyLL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">112&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41ybikkCyLL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">349&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Joe Conway&lt;/Author>&lt;Author>Aaron Hillegass&lt;/Author>&lt;Manufacturer>Big Nerd Ranch Guides&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>iOS Programming: The Big Nerd Ranch Guide (3rd Edition) (Big Nerd Ranch Guides)&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1449342752&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/iOS-Programming-Cookbook-Vandad-Nahavandipoor/dp/1449342752%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1449342752&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/iOS-Programming-Cookbook-Vandad-Nahavandipoor/dp/tech-data/1449342752%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449342752&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1449342752%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449342752&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1449342752%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449342752&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1449342752%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449342752&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1449342752%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449342752&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1449342752%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449342752&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1449342752%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449342752&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51esysk15lL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51esysk15lL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51esysk15lL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51esysk15lL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51esysk15lL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51esysk15lL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51esysk15lL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">84&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51esysk15lL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51esysk15lL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;ImageSet Category="variant">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51m-eUUQZkL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51m-eUUQZkL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51m-eUUQZkL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51m-eUUQZkL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">84&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51m-eUUQZkL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51m-eUUQZkL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Vandad Nahavandipoor&lt;/Author>&lt;Manufacturer>O'Reilly Media&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>iOS 6 Programming Cookbook&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1449365760&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Programming-iOS-6-Matt-Neuburg/dp/1449365760%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1449365760&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Programming-iOS-6-Matt-Neuburg/dp/tech-data/1449365760%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449365760&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1449365760%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449365760&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1449365760%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449365760&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1449365760%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449365760&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1449365760%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449365760&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1449365760%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449365760&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1449365760%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449365760&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51ZCvz9cG8L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51ZCvz9cG8L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51ZCvz9cG8L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51ZCvz9cG8L.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51ZCvz9cG8L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51ZCvz9cG8L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51ZCvz9cG8L.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">84&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51ZCvz9cG8L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51ZCvz9cG8L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Matt Neuburg&lt;/Author>&lt;Manufacturer>O'Reilly Media&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Programming iOS 6&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1118449959&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/iOS-Programming-Pushing-Limits-Application/dp/1118449959%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1118449959&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/iOS-Programming-Pushing-Limits-Application/dp/tech-data/1118449959%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118449959&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1118449959%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118449959&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1118449959%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118449959&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1118449959%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118449959&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1118449959%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118449959&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1118449959%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118449959&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1118449959%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118449959&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51gEXI6QMZL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">58&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51gEXI6QMZL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">124&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51gEXI6QMZL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">388&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51gEXI6QMZL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51gEXI6QMZL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">58&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51gEXI6QMZL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">58&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51gEXI6QMZL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">85&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51gEXI6QMZL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">124&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51gEXI6QMZL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">388&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Rob Napier&lt;/Author>&lt;Author>Mugunth Kumar&lt;/Author>&lt;Manufacturer>Wiley&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>iOS 6 Programming Pushing the Limits: Advanced Application Development for Apple iPhone, iPad and iPod Touch&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>0321741838&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Learning-OpenGL-iOS-Hands-Programming/dp/0321741838%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0321741838&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Learning-OpenGL-iOS-Hands-Programming/dp/tech-data/0321741838%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321741838&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D0321741838%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321741838&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D0321741838%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321741838&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D0321741838%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321741838&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/0321741838%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321741838&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/0321741838%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321741838&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/0321741838%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321741838&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51wqjU0VTSL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">58&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51wqjU0VTSL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">124&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51wqjU0VTSL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">388&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51wqjU0VTSL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51wqjU0VTSL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">58&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51wqjU0VTSL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">58&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51wqjU0VTSL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">85&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51wqjU0VTSL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">124&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51wqjU0VTSL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">388&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Erik M. Buck&lt;/Author>&lt;Manufacturer>Addison-Wesley Professional&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Learning OpenGL ES for iOS: A Hands-on Guide to Modern 3D Graphics Programming&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>0321636848&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Learning-Core-Audio-Hands-On-Programming/dp/0321636848%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0321636848&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Learning-Core-Audio-Hands-On-Programming/dp/tech-data/0321636848%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321636848&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D0321636848%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321636848&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D0321636848%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321636848&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D0321636848%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321636848&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/0321636848%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321636848&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/0321636848%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321636848&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/0321636848%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321636848&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51AzGxb1nNL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">58&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51AzGxb1nNL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">124&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51AzGxb1nNL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">388&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51AzGxb1nNL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51AzGxb1nNL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">58&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51AzGxb1nNL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">58&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51AzGxb1nNL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">85&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51AzGxb1nNL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">124&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51AzGxb1nNL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">388&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Chris Adamson&lt;/Author>&lt;Author>Kevin Avila&lt;/Author>&lt;Manufacturer>Addison-Wesley Professional&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Learning Core Audio: A Hands-On Guide to Audio Programming for Mac and iOS&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1118362403&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Professional-iOS-Network-Programming-Connecting/dp/1118362403%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1118362403&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Professional-iOS-Network-Programming-Connecting/dp/tech-data/1118362403%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118362403&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1118362403%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118362403&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1118362403%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118362403&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1118362403%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118362403&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1118362403%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118362403&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1118362403%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118362403&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1118362403%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118362403&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/519rZ2Pp9aL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">59&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/519rZ2Pp9aL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">126&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/519rZ2Pp9aL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">394&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/519rZ2Pp9aL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">24&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/519rZ2Pp9aL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">59&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/519rZ2Pp9aL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">59&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/519rZ2Pp9aL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">87&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/519rZ2Pp9aL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">126&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/519rZ2Pp9aL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">394&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Jack Cox&lt;/Author>&lt;Author>Nathan Jones&lt;/Author>&lt;Author>John Szumski&lt;/Author>&lt;Manufacturer>Wrox&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Professional iOS Network Programming: Connecting the Enterprise to the iPhone and iPad&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1449359345&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Learning-iOS-Programming-Xcode-Store/dp/1449359345%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1449359345&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Learning-iOS-Programming-Xcode-Store/dp/tech-data/1449359345%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449359345&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1449359345%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449359345&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1449359345%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449359345&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1449359345%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449359345&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1449359345%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449359345&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1449359345%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449359345&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1449359345%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449359345&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41N%2BYIc3wTL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41N%2BYIc3wTL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41N%2BYIc3wTL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/41N%2BYIc3wTL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41N%2BYIc3wTL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/41N%2BYIc3wTL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/41N%2BYIc3wTL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">84&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41N%2BYIc3wTL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41N%2BYIc3wTL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Alasdair Allan&lt;/Author>&lt;Manufacturer>O'Reilly Media&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Learning iOS Programming: From Xcode to App Store&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>0321699424&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Learning-iOS-Game-Programming-Hands-On/dp/0321699424%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0321699424&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Learning-iOS-Game-Programming-Hands-On/dp/tech-data/0321699424%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321699424&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D0321699424%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321699424&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D0321699424%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321699424&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D0321699424%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321699424&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/0321699424%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321699424&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/0321699424%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321699424&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/0321699424%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321699424&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51cbd0Dp-7L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51cbd0Dp-7L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51cbd0Dp-7L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51cbd0Dp-7L.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51cbd0Dp-7L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51cbd0Dp-7L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51cbd0Dp-7L.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">84&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51cbd0Dp-7L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51cbd0Dp-7L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Michael Daley&lt;/Author>&lt;Manufacturer>Addison-Wesley Professional&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Learning iOS Game Programming: A Hands-On Guide to Building Your First iPhone Game&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>0321773772&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/iOS-Programming-Ranch-Edition-Guides/dp/0321773772%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0321773772&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/iOS-Programming-Ranch-Edition-Guides/dp/tech-data/0321773772%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321773772&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D0321773772%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321773772&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D0321773772%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321773772&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D0321773772%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321773772&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/0321773772%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321773772&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/0321773772%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321773772&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/0321773772%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dtag%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321773772&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/412zhvqyIXL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">52&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/412zhvqyIXL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">110&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/412zhvqyIXL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">345&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/412zhvqyIXL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">21&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/412zhvqyIXL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">52&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/412zhvqyIXL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">52&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/412zhvqyIXL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">76&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/412zhvqyIXL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">110&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/412zhvqyIXL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">345&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Joe Conway&lt;/Author>&lt;Author>Aaron Hillegass&lt;/Author>&lt;Manufacturer>Big Nerd Ranch Guides&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>iOS Programming: The Big Nerd Ranch Guide (2nd Edition) (Big Nerd Ranch Guides)&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;/Items>&lt;/ItemSearchResponse>&lt;/soapenv:Body>&lt;/soapenv:Envelope>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>If you forget to fill in your AWS Access Key and Secure Key in the shared client, then you will get error like below:</p>
+
+<p><img class="center" src="/images/pico/tutorial05/screen_shot2.png" width="300" height="500"></p>
+
+<p>This is just a bare minimum Amazon ECommerce service based application, for a demo with more functions, please see the AWSECDemoApp sample in the <code>Examples</code> folder of Pico source, AWSECDemoApp calls following APIs in one app:</p>
+
+<blockquote><ol>
+<li><strong><em>itemSearch</em></strong> for book search</li>
+<li><strong><em>cartCreate</em></strong> to add chosen book into shopping cart</li>
+</ol>
+</blockquote>
+
+<p>Below is a few screen shots:</p>
+
+<p>Search:
+<img class="center" src="/images/pico/tutorial05/screen_shot3.png" width="300" height="500"></p>
+
+<p>Details:
+<img class="center" src="/images/pico/tutorial05/screen_shot4.png" width="300" height="500"></p>
+
+<p>Add To Cart:
+<img class="center" src="/images/pico/tutorial05/screen_shot5.png" width="300" height="500"></p>
+
+<p>Now it's your turn to create iOS applications based on Amazon ECommerce web serivces, see your next great serivce based app.</p>
+
+<h3>Update 1</h3>
+
+<p>The Amazon Product Advertising API Proxy has been extracted as a standalone project, hosted <a href="https://github.com/bulldog2011/PicoAWSECommerceServiceClient">here</a>, and the corresponding appledoc is hosted <a href="http://bulldog2011.github.com/PicoAWSECommerceServiceClient/">here</a>, the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Pico Tutorial 4 - Hello eBay Shopping]]></title>
@@ -1027,6 +2049,10 @@ since we will use XML based interface in this tutorial, you may now review the g
 <p><img class="center" src="/images/pico/tutorial04/screen_shot3.png" width="300" height="500"></p>
 
 <p>Now it's your turn to create iOS applications based on eBay Shopping and eBay Finding web serivces, see your next great serivce based app.</p>
+
+<h3>Update 1</h3>
+
+<p>The eBay Shopping Service Proxy has been extracted as a standalone project, hosted <a href="https://github.com/bulldog2011/PicoEBayShoppingClient">here</a>, and the corresponding appledoc is hosted <a href="http://bulldog2011.github.com/PicoEBayShoppingClient/">here</a>, the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.</p>
 ]]></content>
   </entry>
   
@@ -2886,74 +3912,6 @@ since we will use XML based interface in this tutorial, you may now review the g
 <p>StockQuote is just a bare minimum demo, there are other more featured demos(like Amazon, eBay search demo) in the Examples folder of Pico source project, please try them to better understand how Pico works, then you can begin to develop your own service based applications, using wsdl driven methodology supported by Pico.</p>
 
 <p>See your next great application!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[wsdl driven development on iOS - the big picture]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/"/>
-    <updated>2013-03-25T20:03:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture</id>
-    <content type="html"><![CDATA[<p>WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost.</p>
-
-<!--more-->
-
-
-<p>Although nowadays there is a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it's very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
-
-<p>Can WSDL driven development be put into practice on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.</p>
-
-<p>Let's see the big picture:</p>
-
-<p><img class="center" src="/images/pico/big_picture.png" width="600" height="800"></p>
-
-<p>The picture above is the blueprint of WSDL driven development on iOS. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can't be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/pico">Pico Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your iOS app, your app issues request on service proxy, the proxy passes the request to the Pico runtime framework which will delegate the object to XML/SOAP marshalling work to Pico binding framework then send XML/SOAP request to external service through AFNetworking HTTP client component, when an XML/SOAP response is received by the HTTP client component, the Pico runtime framework will also delegate the XML/SOAP to object unmarshalling work to Pico binding framework and passes the response object to the proxy which will eventually return the response object back to the calling app.</p>
-
-<p>We used the synchronous flow in the picture just for convenient demonstration, the real call flow in the runtime is asynchronous, by leveraging NSOperation, NSOperationQueue and GCD, in order not to block main UI thread.</p>
-
-<p>The Pico binding framework is the core of the Pico runtime, the real object<->xml binding magic happens here, below is the architecture of the binding runtime:</p>
-
-<p><img class="center" src="/images/pico/binding.png" width="500" height="600"></p>
-
-<p>There are four main components:</p>
-
-<blockquote><ol>
-<li><strong><em>Marshaller</em></strong> - responsible for object to xml marshalling</li>
-<li><strong><em>Unmarshaller</em></strong> - responsible for xml to object unmarshalling</li>
-<li><strong><em>BindingSchema</em></strong> - store object<->xml mapping information, used by both Marshaller and Unmarshaller to guide the marshalling/unmarshalling process at runtime, schema is extracted from classes and is cached for better performance.</li>
-<li><strong><em>Converter</em></strong> - type converter for primitive types or frequently used types.</li>
-</ol>
-</blockquote>
-
-<p>The marshalling/unmarshalling algorithm is recursive in nature:</p>
-
-<blockquote><ol>
-<li>for fields of primitive or frequently used types, use corresponding converter to convert the field directly.</li>
-<li>for fields of object type, convert the fields of the object one by one and recursively.</li>
-</ol>
-</blockquote>
-
-<p>The code generator component is based on <a href="http://docs.oracle.com/javase/6/docs/technotes/tools/share/wsimport.html">JAX-WS Wsimport</a> and <a href="http://freemarker.org/">Freemarker</a> template engine, see the whole architecture below:</p>
-
-<p><img class="center" src="/images/pico/codegen-arch.png" width="600" height="750"></p>
-
-<p>The whole architecture can be summarized as <strong><em>Model + Template = Code</em></strong>, code generation flow as following:</p>
-
-<blockquote><ol>
-<li>WSDL doc is first fed into Wsimport and a JAXB/JAX-WS model is generated.</li>
-<li>The JAXB/JAX-WS model is then transformed into a language independent intermediate codegen model.</li>
-<li>The codegen model and corresponding target language templates(Objective-C or Android) are then fed into the Freemarker template engine.</li>
-<li>The Freemarker template engine will eventually transform the in-memory model into target code, guided by the templates.</li>
-</ol>
-</blockquote>
-
-<p>There are other WSDL to Objective-C code generation tools, like <a href="http://code.google.com/p/wsdl2objc/">wsdl2objc</a> and <a href="http://sudzc.com/">SudzC</a>, it's ok to use these tools to generate code from simple wsdl, but when fed with an industry level wsdl like eBay or Amazon wsdl, seems these tools will always break. Unlike these simple tools, the mwsc code generator provided by Pico framework is backed by JAX-WS Wsimport, which is mature and stable, and can recognize most standard WSDL/Schema components, by delegating the most tricky and complex wsdl model transformation task to Wsimport, the mwsc code generator solved the WSDL to Objective-C(or Android Java) problem in a simple while elegant way.</p>
-
-<p>The mwsc code generator not only generates simple bean classes from WSDL/Schema, but also generates the XML<->object mapping information(schema) and record these information in the class as meta-data, the meta-data will later be leveraged by Pico binding framework to guide the XML<->Object transformation at runtime.</p>
-
-<p>With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.</p>
-
-<p>In later posts, I will show how to put WSDL driven iOS app development into practice in a series of tutorials, just stay tuned.</p>
 ]]></content>
   </entry>
   

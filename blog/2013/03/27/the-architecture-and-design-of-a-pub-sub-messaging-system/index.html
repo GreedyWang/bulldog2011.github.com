@@ -201,7 +201,7 @@ At the producing side, there are different kinds of producers, such as:</p>
 
 <p><img class="center" src="/images/luxun/queue_logical_view.png" width="400" height="600"></p>
 
-<p>you can access the queue using array like index, one special thing is that the index is of type long(in typical programming language, array index is of type int), so the queue can accomodate huge amount of data, only limited by available disk space. You may also think of the queue as a circular queue as shown in figure above, since the queue will wrap around when the long.max index is reached, (although in practice, we don&#8217;t think current application will get chance to reach the long.max index:)).</p>
+<p>you can access the queue using array like index, one special thing is that the index is of type long(in typical programming language, array index is of type int), so the queue can accomodate huge amount of data, only limited by available disk space. You may also think of the queue as a circular queue as shown in figure above, since the queue will wrap around when the long.max index is reached(although in practice, we don&#8217;t think current application will get chance to reach the long.max index:)).</p>
 
 <p>With simple array like abstraction, we can implement queue semantics with ease:</p>
 
@@ -607,16 +607,166 @@ on client side, we chosen:</li>
 <ul>
 <li><strong><em>consume by fanout id</em></strong>: this is just the fanout queue semantics support, in such mode, you need to provide target topic, a fanout id and a max fetch size as input, the response will return a list of binary data if the operation is successful.</li>
 <li><strong><em>consume by index</em></strong>: this is a more flexible queue semantics support, in such mode, you need to provide target topic, a start index and a max fetch size as input, the response will return a list of binary data if the operation is successful.    <br/>
-The max fetch size parameter is required to support batch consuming - one consume operation will fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, just set max fetch size to &lt;= 0;</li>
+Note, if both fanout id and start index are provided, then fanout id will take precedence.
+The max fetch size parameter is required to support batch consuming - one consume operation can fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, set max fetch size to &lt;= 0;</li>
 </ul>
 </li>
-<li>The <strong><em>findClosetIndexByTime</em></strong> call is useful if you want <strong><em>consume by index</em></strong> semantics and want to find an index by a specific timestamp. You need to provide target topic and a timestamp as input, the response will return closet index if the find operation is successful.</li>
-<li>The <strong><em>deleteTopic</em></strong> call is used for deleting any unused topics, you need to provide target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.</li>
-<li>The <strong><em>getSize</em></strong> call just returns the total number of items remaining in a topic, this is a call for queue status query.</li>
+<li>The <strong><em>findClosestIndexByTime</em></strong> call is useful if you want <strong><em>consume by index</em></strong> semantics and want to find an index by a specific timestamp. You need to provide a target topic and a timestamp as input, the response will return closest index if the find operation is successful.</li>
+<li>The <strong><em>deleteTopic</em></strong> call is used for deleting any unused topics, you need to provide a target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.</li>
+<li>The <strong><em>getSize</em></strong> call just returns the total number of items remaining in a topic, this is a call for queue status query, if fanout id is provided, then the size of specific fanout queue will be returned, if no fanout id is provided, then the size of underlying queue(big array) will be returned.</li>
 </ol>
 </blockquote>
 
-<p>Simplicity is the main design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the sample, future extension is easy because of the flexibility and IDL driven development provided by Thrift.</p>
+<p>Simplicity is the ultimate design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the sample, future extension is easy because of the flexibility and IDL driven development provided by Thrift.</p>
+
+<h1>The Design of the Producer</h1>
+
+<p>The raw producer client generated from Luxun queue IDL can be used directly in real application, however, we believe the raw client is too low level for most average developers, so we provided a high-level and feature rich client which is actually a wrapper around the low level raw client generated from IDL. The high level producer not only provides a simpler and intuitive interface for average application developers, but provides advanced features like partitioning, compression, asynchronous batching, further improving the message producing performance. Let&#8217;s see the main design elements of the producer below.</p>
+
+<h3>The Interface</h3>
+
+<figure class='code'><figcaption><span>IProducer.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/IProducer.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Producer interface</span>
+</span><span class='line'><span class="cm"> * </span>
+</span><span class='line'><span class="cm"> * @author bulldog</span>
+</span><span class='line'><span class="cm"> * @param &lt;K&gt; partition key</span>
+</span><span class='line'><span class="cm"> * @param &lt;V&gt; real message</span>
+</span><span class='line'><span class="cm"> * </span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">IProducer</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Closeable</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * Send messages</span>
+</span><span class='line'><span class="cm">     * </span>
+</span><span class='line'><span class="cm">     * @param data message data</span>
+</span><span class='line'><span class="cm">     * @throws NoBrokersForTopicException no broker for this topic</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="nf">send</span><span class="o">(</span><span class="n">ProducerData</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="n">data</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">NoBrokersForTopicException</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * get message encoder</span>
+</span><span class='line'><span class="cm">     * </span>
+</span><span class='line'><span class="cm">     * @return message encoder</span>
+</span><span class='line'><span class="cm">     * @see Encoder</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="n">Encoder</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="nf">getEncoder</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * get partition chooser</span>
+</span><span class='line'><span class="cm">     * </span>
+</span><span class='line'><span class="cm">     * @return partition chooser</span>
+</span><span class='line'><span class="cm">     * @see IPartitioner</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="n">IPartitioner</span><span class="o">&lt;</span><span class="n">K</span><span class="o">&gt;</span> <span class="nf">getPartitioner</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>ProducerData.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/ProducerData.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">* Represents the data to be sent using the Producer send API</span>
+</span><span class='line'><span class="cm">*</span>
+</span><span class='line'><span class="cm">* @author bulldog</span>
+</span><span class='line'><span class="cm">* @param&lt;K&gt; partition key</span>
+</span><span class='line'><span class="cm">* @param&lt;V&gt; real data</span>
+</span><span class='line'><span class="cm">*</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ProducerData</span><span class="o">&lt;</span><span class="n">K</span><span class="o">,</span> <span class="n">V</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/** the topic under which the message is to be published */</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">String</span> <span class="n">topic</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/** the key used by the partitioner to pick a broker */</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">K</span> <span class="n">key</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/** variable length data to be published as Luxun messages under topic */</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">V</span><span class="o">&gt;</span> <span class="n">data</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="o">.</span>
+</span><span class='line'>  <span class="o">.</span>
+</span><span class='line'>  <span class="o">.</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This interface is quite self explanatory, a real <code>IProducer</code> implementation is <a href="https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/Producer.java">here</a>, to publish data to Luxun server, you just call <code>send</code> with target topic and data(or a list of data) as input, optionally, you may :</p>
+
+<blockquote><ul>
+<li>Provide an <a href="https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/serializer/Encoder.java">Encoder</a> to let the producer know how to convert your data into binary format,</li>
+<li>Provide an <a href="https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/IPartitioner.java">IPartitioner</a> to let the producer know how to choose the target Luxun borker, in such case, you may also provide a partition key as part of the data.</li>
+</ul>
+</blockquote>
+
+<h3>Partitioning</h3>
+
+<p>At producer side, Luxun supports distribution through client side partitioning - the producer will choose a target broker using the default or user specified partitioner, if the default <a href="https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/producer/DefaultPartitioner.java">random partitioner</a> is used, then the producer will pick a server at random when producing data, this end up with a distributed queue that each server stands alone and is strongly ordered, making the cluster loosely ordered.
+In many situations, loose ordering is sufficient. Dropping the requirement on cross communication makes it horizontally scale to infinity and beyond: no multicast, not &#8220;elections&#8221;, no coordination at all.</p>
+
+<p><img class="center" src="/images/luxun/partitioning.png" width="400" height="600"></p>
+
+<p>It&#8217;s also feasible to use a VIP between the producers and the Luxun cluster, in such case, producers only need to know the address of VIP, the VIP will be responsible for distributing traffic to different brokers.</p>
+
+<p><img class="center" src="/images/luxun/vip.png" width="400" height="600"></p>
 
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
 
@@ -723,18 +873,22 @@ The max fetch size parameter is required to support batch consuming - one consum
   <h1>Categories</h1>
   <ul id="categories">
     <li class='category'><a href='/blog/categories/big-queue/'>big queue (7)</a></li>
-<li class='category'><a href='/blog/categories/design/'>design (2)</a></li>
+<li class='category'><a href='/blog/categories/design/'>design (3)</a></li>
 <li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
 <li class='category'><a href='/blog/categories/luxun/'>luxun (1)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
 <li class='category'><a href='/blog/categories/nano/'>nano (9)</a></li>
-<li class='category'><a href='/blog/categories/pico/'>pico (5)</a></li>
+<li class='category'><a href='/blog/categories/pico/'>pico (6)</a></li>
 
   </ul>
 </section>
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/03/31/pico-tutoiral-5-hello-amazon-product-advertising-api/">Pico Tutoiral 5 - Hello Amazon Product Advertising API</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/03/30/pico-tutorial-4-hello-ebay-shopping/">Pico Tutorial 4 - Hello eBay Shopping</a>
@@ -750,10 +904,6 @@ The max fetch size parameter is required to support batch consuming - one consum
     
       <li class="post">
         <a href="/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">Pico Tutorial - a StockQuote sample</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/03/27/the-architecture-and-design-of-a-pub-sub-messaging-system/">the architecture and design of a publish subscribe messaging system tailored for big data collecting and analytics</a>
       </li>
     
   </ul>

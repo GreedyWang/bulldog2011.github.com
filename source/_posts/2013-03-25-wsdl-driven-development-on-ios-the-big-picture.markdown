@@ -3,7 +3,7 @@ layout: post
 title: "wsdl driven development on iOS - the big picture"
 date: 2013-03-25 20:03
 comments: true
-categories: [pico]
+categories: [pico, design]
 keywords: wsdl, soap, ios, iphone
 description: show the big picture of wsdl driven development on iOS platform
 ---

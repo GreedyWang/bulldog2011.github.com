@@ -4,7 +4,7 @@
   <title><![CDATA[Category: design | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/design/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-01T18:44:00+08:00</updated>
+  <updated>2013-04-01T18:51:41+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -820,12 +820,13 @@ reduce bandwidth and storage usage to an acceptable level. Most of big data like
 
 <blockquote><ol>
 <li>The number of messages in the blocking queue has reached a threshhold.</li>
-<li>A time interval has expired.
-Async producing does not block calling thread, the calling thread just fire the message then forget, so async producing has no performance impact on upper layer calling application, it's a preferred mode for most big data collecting scenarios.</li>
+<li>A time interval has expired.</li>
 </ol>
 </blockquote>
 
-<p>Although the throughput of sync producing does not compare with async producing, in some situations, sync producing is a preferred mode, for example, in real time event system, speed is a top priority  while throughput is a secondary priority.</p>
+<p>Async producing does not block calling thread, the calling thread just fire the message then forget, so async producing has no performance impact on upper layer calling application, it's a preferred mode for most big data collecting scenarios.</p>
+
+<p>Although the throughput of sync producing does not compare with async producing, in some situations, sync producing is a preferred mode, for example, in real time event system, speed is a top priority  while throughput is a secondary consideration.</p>
 
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
 

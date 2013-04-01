@@ -448,6 +448,46 @@ It's also feasible to use a VIP between the producers and the Luxun cluster, in 
 
 {% img center /images/luxun/vip.png 400 600 %}
 
+### Compression
+
+Big data is big consumer of network bandwidth and disk storage, compression, if used appropriately, can 
+reduce bandwidth and storage usage to an acceptable level. Most of big data like logs are text data, making compression a high priority choice when designing the collecting system.
+
+In current implementation, Luxun supports [gzip](https://en.wikipedia.org/wiki/Gzip) and [snappy](http://en.wikipedia.org/wiki/Snappy_%28software%29) compression, enabled by producer side setting. Below is the message encoding flow at producer side:
+>1. Use user specified or default `Encoder` to convert user provided data into binary format then wrap them in a TMessageList container object, TMessageList is generated from Thrift IDL, see definition [here](https://github.com/bulldog2011/luxun/blob/master/src/main/resources/thrift/message.thrift).
+2. Convert the TMessageList into binary format using Thrift serialization, compress the binary according to user specified codec, if no codec specified, then the binary data won't be compressed.
+3. Wrap the compressed binary data with codec into another TMessagePack container object, TMessagePack is also generated from Thrift IDL, see definition [here](https://github.com/bulldog2011/luxun/blob/master/src/main/resources/thrift/message.thrift).
+4. Convert the TMessagePack into binary format using Thrift serialization, then send the binary to Luxun broker by calling `produce` raw API.
+
+Below is corresponding message decoding flow at consumer side:
+>1. Get binary data from Luxun broker by calling `consume` raw API.
+2. Convert the binary data into a TMessagePack object by using Thrift serialization.
+3. Extract codec and the wrapped binary data from the TMessagePack object, decompress the binary data according to the codec.
+4. Convert the decompressed binary data into a TMessageList object by using Thrift serialization.
+5. Extract data wrapped in the TMessageList object and convert them into user format by using user specified or default `Decoder`. 
+
+### Batch & Asynchronous Producing
+The roundtrip overhead of RPC call over network has a significant impact on the system throughput and performance, as a best practice, many big data systems use batch and asynchronous producing technology at producer side for higher throughput, our testing also showed that the performance of batch producing is far better(order of magnitude differences) than the performance of producing without batch. 
+
+Figures below vividly show the inner working of synchronous and asynchronous(aka batch) producing:
+
+{% img center /images/luxun/sync_producer.png 400 600 %}
+
+{% img center /images/luxun/async_producer.png 400 600 %}
+
+First, in both sync and async producing modes, there are a couple of sync(or async) producers cached on the producer side, and there is a one to one mapping between a sync(or async) producer and a Luxun broker, at runtime, whenever there is a producing request, the producer will pick one concrete producer instance from cache by partition policy .
+
+In sync producer mode, the sync producer will send a message to Luxun broker everytime it gets a message sending request from calling threads, and the calling thread will block before the `send` call return.
+
+In asyn producer mode, messages from sending threads will be cached in an inner blocking queue first, and there is an inner sender thread which will continuously poll messages from the queue, collate and pack messages into chunk according to target topic, and send the chunk to Luxun server eventually. In async mode, message sending is actually triggered by ***either*** of following configurable conditions:
+>1. The number of messages in the blocking queue has reached a threshhold.
+2. A time interval has expired.
+
+Async producing does not block calling thread, the calling thread just fire the message then forget, so async producing has no performance impact on upper layer calling application, it's a preferred mode for most big data collecting scenarios.
+
+Although the throughput of sync producing does not compare with async producing, in some situations, sync producing is a preferred mode, for example, in real time event system, speed is a top priority  while throughput is a secondary consideration.
+
+
 # Luxun vs Apache Kafka - the Main Differences
 Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:
 >1. Luxun is based on [Memory Mapped file](http://en.wikipedia.org/wiki/Memory-mapped_file), while Kafka is based on filesystem and OS page cache, memory mapped file is a natural bridge between volatile memory and persistent disk, hence it will have better throughput, memory mapped file also has following unique features:
@@ -461,6 +501,8 @@ Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simp
 
 The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.
  
+# Performance
+
 
 ##Contributions
 Luxun borrowed design ideas and adapted source from following open source projects:

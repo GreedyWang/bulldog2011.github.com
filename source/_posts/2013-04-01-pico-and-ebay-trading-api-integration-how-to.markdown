@@ -54,7 +54,7 @@ You may review and study these samples before you create your own Pico and eBay 
 
 To run first sample, you must fill in your `eBay AppId` and `eBay Auth Token` in the shared client class `EBayTradingServiceClient`
 
-To run second sample, you mst fill in your `eBay AppId` in three shared client classes: `EBayFindingServiceClient`, `EBayShoppingServiceClient` and `EBayTradingServiceClient`, then fill in your `eBay Auth Token` in `EBayTradingServiceClient`, this just looks tedious and silly, I did so since this is just for demo, in real world app, I suggest you to centralize the credential setting in one place.
+To run second sample, you must fill in your `eBay AppId` in three shared client classes: `EBayFindingServiceClient`, `EBayShoppingServiceClient` and `EBayTradingServiceClient`, then fill in your `eBay Auth Token` in `EBayTradingServiceClient`, this just looks tedious and silly, I did so since this is just for demo, in real world app, I suggest you to centralize the credential setting in one place.
 
 ***Note***, for demo, credentials like eBay AppId and AuthToken are hardcoded in the sample, in real-world application, for security consideration, you need to integrate with eBay [Authentication & Authorization](http://developer.ebay.com/DevZone/XML/docs/WebHelp/wwhelp/wwhimpl/common/html/wwhelp.htm?context=eBay_XML_API&file=GettingTokens-Getting_Tokens_for_Applications_with_Multiple_Users.html) flow on your iOS device, and ensure the seurity of user credentials on device.
 

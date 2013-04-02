@@ -1,0 +1,341 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>pico and ebay trading api integration how to - Abstraction Builder</title>
+  <meta name="author" content="Bulldog">
+
+  
+  <meta name="description" content="pico and ebay trading api integration how to">
+  <meta name="keywords" content="ios, iphone, wsdl, soap, ebay trading api">
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Abstraction Builder" type="application/atom+xml">
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <div id="logo">
+  	<div id="logoLeft">{</div>
+  	<div id="logoText">ab</div>
+  	<div id="logoRight">}</div>
+  	<div class="clear"></div>
+  </div>
+  <h1><a href="/">Abstraction Builder</a></h1>
+  
+    <h2>Building simple and elegant programming abstractions</h2>
+  
+  <div class="clear"></div>
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:bulldog2011.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/projects">Projects</a></li>
+  <li><a href="/lab">Lab</a></li>
+  <li><a href="/about">About Me</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      
+        <h1 class="entry-title">Pico and Ebay Trading Api Integration How To</h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-01T20:18:00+08:00" pubdate data-updated="true">Apr 1<span>st</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I&#8217;ve written a series of tutorials showing to put wsdl driven development into practice on iOS platform using <a href="https://github.com/bulldog2011/pico">Pico</a> framework. In <a href="http://bulldog2011.github.com/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">tutorial 3</a> and <a href="http://bulldog2011.github.com/blog/2013/03/30/pico-tutorial-4-hello-ebay-shopping/">tutorial 4</a> I showed how to integrate Pico with eBay Finding and Shopping API. This post is about Pico integration with <a href="https://www.x.com/developers/ebay/products/trading-api">eBay Trading API</a> - the most heavy-weight and feature rich API from eBay, I am not going to write another tutorial for eBay Trading API integration, since the flow is quite smiliar to that already elaborated in tutorial 3 and 4, instead, I will dump a few comments here to give you some guide in case you want to integrate eBay Trading API on iOS device using Pico framework.</p>
+
+<!--more-->
+
+
+<h3>1. eBay Trading WSDL Fix</h3>
+
+<p>The <a href="http://developer.ebay.com/webservices/latest/ebaySvc.wsdl">eBay Trading WSDL</a> has issue to work with <a href="https://github.com/bulldog2011/mwsc">mwsc</a> code generator directly, following fix is needed before mwsc can correctly generate code from the wsdl:</p>
+
+<blockquote><ol>
+<li>Remove an any element declaration in ReviseInventoryStatusRequestType, since any has already been declarated in the AbstractRequestType(from which ReviseInventoryStatusRequestType extends).</li>
+<li>Add following annotation in the schema definition(at the beginning):</li>
+</ol>
+</blockquote>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'>   <span class="nt">&lt;xs:annotation&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;xs:appinfo&gt;</span>
+</span><span class='line'>     <span class="nt">&lt;jaxb:globalBindings</span> <span class="na">typesafeEnumMaxMembers=</span><span class="s">&quot;1000&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;/xs:appinfo&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;/xs:annotation&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is because the numbe of members in some enum types in wsdl exceeds the maximum allowed by defult xjc/jaxb processor. Of couse, you also need to declare jaxb namespace and version in wsdl/schema definition. <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/wsdl">Here</a> is a fixed eBay Trading wsdl(version 815), you can search <code>mwsc</code> to find out what I have fixed.</p>
+
+<h3>2. Code Generation Command</h3>
+
+<p>The command to generate eBay Trading proxy from wsdl is:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin/mwsc -pico -prefix Trading_ -ebaytrading ebaySvc_815_fix.wsdl</span></code></pre></td></tr></table></div></figure>
+
+
+<p>the <code>-ebaytrading</code> is a special option I added for eBay Trading API code generation only, for auto-generating per-call HTTP header setting, this is not a generic code generator option.</p>
+
+<h3>3. eBay Trading WSDL pruning</h3>
+
+<p>The eBay Trading WSDL is a super big wsdl, more than 4M in size, the generated code is also very big in size, leading to slow compilation in Xcode, while in most cases, your application only needs a few calls in eBay Trading API, fortunately, eBay provides a <a href="http://developer.ebay.com/DevZone/codebase/wsdlpruner/pruner.zip">pruner</a> tool which let you prune the bulky wsdl down to the operations that you want to use. <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/Examples/HelloeBayTrading/wsdl">here</a> and <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/Examples/eBayDemoApp/wsdl">here</a> are two wsdl I pruned for demo, the first one only supports <code>geteBayOfficialTime</code> call, and the second only supports <code>getWatchList</code> and <code>getMyeBayBuying</code> calls. You may prune the eBay Trading wsdl according to your real needs before code generation.</p>
+
+<h3>4. Samples</h3>
+
+<p>I&#8217;ve created two samples to demonstrate Pico integration with eBay Trading API, the <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/Examples/HelloeBayTrading">first one</a> is a hello world like sample, just call eBay Trading <code>geteBayOfficalTime</code> API to show official time on eBay server; the <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/Examples/eBayDemoApp">second one</a> is a composite sample which calls eBay Finding, Shopping and Trading APIs behind:</p>
+
+<blockquote><ol>
+<li>Search items on eBay by keywords by invoking eBay Finding <code>findItemsByKeywords</code> API.</li>
+<li>Show detail of an item by invoking eBay Shopping <code>getSingleItem</code> API.</li>
+<li>Add item to watch list by invoking eBay Trading <code>addToWatchList</code> API.</li>
+<li>View watch list by invoking eBay Trading <code>getMyeBayBuying</code> API.</li>
+</ol>
+</blockquote>
+
+<p>You may review and study these samples before you create your own Pico and eBay API based app.</p>
+
+<p>To run first sample, you must fill in your <code>eBay AppId</code> and <code>eBay Auth Token</code> in the shared client class <code>EBayTradingServiceClient</code></p>
+
+<p>To run second sample, you must fill in your <code>eBay AppId</code> in three shared client classes: <code>EBayFindingServiceClient</code>, <code>EBayShoppingServiceClient</code> and <code>EBayTradingServiceClient</code>, then fill in your <code>eBay Auth Token</code> in <code>EBayTradingServiceClient</code>, this just looks tedious and silly, I did so since this is just for demo, in real world app, I suggest you to centralize the credential setting in one place.</p>
+
+<p><strong><em>Note</em></strong>, for demo, credentials like eBay AppId and AuthToken are hardcoded in the sample, in real-world application, for security consideration, you need to integrate with eBay <a href="http://developer.ebay.com/DevZone/XML/docs/WebHelp/wwhelp/wwhimpl/common/html/wwhelp.htm?context=eBay_XML_API&amp;file=GettingTokens-Getting_Tokens_for_Applications_with_Multiple_Users.html">Authentication &amp; Authorization</a> flow on your iOS device, and ensure the seurity of user credentials on device.</p>
+
+<h3>5. Regrading Pico Integration</h3>
+
+<p>Basically, the Pico integration with eBay Trading API is similar to Pico integartion with eBay Finding and Shopping API, one difference is eBay Trading API call needs to append a few request parameters(see details <a href="http://developer.ebay.com/DevZone/XML/docs/WebHelp/wwhelp/wwhimpl/common/html/wwhelp.htm?context=eBay_XML_API&amp;file=InvokingWebServices-.html">here</a>) as query string, plese refer to code <a href="https://github.com/bulldog2011/PicoEBayTradingClient/blob/master/Examples/HelloeBayTrading/HelloeBayTrading/EBayTradingServiceClient.m">here</a> to learn how to add request parameters as query sting on Pico client.</p>
+
+<h3>6. Standalone Site for eBay Trading Proxy</h3>
+
+<p>The eBay Trading Proxy has been extracted as a standalone project, hosted <a href="https://github.com/bulldog2011/PicoEBayTradingClient">here</a>, and the corresponding appledoc is hosted <a href="http://bulldog2011.github.com/PicoEBayTradingClient/">here</a>, the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.</p>
+
+<h3>Final Word</h3>
+
+<p>eBay Trading API is a powerful API, you can use it to build applications such as listing, selling and post-sales management applications, manage user information, and initiate the item purchase flow on eBay. See your next greap iOS app based on Pico and eBay Trading API.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bulldog</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-01T20:18:00+08:00" pubdate data-updated="true">Apr 1<span>st</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/pico/'>pico</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left articlenav" href="/blog/2013/03/31/pico-tutoiral-5-hello-amazon-product-advertising-api/" title="Previous Post: Pico Tutoiral 5 - Hello Amazon Product Advertising API">&laquo; Pico Tutoiral 5 - Hello Amazon Product Advertising API</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Categories</h1>
+  <ul id="categories">
+    <li class='category'><a href='/blog/categories/big-queue/'>big queue (7)</a></li>
+<li class='category'><a href='/blog/categories/design/'>design (3)</a></li>
+<li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
+<li class='category'><a href='/blog/categories/luxun/'>luxun (1)</a></li>
+<li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
+<li class='category'><a href='/blog/categories/nano/'>nano (9)</a></li>
+<li class='category'><a href='/blog/categories/pico/'>pico (7)</a></li>
+
+  </ul>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to/">pico and ebay trading api integration how to</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/31/pico-tutoiral-5-hello-amazon-product-advertising-api/">Pico Tutoiral 5 - Hello Amazon Product Advertising API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/30/pico-tutorial-4-hello-ebay-shopping/">Pico Tutorial 4 - Hello eBay Shopping</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">Pico Tutorial 3 - Hello eBay Finding</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/">Pico Tutorial 2 - a Currency Converter Sample</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Bulldog -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'bulldogtech';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

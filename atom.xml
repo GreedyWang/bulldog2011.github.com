@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-01T18:51:41+08:00</updated>
+  <updated>2013-04-02T17:29:43+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,89 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[pico and ebay trading api integration how to]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to/"/>
+    <updated>2013-04-01T20:18:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to</id>
+    <content type="html"><![CDATA[<p>I&#8217;ve written a series of tutorials showing to put wsdl driven development into practice on iOS platform using <a href="https://github.com/bulldog2011/pico">Pico</a> framework. In <a href="http://bulldog2011.github.com/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">tutorial 3</a> and <a href="http://bulldog2011.github.com/blog/2013/03/30/pico-tutorial-4-hello-ebay-shopping/">tutorial 4</a> I showed how to integrate Pico with eBay Finding and Shopping API. This post is about Pico integration with <a href="https://www.x.com/developers/ebay/products/trading-api">eBay Trading API</a> - the most heavy-weight and feature rich API from eBay, I am not going to write another tutorial for eBay Trading API integration, since the flow is quite smiliar to that already elaborated in tutorial 3 and 4, instead, I will dump a few comments here to give you some guide in case you want to integrate eBay Trading API on iOS device using Pico framework.</p>
+
+<!--more-->
+
+
+<h3>1. eBay Trading WSDL Fix</h3>
+
+<p>The <a href="http://developer.ebay.com/webservices/latest/ebaySvc.wsdl">eBay Trading WSDL</a> has issue to work with <a href="https://github.com/bulldog2011/mwsc">mwsc</a> code generator directly, following fix is needed before mwsc can correctly generate code from the wsdl:</p>
+
+<blockquote><ol>
+<li>Remove an any element declaration in ReviseInventoryStatusRequestType, since any has already been declarated in the AbstractRequestType(from which ReviseInventoryStatusRequestType extends).</li>
+<li>Add following annotation in the schema definition(at the beginning):</li>
+</ol>
+</blockquote>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'>   <span class="nt">&lt;xs:annotation&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;xs:appinfo&gt;</span>
+</span><span class='line'>     <span class="nt">&lt;jaxb:globalBindings</span> <span class="na">typesafeEnumMaxMembers=</span><span class="s">&quot;1000&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;/xs:appinfo&gt;</span>
+</span><span class='line'>   <span class="nt">&lt;/xs:annotation&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is because the numbe of members in some enum types in wsdl exceeds the maximum allowed by defult xjc/jaxb processor. Of couse, you also need to declare jaxb namespace and version in wsdl/schema definition. <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/wsdl">Here</a> is a fixed eBay Trading wsdl(version 815), you can search <code>mwsc</code> to find out what I have fixed.</p>
+
+<h3>2. Code Generation Command</h3>
+
+<p>The command to generate eBay Trading proxy from wsdl is:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin/mwsc -pico -prefix Trading_ -ebaytrading ebaySvc_815_fix.wsdl</span></code></pre></td></tr></table></div></figure>
+
+
+<p>the <code>-ebaytrading</code> is a special option I added for eBay Trading API code generation only, for auto-generating per-call HTTP header setting, this is not a generic code generator option.</p>
+
+<h3>3. eBay Trading WSDL pruning</h3>
+
+<p>The eBay Trading WSDL is a super big wsdl, more than 4M in size, the generated code is also very big in size, leading to slow compilation in Xcode, while in most cases, your application only needs a few calls in eBay Trading API, fortunately, eBay provides a <a href="http://developer.ebay.com/DevZone/codebase/wsdlpruner/pruner.zip">pruner</a> tool which let you prune the bulky wsdl down to the operations that you want to use. <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/Examples/HelloeBayTrading/wsdl">here</a> and <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/Examples/eBayDemoApp/wsdl">here</a> are two wsdl I pruned for demo, the first one only supports <code>geteBayOfficialTime</code> call, and the second only supports <code>getWatchList</code> and <code>getMyeBayBuying</code> calls. You may prune the eBay Trading wsdl according to your real needs before code generation.</p>
+
+<h3>4. Samples</h3>
+
+<p>I&#8217;ve created two samples to demonstrate Pico integration with eBay Trading API, the <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/Examples/HelloeBayTrading">first one</a> is a hello world like sample, just call eBay Trading <code>geteBayOfficalTime</code> API to show official time on eBay server; the <a href="https://github.com/bulldog2011/PicoEBayTradingClient/tree/master/Examples/eBayDemoApp">second one</a> is a composite sample which calls eBay Finding, Shopping and Trading APIs behind:</p>
+
+<blockquote><ol>
+<li>Search items on eBay by keywords by invoking eBay Finding <code>findItemsByKeywords</code> API.</li>
+<li>Show detail of an item by invoking eBay Shopping <code>getSingleItem</code> API.</li>
+<li>Add item to watch list by invoking eBay Trading <code>addToWatchList</code> API.</li>
+<li>View watch list by invoking eBay Trading <code>getMyeBayBuying</code> API.</li>
+</ol>
+</blockquote>
+
+<p>You may review and study these samples before you create your own Pico and eBay API based app.</p>
+
+<p>To run first sample, you must fill in your <code>eBay AppId</code> and <code>eBay Auth Token</code> in the shared client class <code>EBayTradingServiceClient</code></p>
+
+<p>To run second sample, you must fill in your <code>eBay AppId</code> in three shared client classes: <code>EBayFindingServiceClient</code>, <code>EBayShoppingServiceClient</code> and <code>EBayTradingServiceClient</code>, then fill in your <code>eBay Auth Token</code> in <code>EBayTradingServiceClient</code>, this just looks tedious and silly, I did so since this is just for demo, in real world app, I suggest you to centralize the credential setting in one place.</p>
+
+<p><strong><em>Note</em></strong>, for demo, credentials like eBay AppId and AuthToken are hardcoded in the sample, in real-world application, for security consideration, you need to integrate with eBay <a href="http://developer.ebay.com/DevZone/XML/docs/WebHelp/wwhelp/wwhimpl/common/html/wwhelp.htm?context=eBay_XML_API&amp;file=GettingTokens-Getting_Tokens_for_Applications_with_Multiple_Users.html">Authentication &amp; Authorization</a> flow on your iOS device, and ensure the seurity of user credentials on device.</p>
+
+<h3>5. Regrading Pico Integration</h3>
+
+<p>Basically, the Pico integration with eBay Trading API is similar to Pico integartion with eBay Finding and Shopping API, one difference is eBay Trading API call needs to append a few request parameters(see details <a href="http://developer.ebay.com/DevZone/XML/docs/WebHelp/wwhelp/wwhimpl/common/html/wwhelp.htm?context=eBay_XML_API&amp;file=InvokingWebServices-.html">here</a>) as query string, plese refer to code <a href="https://github.com/bulldog2011/PicoEBayTradingClient/blob/master/Examples/HelloeBayTrading/HelloeBayTrading/EBayTradingServiceClient.m">here</a> to learn how to add request parameters as query sting on Pico client.</p>
+
+<h3>6. Standalone Site for eBay Trading Proxy</h3>
+
+<p>The eBay Trading Proxy has been extracted as a standalone project, hosted <a href="https://github.com/bulldog2011/PicoEBayTradingClient">here</a>, and the corresponding appledoc is hosted <a href="http://bulldog2011.github.com/PicoEBayTradingClient/">here</a>, the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.</p>
+
+<h3>Final Word</h3>
+
+<p>eBay Trading API is a powerful API, you can use it to build applications such as listing, selling and post-sales management applications, manage user information, and initiate the item purchase flow on eBay. See your next greap iOS app based on Pico and eBay Trading API.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Pico Tutoiral 5 - Hello Amazon Product Advertising API]]></title>
@@ -3856,6 +3939,131 @@ reduce bandwidth and storage usage to an acceptable level. Most of big data like
 <p>Async producing does not block calling thread, the calling thread just fire the message then forget, so async producing has no performance impact on upper layer calling application, it&#8217;s a preferred mode for most big data collecting scenarios.</p>
 
 <p>Although the throughput of sync producing does not compare with async producing, in some situations, sync producing is a preferred mode, for example, in real time event system, speed is a top priority  while throughput is a secondary consideration.</p>
+
+<h1>The Design of the Consumer</h1>
+
+<p>In current implementation, Luxun provides two kinds of consumers:</p>
+
+<h3>A Simple Consumer</h3>
+
+<p>Simple consumer only supports consuming from one broker, it is just provided for demo, testing, or for user extension, following is the main interface of simple consumer:</p>
+
+<figure class='code'><figcaption><span>SimpleConsumer.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/consumer/SimpleConsumer.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageList</span><span class="o">&gt;</span> <span class="nf">consume</span><span class="o">(</span><span class="n">String</span> <span class="n">topic</span><span class="o">,</span> <span class="kt">long</span> <span class="n">index</span><span class="o">,</span> <span class="kt">int</span> <span class="n">fetchSize</span><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageList</span><span class="o">&gt;</span> <span class="nf">consume</span><span class="o">(</span><span class="n">String</span> <span class="n">topic</span><span class="o">,</span> <span class="n">String</span> <span class="n">fanoutId</span><span class="o">,</span> <span class="kt">int</span> <span class="n">fetchSize</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As the interface show, <code>consume by index</code> and <code>consume by fanoutId</code> are supported, fetchSize setting is used for batch consuming, once the consume succeeds, a list of <code>MessageList</code> will be returned, one <code>MessageList</code> is one compressed and encoded version of <code>ProducerData</code> produced by producer, so before you can get real data in user format, you still need to decode according to the message decode flow described in section above.</p>
+
+<h3>Advanced Consumer</h3>
+
+<p>The advanced consumer provides high-level abstraction to simplify consuming operation, it supports distributed consuming, multi-threads consuming and group consuming features. Below is main interface to create advanced consumer:</p>
+
+<figure class='code'><figcaption><span>IStreamFactory.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/consumer/IStreamFactory.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">* Factory interface for streaming consumer</span>
+</span><span class='line'><span class="cm">*</span>
+</span><span class='line'><span class="cm">* @author bulldog</span>
+</span><span class='line'><span class="cm">*</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">IStreamFactory</span> <span class="kd">extends</span> <span class="n">Closeable</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">* Create a list of {@link MessageStream} for each topic</span>
+</span><span class='line'><span class="cm">*</span>
+</span><span class='line'><span class="cm">* @param topicThreadNumMap a map of (topic, number of threads/streams) pair</span>
+</span><span class='line'><span class="cm">* @param decoder message decoder</span>
+</span><span class='line'><span class="cm">* @return a map of (topic,list of MessageStream) pair. The number of</span>
+</span><span class='line'><span class="cm">* items in the list is the number of threads/streams. Each MessageStream supports</span>
+</span><span class='line'><span class="cm">* an iterator of messages.</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageStream</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;&gt;</span> <span class="n">createMessageStreams</span><span class="o">(</span>
+</span><span class='line'>            <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;</span> <span class="n">topicThreadNumMap</span><span class="o">,</span> <span class="n">Decoder</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">decoder</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">* Create a list of {@link MessageStream} for each topic with default Luxun message decoder</span>
+</span><span class='line'><span class="cm">*</span>
+</span><span class='line'><span class="cm">* @param topicThreadNumMap a map of (topic, number of threads/streams) pair</span>
+</span><span class='line'><span class="cm">* @return a map of (topic,list of MessageStream) pair. The number of</span>
+</span><span class='line'><span class="cm">* items in the list is the number of threads/streams. Each MessageStream supports</span>
+</span><span class='line'><span class="cm">* an iterator of messages.</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageStream</span><span class="o">&lt;</span><span class="n">Message</span><span class="o">&gt;&gt;&gt;</span> <span class="n">createMessageStreams</span><span class="o">(</span>
+</span><span class='line'>            <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;</span> <span class="n">topicThreadNumMap</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">* Shut down the consumer</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In this interface, the message consumer is abstracted as message stream, to create message streams, you provide a map with :</p>
+
+<blockquote><ul>
+<li>target topic as key</li>
+<li>number of consuming threads(or streams) as value</li>
+</ul>
+</blockquote>
+
+<p>The the concrete <code>IStreamFactory</code> implementation will return a list of message streams per topic, then you can delegate these message streams to different threads for concurrent consuming.
+Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn a couple of consuming threads(one thread for one broker) that will concurrently consume messages in target topic in Luxun servers, and put the consumed messages into a blocking queue, <code>MessageStream</code> abstraction is just a wrapper around the blocking queue with additional <code>Iterable</code> support, when upper layer threads concurrently consume on their respective streams, they are actually contenting messages in one blocking queue.</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/luxun/concurrent_consuming.png" width="400" height="600"></p>
+
+<p>Advanced consumer has encapsulated the message decoding flow, so when you iterate on the message stream, you will get message in user format directly.</p>
+
+<p>Similar to producer, consumer uses a simple and random policy for distributed consuming, the spawned  threads will continuously check broker for message, if no message available in a certain broker, the corresponding thread will back off till message is available again, this can avoid frequent while fruitless server pull.</p>
+
+<p>When you finish with consuming, call <code>close</code> on the <code>IStreamFactory</code> will stop the underlying consuming threads, then wait the blocking queue to be emptied by upper threads. Call <code>close</code> is a must to avoid message lose.</p>
+
+<p>In case one consumer is not enough to keep up with the speed of producers, several consumer can form a <code>consumer group</code>, in such case, every consumer in the same group will use same <code>group id</code>(or <code>fanout id</code>), and every message will be consumed by one and only one consumer. This is just the <code>consume once semantics</code>.</p>
+
+<p>If different consumers or consumer groups use different <code>group id</code>(or <code>fanout id</code>) to consume messages in same topic, then every consumer(or consumer group) can consume independently, means every message in the topic will go to every consumer(or consume group). This is just the <code>fanout queue semantics</code>.</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/luxun/consumer_group.png" width="400" height="600"></p>
+
+<p>Although Luxun only provides two kinds of consumer interface, it does limit user to build more advanced consuming semantics, such as consume by index, transactional consuming, etc, by extending the raw consuming interface provide by Luxun.</p>
 
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
 
@@ -8357,56 +8565,6 @@ On client side, you just need to create a thrift client which also implements th
 <p>Cool! I turned my big queue into a Thrift based queue service with less than 2 hours, this is agile development I am pursuing!</p>
 
 <p>When compared with heavy-weight enterprise level messaging products like ActiveMQ or RabbitMQ, BigQueue with Thrift support is a quite light-weight, fast and persistent messaging framework, this is the <strong><em>just enough queue</em></strong> which can slove your business problem in agile and effective way, if you find this queue useful, don&#8217;t foget to let me know by leaving feedback at this post.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Sort and Search 100GB Data on a Single Machine]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/01/25/merge-sort-using-big-queue/"/>
-    <updated>2013-01-25T18:01:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/01/25/merge-sort-using-big-queue</id>
-    <content type="html"><![CDATA[<p>How to sort 100GB or more data in effective way? You may tell me to use Hadoop, oh, I know Hadoop can definitely do that, but the cost to build and maintain Hadoop always make me headache. Can we sort 100GB or more data on a single commodity machine with less than 8GB memory? The answer is yes, use a technology called <a href="http://en.wikipedia.org/wiki/External_sorting">external sorting</a>. Since I have just build a big, fast and persistent queue, I want to show you how to use my big queue to sort huge amount of data on a single machine with limited physical memory.</p>
-
-<!--more-->
-
-
-<p>The algorithm is a typical <a href="http://en.wikipedia.org/wiki/Merge_sort">merge sort algorithm</a>, I adapted it to only use my big queue, here are the detailed steps:</p>
-
-<pre><code>1. put all your data into a queue called sourceQueue.
-2. build a queue of sorted queues by dividing and sorting the sourceQueue.
-    1. build a new queue called queueOfSortedQueues.
-    2. extract n items out of the sourceQueue, n is the max num of items that can be sorted 
-       in physical memory in one pass.
-    3. sort n items in memory using any effective in memory sorting algorithm like quick sort.
-    4. put n sorted items into a new queue and put the queue referece into the queueOfSortedQueues.
-    5. repeat 2 - 4 until all items in sourceQueue have been consumed.
-3. merge sort the queueOfSortedQueues
-    1. extract n queues out of the queueOfSortedQueues, n must be &gt;= 2 but not be too big, 
-       this is number of ways you want to merge sort in parallel.
-    2. mergesort n queues and put the result sorted queue back into the queueOfSortedQueues
-            1. build a new result queue for sorted items later.
-            2. find out the lowest item in all n input queues by peeking the front of the queue
-            3. extract the lowest item out of the queue and put the item into the result queue
-            4. repeat 2 &amp; 3 until all items in n input queues have been consumed.
-            5. put the result sorted queue back into the queueOfSortedQueues.
-    3. repeat 1 &amp; 2 until there is only one left in the queueOfSortedQueues.
-4. The last one left in the queueOfSortedQueues is the final sorted queue.
-</code></pre>
-
-<p><strong><em>Note</em></strong>: all queues mentioned above refer to my big queue except that queueOfSortedQueues is a normal in memory queue.</p>
-
-<p>Basically, this is a typical divide and conqure algorithm, in order to sort data that is too big to be put into physical memory, you need to first divide the source data into chunks such that each chunk is small enough to be sorted in physical memory in one pass, after sorting all these small chunks, you need to merge and sort these chunks into the final sorted chunk, the merge and sort operation won&#8217;t consume much memory because it only needs to sequentially read chunks on external storage and sequentially write the final sorted chunk to exertnal storagte, only limited items are kept in memory for comparing and sorting in one turn.</p>
-
-<p>Suppose you have 64GB data to sort, and your machine can only sort 2GB in one pass, then you divide 64GB data into 32 chunks with 2GB each,
-then you sort 32 chunks in memory in turn, after in memory sorting finish, if you choose 32 way merge sort, you merge and sort all 32 chunks into one final chunk,
-if you choose 4 way merge sort, then you need 8 + 2 + 1 = 11 rounds of merge sort to get the final sorted chunk.</p>
-
-<p>I was able to sort 128GB data(each data item has 100 bytes) in 8.68 hours using my big queue structure and the algorithm above, basically, the sort speed is only limited by disk IO bandwidth,
-if you are intested, you can find my merge sort code <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/sortsearch/src/com/leansoft/bigqueue/sample">here</a>, the code of multi-thread version is also included.</p>
-
-<p>Another interesting thing is, after I sorted the big data, by leveraging my <a href="https://github.com/bulldog2011/bigqueue/tree/master/src/main/java/com/leansoft/bigqueue">indexed big array</a> structure and the typical <a href="http://en.wikipedia.org/wiki/Binary_search_algorithm">binary search alogrithm</a> I can search more than 100GB sorted data in constant time(far less than 1 second on average), this is really amazing. If you are interested, find the source in the link mentioned above.</p>
-
-<p>Any feedback to further improve my big queue sturucture and the merge sort alogrithm is welcome!</p>
 ]]></content>
   </entry>
   

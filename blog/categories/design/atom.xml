@@ -4,7 +4,7 @@
   <title><![CDATA[Category: design | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/design/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-01T18:51:41+08:00</updated>
+  <updated>2013-04-02T17:29:43+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -827,6 +827,153 @@ reduce bandwidth and storage usage to an acceptable level. Most of big data like
 <p>Async producing does not block calling thread, the calling thread just fire the message then forget, so async producing has no performance impact on upper layer calling application, it's a preferred mode for most big data collecting scenarios.</p>
 
 <p>Although the throughput of sync producing does not compare with async producing, in some situations, sync producing is a preferred mode, for example, in real time event system, speed is a top priority  while throughput is a secondary consideration.</p>
+
+<h1>The Design of the Consumer</h1>
+
+<p>In current implementation, Luxun provides two kinds of consumers:</p>
+
+<h3>A Simple Consumer</h3>
+
+<p>Simple consumer only supports consuming from one broker, it is just provided for demo, testing, or for user extension, following is the main interface of simple consumer:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>SimpleConsumer.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/consumer/SimpleConsumer.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageList</span><span class="o">&gt;</span> <span class="n">consume</span><span class="o">(</span><span class="n">String</span> <span class="n">topic</span><span class="o">,</span> <span class="kt">long</span> <span class="n">index</span><span class="o">,</span> <span class="kt">int</span> <span class="n">fetchSize</span><span class="o">)&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageList</span><span class="o">&gt;</span> <span class="n">consume</span><span class="o">(</span><span class="n">String</span> <span class="n">topic</span><span class="o">,</span> <span class="n">String</span> <span class="n">fanoutId</span><span class="o">,</span> <span class="kt">int</span> <span class="n">fetchSize</span><span class="o">);&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>As the interface show, <code>consume by index</code> and <code>consume by fanoutId</code> are supported, fetchSize setting is used for batch consuming, once the consume succeeds, a list of <code>MessageList</code> will be returned, one <code>MessageList</code> is one compressed and encoded version of <code>ProducerData</code> produced by producer, so before you can get real data in user format, you still need to decode according to the message decode flow described in section above.</p>
+
+<h3>Advanced Consumer</h3>
+
+<p>The advanced consumer provides high-level abstraction to simplify consuming operation, it supports distributed consuming, multi-threads consuming and group consuming features. Below is main interface to create advanced consumer:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>IStreamFactory.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/consumer/IStreamFactory.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'><span class="o">*</span> <span class="n">Factory</span> <span class="kd">interface</span> <span class="nc">for</span> <span class="n">streaming</span> <span class="n">consumer</span>
+</span><span class='line'><span class="o">*</span>
+</span><span class='line'><span class="o">*</span> <span class="nd">@author</span> <span class="n">bulldog</span>
+</span><span class='line'><span class="o">*</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">IStreamFactory</span> <span class="kd">extends</span> <span class="n">Closeable</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'><span class="o">*</span> <span class="n">Create</span> <span class="n">a</span> <span class="n">list</span> <span class="n">of</span> <span class="o">{</span><span class="nd">@link</span> <span class="n">MessageStream</span><span class="o">}</span> <span class="k">for</span> <span class="n">each</span> <span class="n">topic</span>
+</span><span class='line'><span class="o">*</span>
+</span><span class='line'><span class="o">*</span> <span class="nd">@param</span> <span class="n">topicThreadNumMap</span> <span class="n">a</span> <span class="n">map</span> <span class="n">of</span> <span class="o">(</span><span class="n">topic</span><span class="o">,</span> <span class="n">number</span> <span class="n">of</span> <span class="n">threads</span><span class="o">/</span><span class="n">streams</span><span class="o">)</span> <span class="n">pair</span>
+</span><span class='line'><span class="o">*</span> <span class="nd">@param</span> <span class="n">decoder</span> <span class="n">message</span> <span class="n">decoder</span>
+</span><span class='line'><span class="o">*</span> <span class="nd">@return</span> <span class="n">a</span> <span class="n">map</span> <span class="n">of</span> <span class="o">(</span><span class="n">topic</span><span class="o">,</span><span class="n">list</span> <span class="n">of</span> <span class="n">MessageStream</span><span class="o">)</span> <span class="n">pair</span><span class="o">.</span> <span class="n">The</span> <span class="n">number</span> <span class="n">of</span>
+</span><span class='line'><span class="o">*</span> <span class="n">items</span> <span class="n">in</span> <span class="n">the</span> <span class="n">list</span> <span class="n">is</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">threads</span><span class="o">/</span><span class="n">streams</span><span class="o">.</span> <span class="n">Each</span> <span class="n">MessageStream</span> <span class="n">supports</span>
+</span><span class='line'><span class="o">*</span> <span class="n">an</span> <span class="n">iterator</span> <span class="n">of</span> <span class="n">messages</span><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Map</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">String</span><span class="o">,</span> <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">MessageStream</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;&gt;</span> <span class="n">createMessageStreams</span><span class="o">(&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>        <span class="n">Map</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">topicThreadNumMap</span><span class="o">,</span> <span class="n">Decoder</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">T</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">decoder</span><span class="o">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'><span class="o">*</span> <span class="n">Create</span> <span class="n">a</span> <span class="n">list</span> <span class="n">of</span> <span class="o">{</span><span class="nd">@link</span> <span class="n">MessageStream</span><span class="o">}</span> <span class="k">for</span> <span class="n">each</span> <span class="n">topic</span> <span class="n">with</span> <span class="k">default</span> <span class="n">Luxun</span> <span class="n">message</span> <span class="n">decoder</span>
+</span><span class='line'><span class="o">*</span>
+</span><span class='line'><span class="o">*</span> <span class="nd">@param</span> <span class="n">topicThreadNumMap</span> <span class="n">a</span> <span class="n">map</span> <span class="n">of</span> <span class="o">(</span><span class="n">topic</span><span class="o">,</span> <span class="n">number</span> <span class="n">of</span> <span class="n">threads</span><span class="o">/</span><span class="n">streams</span><span class="o">)</span> <span class="n">pair</span>
+</span><span class='line'><span class="o">*</span> <span class="nd">@return</span> <span class="n">a</span> <span class="n">map</span> <span class="n">of</span> <span class="o">(</span><span class="n">topic</span><span class="o">,</span><span class="n">list</span> <span class="n">of</span> <span class="n">MessageStream</span><span class="o">)</span> <span class="n">pair</span><span class="o">.</span> <span class="n">The</span> <span class="n">number</span> <span class="n">of</span>
+</span><span class='line'><span class="o">*</span> <span class="n">items</span> <span class="n">in</span> <span class="n">the</span> <span class="n">list</span> <span class="n">is</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">threads</span><span class="o">/</span><span class="n">streams</span><span class="o">.</span> <span class="n">Each</span> <span class="n">MessageStream</span> <span class="n">supports</span>
+</span><span class='line'><span class="o">*</span> <span class="n">an</span> <span class="n">iterator</span> <span class="n">of</span> <span class="n">messages</span><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Map</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">String</span><span class="o">,</span> <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">MessageStream</span><span class="o">&lt;</span><span class="n">Message</span><span class="o">&gt;&gt;&gt;</span> <span class="n">createMessageStreams</span><span class="o">(&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>        <span class="n">Map</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">topicThreadNumMap</span><span class="o">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'><span class="o">*</span> <span class="n">Shut</span> <span class="n">down</span> <span class="n">the</span> <span class="n">consumer</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
+</span><span class='line'><span class="o">}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>In this interface, the message consumer is abstracted as message stream, to create message streams, you provide a map with :</p>
+
+<blockquote><ul>
+<li>target topic as key</li>
+<li>number of consuming threads(or streams) as value</li>
+</ul>
+</blockquote>
+
+<p>The the concrete <code>IStreamFactory</code> implementation will return a list of message streams per topic, then you can delegate these message streams to different threads for concurrent consuming.
+Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn a couple of consuming threads(one thread for one broker) that will concurrently consume messages in target topic in Luxun servers, and put the consumed messages into a blocking queue, <code>MessageStream</code> abstraction is just a wrapper around the blocking queue with additional <code>Iterable</code> support, when upper layer threads concurrently consume on their respective streams, they are actually contenting messages in one blocking queue.</p>
+
+<p><img class="center" src="/images/luxun/concurrent_consuming.png" width="400" height="600"></p>
+
+<p>Advanced consumer has encapsulated the message decoding flow, so when you iterate on the message stream, you will get message in user format directly.</p>
+
+<p>Similar to producer, consumer uses a simple and random policy for distributed consuming, the spawned  threads will continuously check broker for message, if no message available in a certain broker, the corresponding thread will back off till message is available again, this can avoid frequent while fruitless server pull.</p>
+
+<p>When you finish with consuming, call <code>close</code> on the <code>IStreamFactory</code> will stop the underlying consuming threads, then wait the blocking queue to be emptied by upper threads. Call <code>close</code> is a must to avoid message lose.</p>
+
+<p>In case one consumer is not enough to keep up with the speed of producers, several consumer can form a <code>consumer group</code>, in such case, every consumer in the same group will use same <code>group id</code>(or <code>fanout id</code>), and every message will be consumed by one and only one consumer. This is just the <code>consume once semantics</code>.</p>
+
+<p>If different consumers or consumer groups use different <code>group id</code>(or <code>fanout id</code>) to consume messages in same topic, then every consumer(or consumer group) can consume independently, means every message in the topic will go to every consumer(or consume group). This is just the <code>fanout queue semantics</code>.</p>
+
+<p><img class="center" src="/images/luxun/consumer_group.png" width="400" height="600"></p>
+
+<p>Although Luxun only provides two kinds of consumer interface, it does limit user to build more advanced consuming semantics, such as consume by index, transactional consuming, etc, by extending the raw consuming interface provide by Luxun.</p>
 
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
 

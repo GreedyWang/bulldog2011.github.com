@@ -586,6 +586,14 @@ Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simp
 5. Luxun only supports server level partitioning - partition a topic on different servers, while Kafka supports partitioning within a topic. Our performance test show partitioning within a topic has no performance gain, at the same time, it makes design complex.
 
 The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.
+
+# Management & Monitoring
+Luxun is a system software, no fancy UI, management and monitoring are de factor UI of Luxun, also essential parts of Luxun architecture.
+
+In current implementation, management functionality is limited, administrator can only delete useless topic in Luxun broker, in the future, more management functionality will be integrated as needed.
+
+Luxun relies on [JMX](http://en.wikipedia.org/wiki/Java_Management_Extensions) for system metrics monitoring, a list of monitored metrics will be listed in a separate post for operation reference.
+
  
 # Performance
 

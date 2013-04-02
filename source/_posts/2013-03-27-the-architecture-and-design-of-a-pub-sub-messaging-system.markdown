@@ -488,6 +488,92 @@ Async producing does not block calling thread, the calling thread just fire the 
 Although the throughput of sync producing does not compare with async producing, in some situations, sync producing is a preferred mode, for example, in real time event system, speed is a top priority  while throughput is a secondary consideration.
 
 
+# The Design of the Consumer
+
+In current implementation, Luxun provides two kinds of consumers:
+
+### A Simple Consumer
+Simple consumer only supports consuming from one broker, it is just provided for demo, testing, or for user extension, following is the main interface of simple consumer:
+
+{% codeblock SimpleConsumer.java lang:java https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/consumer/SimpleConsumer.java source  %}
+
+public List<MessageList> consume(String topic, long index, int fetchSize)
+
+public List<MessageList> consume(String topic, String fanoutId, int fetchSize);
+
+{% endcodeblock %}
+
+As the interface show, `consume by index` and `consume by fanoutId` are supported, fetchSize setting is used for batch consuming, once the consume succeeds, a list of `MessageList` will be returned, one `MessageList` is one compressed and encoded version of `ProducerData` produced by producer, so before you can get real data in user format, you still need to decode according to the message decode flow described in section above.
+
+### Advanced Consumer
+The advanced consumer provides high-level abstraction to simplify consuming operation, it supports distributed consuming, multi-threads consuming and group consuming features. Below is main interface to create advanced consumer:
+
+{% codeblock IStreamFactory.java lang:java https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/consumer/IStreamFactory.java source  %}
+
+/**
+* Factory interface for streaming consumer
+*
+* @author bulldog
+*
+*/
+public interface IStreamFactory extends Closeable {
+
+/**
+* Create a list of {@link MessageStream} for each topic
+*
+* @param topicThreadNumMap a map of (topic, number of threads/streams) pair
+* @param decoder message decoder
+* @return a map of (topic,list of MessageStream) pair. The number of
+* items in the list is the number of threads/streams. Each MessageStream supports
+* an iterator of messages.
+*/
+<T> Map<String, List<MessageStream<T>>> createMessageStreams(
+            Map<String, Integer> topicThreadNumMap, Decoder<T> decoder);
+    
+/**
+* Create a list of {@link MessageStream} for each topic with default Luxun message decoder
+*
+* @param topicThreadNumMap a map of (topic, number of threads/streams) pair
+* @return a map of (topic,list of MessageStream) pair. The number of
+* items in the list is the number of threads/streams. Each MessageStream supports
+* an iterator of messages.
+*/
+<T> Map<String, List<MessageStream<Message>>> createMessageStreams(
+            Map<String, Integer> topicThreadNumMap);
+
+/**
+* Shut down the consumer
+*/
+public void close() throws IOException;
+}
+
+{% endcodeblock %}
+
+In this interface, the message consumer is abstracted as message stream, to create message streams, you provide a map with :
+
+>* target topic as key
+* number of consuming threads(or streams) as value
+
+The the concrete `IStreamFactory` implementation will return a list of message streams per topic, then you can delegate these message streams to different threads for concurrent consuming.
+Behind the scene, concrete `IStreamFactory` implementation will spawn a couple of consuming threads(one thread for one broker) that will concurrently consume messages in target topic in Luxun servers, and put the consumed messages into a blocking queue, `MessageStream` abstraction is just a wrapper around the blocking queue with additional `Iterable` support, when upper layer threads concurrently consume on their respective streams, they are actually contenting messages in one blocking queue.
+
+{% img center /images/luxun/concurrent_consuming.png 400 600 %}
+
+Advanced consumer has encapsulated the message decoding flow, so when you iterate on the message stream, you will get message in user format directly.
+
+Similar to producer, consumer uses a simple and random policy for distributed consuming, the spawned  threads will continuously check broker for message, if no message available in a certain broker, the corresponding thread will back off till message is available again, this can avoid frequent while fruitless server pull.
+
+When you finish with consuming, call `close` on the `IStreamFactory` will stop the underlying consuming threads, then wait the blocking queue to be emptied by upper threads. Call `close` is a must to avoid message lose.
+
+In case one consumer is not enough to keep up with the speed of producers, several consumer can form a `consumer group`, in such case, every consumer in the same group will use same `group id`(or `fanout id`), and every message will be consumed by one and only one consumer. This is just the `consume once semantics`.
+
+If different consumers or consumer groups use different `group id`(or `fanout id`) to consume messages in same topic, then every consumer(or consumer group) can consume independently, means every message in the topic will go to every consumer(or consume group). This is just the `fanout queue semantics`.
+
+
+{% img center /images/luxun/consumer_group.png 400 600 %}
+
+Although Luxun only provides two kinds of consumer interface, it does limit user to build more advanced consuming semantics, such as consume by index, transactional consuming, etc, by extending the raw consuming interface provide by Luxun.
+
 # Luxun vs Apache Kafka - the Main Differences
 Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:
 >1. Luxun is based on [Memory Mapped file](http://en.wikipedia.org/wiki/Memory-mapped_file), while Kafka is based on filesystem and OS page cache, memory mapped file is a natural bridge between volatile memory and persistent disk, hence it will have better throughput, memory mapped file also has following unique features:

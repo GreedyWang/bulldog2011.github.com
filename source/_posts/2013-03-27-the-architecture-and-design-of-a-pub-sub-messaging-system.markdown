@@ -574,6 +574,16 @@ If different consumers or consumer groups use different `group id`(or `fanout id
 
 Although Luxun only provides two kinds of consumer interface, it does limit user to build more advanced consuming semantics, such as consume by index, transactional consuming, etc, by extending the raw consuming interface provide by Luxun.
 
+# Management & Monitoring
+Luxun is a system software, no fancy UI, management and monitoring are de factor UI of Luxun, also essential parts of Luxun architecture.
+
+In current implementation, management functionality is limited, administrator can only delete useless topic in Luxun broker, in the future, more management functionality will be integrated as needed.
+
+Luxun relies on [JMX](http://en.wikipedia.org/wiki/Java_Management_Extensions) for system metrics monitoring, a list of monitored metrics will be listed in a separate post for operation reference.
+
+# Performance
+To be added.
+
 # Luxun vs Apache Kafka - the Main Differences
 Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:
 >1. Luxun is based on [Memory Mapped file](http://en.wikipedia.org/wiki/Memory-mapped_file), while Kafka is based on filesystem and OS page cache, memory mapped file is a natural bridge between volatile memory and persistent disk, hence it will have better throughput, memory mapped file also has following unique features:
@@ -586,16 +596,6 @@ Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simp
 5. Luxun only supports server level partitioning - partition a topic on different servers, while Kafka supports partitioning within a topic. Our performance test show partitioning within a topic has no performance gain, at the same time, it makes design complex.
 
 The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.
-
-# Management & Monitoring
-Luxun is a system software, no fancy UI, management and monitoring are de factor UI of Luxun, also essential parts of Luxun architecture.
-
-In current implementation, management functionality is limited, administrator can only delete useless topic in Luxun broker, in the future, more management functionality will be integrated as needed.
-
-Luxun relies on [JMX](http://en.wikipedia.org/wiki/Java_Management_Extensions) for system metrics monitoring, a list of monitored metrics will be listed in a separate post for operation reference.
-
- 
-# Performance
 
 
 ##Contributions

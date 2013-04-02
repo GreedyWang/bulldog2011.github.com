@@ -967,6 +967,14 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 
 <p>The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.</p>
 
+<h1>Management &amp; Monitoring</h1>
+
+<p>Luxun is a system software, no fancy UI, management and monitoring are de factor UI of Luxun, also essential parts of Luxun architecture.</p>
+
+<p>In current implementation, management functionality is limited, administrator can only delete useless topic in Luxun broker, in the future, more management functionality will be integrated as needed.</p>
+
+<p>Luxun relies on <a href="http://en.wikipedia.org/wiki/Java_Management_Extensions">JMX</a> for system metrics monitoring, a list of monitored metrics will be listed in a separate post for operation reference.</p>
+
 <h1>Performance</h1>
 
 <h2>Contributions</h2>

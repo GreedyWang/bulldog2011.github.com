@@ -497,7 +497,7 @@ Simple consumer only supports consuming from one broker, it is just provided for
 
 {% codeblock SimpleConsumer.java lang:java https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/consumer/SimpleConsumer.java source  %}
 
-public List<MessageList> consume(String topic, long index, int fetchSize)
+public List<MessageList> consume(String topic, long index, int fetchSize);
 
 public List<MessageList> consume(String topic, String fanoutId, int fetchSize);
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: design | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/design/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-02T18:24:08+08:00</updated>
+  <updated>2013-04-02T18:28:56+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -975,6 +975,18 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 
 <p>Although Luxun only provides two kinds of consumer interface, it does limit user to build more advanced consuming semantics, such as consume by index, transactional consuming, etc, by extending the raw consuming interface provide by Luxun.</p>
 
+<h1>Management &amp; Monitoring</h1>
+
+<p>Luxun is a system software, no fancy UI, management and monitoring are de factor UI of Luxun, also essential parts of Luxun architecture.</p>
+
+<p>In current implementation, management functionality is limited, administrator can only delete useless topic in Luxun broker, in the future, more management functionality will be integrated as needed.</p>
+
+<p>Luxun relies on <a href="http://en.wikipedia.org/wiki/Java_Management_Extensions">JMX</a> for system metrics monitoring, a list of monitored metrics will be listed in a separate post for operation reference.</p>
+
+<h1>Performance</h1>
+
+<p>To be added.</p>
+
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
 
 <p>Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:</p>
@@ -996,16 +1008,6 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 </blockquote>
 
 <p>The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.</p>
-
-<h1>Management &amp; Monitoring</h1>
-
-<p>Luxun is a system software, no fancy UI, management and monitoring are de factor UI of Luxun, also essential parts of Luxun architecture.</p>
-
-<p>In current implementation, management functionality is limited, administrator can only delete useless topic in Luxun broker, in the future, more management functionality will be integrated as needed.</p>
-
-<p>Luxun relies on <a href="http://en.wikipedia.org/wiki/Java_Management_Extensions">JMX</a> for system metrics monitoring, a list of monitored metrics will be listed in a separate post for operation reference.</p>
-
-<h1>Performance</h1>
 
 <h2>Contributions</h2>
 

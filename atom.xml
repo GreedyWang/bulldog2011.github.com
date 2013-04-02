@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-02T17:29:43+08:00</updated>
+  <updated>2013-04-02T17:41:03+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -3951,7 +3951,7 @@ reduce bandwidth and storage usage to an acceptable level. Most of big data like
 <figure class='code'><figcaption><span>SimpleConsumer.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/main/java/com/leansoft/luxun/consumer/SimpleConsumer.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageList</span><span class="o">&gt;</span> <span class="nf">consume</span><span class="o">(</span><span class="n">String</span> <span class="n">topic</span><span class="o">,</span> <span class="kt">long</span> <span class="n">index</span><span class="o">,</span> <span class="kt">int</span> <span class="n">fetchSize</span><span class="o">)</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageList</span><span class="o">&gt;</span> <span class="nf">consume</span><span class="o">(</span><span class="n">String</span> <span class="n">topic</span><span class="o">,</span> <span class="kt">long</span> <span class="n">index</span><span class="o">,</span> <span class="kt">int</span> <span class="n">fetchSize</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageList</span><span class="o">&gt;</span> <span class="nf">consume</span><span class="o">(</span><span class="n">String</span> <span class="n">topic</span><span class="o">,</span> <span class="n">String</span> <span class="n">fanoutId</span><span class="o">,</span> <span class="kt">int</span> <span class="n">fetchSize</span><span class="o">);</span>
 </span></code></pre></td></tr></table></div></figure>

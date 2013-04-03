@@ -11,7 +11,7 @@ description: luxun quick start
 ## Step 0 : Prerequisite
 To use Luxun, you need to have JDK 1.6 or above installed on your operating system, and Luxun supports ***Windows*** and ***Linux*** operation systems.
 
-## Step 1 : 
+## Step 1 : Download Luxun package
 Download a recent stable release by following instructions on [Luxun github site](https://github.com/bulldog2011/luxun), then extract zip file to a local folder.  Current(when this post is written) stable release is [0.6.0](https://github.com/bulldog2011/bulldog-repo/raw/master/repo/releases/com/leansoft/luxun/0.6.0/luxun-0.6.0-bin.zip).
 
 Luxun distribution provides scripts for both Windows and Linux environments, the demo below is made in a windows environment, if you are using Linux environment, please change script accordingly.

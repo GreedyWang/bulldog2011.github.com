@@ -4,7 +4,7 @@
   <title><![CDATA[Category: luxun | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/luxun/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-03T17:55:24+08:00</updated>
+  <updated>2013-04-03T18:01:20+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -701,7 +701,7 @@ The max fetch size parameter is required to support batch consuming - one consum
 </ol>
 </blockquote>
 
-<p>Simplicity is the ultimate design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the sample, future extension is easy because of the flexibility and IDL driven development provided by Thrift.</p>
+<p>Simplicity is the ultimate design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the time, future extension is easy because of the flexibility and IDL driven development provided by Thrift.</p>
 
 <h1>The Design of the Producer</h1>
 

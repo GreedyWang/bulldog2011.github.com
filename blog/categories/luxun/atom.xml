@@ -4,7 +4,7 @@
   <title><![CDATA[Category: luxun | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/luxun/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-02T18:28:56+08:00</updated>
+  <updated>2013-04-03T17:52:07+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,100 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[luxun quick start]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/04/03/luxun-quick-start/"/>
+    <updated>2013-04-03T17:01:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/04/03/luxun-quick-start</id>
+    <content type="html"><![CDATA[<h2>Step 0 : Prerequisite</h2>
+
+<p>To use Luxun, you need to have JDK 1.6 or above installed on your operating system, and Luxun supports <strong><em>Windows</em></strong> and <strong><em>Linux</em></strong> operation systems.</p>
+
+<h2>Step 1 :</h2>
+
+<p>Download a recent stable release by following instructions on <a href="https://github.com/bulldog2011/luxun">Luxun github site</a>, then extract zip file to a local folder.  Current(when this post is written) stable release is <a href="https://github.com/bulldog2011/bulldog-repo/raw/master/repo/releases/com/leansoft/luxun/0.6.0/luxun-0.6.0-bin.zip">0.6.0</a>.</p>
+
+<p>Luxun distribution provides scripts for both Windows and Linux environments, the demo below is made in a windows environment, if you are using Linux environment, please change script accordingly.</p>
+
+<h2>Step 2 : Start the server</h2>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>D:\test\luxun-0.6.0>bin\server.bat conf\server.properties
+</span><span class='line'>2013-04-03 16:36:18.856 INFO  [LuxunServer] Starting luxun server 0.6
+</span><span class='line'>2013-04-03 16:36:18.872 INFO  [LogManager] starting log cleaner every 600000 ms.
+</span><span class='line'>2013-04-03 16:36:18.888 INFO  [ThriftServer] Wating server to start, time waited : 0 s.
+</span><span class='line'>2013-04-03 16:36:19.902 INFO  [ThriftServer] Thrift server started on port : 9092
+</span><span class='line'>2013-04-03 16:36:19.902 INFO  [LuxunServer] Server started.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h2>Step 3 : Send some messages</h2>
+
+<p>Luxun comes with a a command line client that will take input from standard input and send it out as messages to the Luxun server. Each line will be sent as a separate message. The topic <code>demo</code> is created automatically when messages are sent to it. You should see something like this:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>D:\test\luxun-0.6.0>bin\producer-console.bat --broker-list 0:localhost:9092 --topic demo
+</span><span class='line'>Enter your message and exit with empty string.&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;blockquote>&lt;p>Welcome to Luxun
+</span><span class='line'>Message sent : Welcome to Luxun
+</span><span class='line'>鲁迅是一个伟大的中国作家
+</span><span class='line'>Message sent : 鲁迅是一个伟大的中国作家&lt;/p>&lt;/blockquote>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h2>Step 4 : Start a consumer</h2>
+
+<p>Luxun also has a command line consumer that will dump out messages to standard output.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>D:\test\luxun-0.6.0>bin\simple-consumer-console --topic demo --server luxun://localhost:9092&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>[1] 0: Welcome to Luxun
+</span><span class='line'>[2] 1: 鲁迅是一个伟大的中国作家&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>If you have each of the above commands running in a different terminal then you should now be able to type messages into the producer terminal and see them appear in the consumer terminal.</p>
+
+<p>Both of these command line tools have additional options. Running the command with no arguments will display usage information documenting them in more detail.</p>
+
+<p><code>simple-consumer-console</code> is built on Luxun's simple consumer, there is also a similar <code>consumer-console</code> which is built on Luxun's advanced consumer. Both can be used for demo and testing.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[the architecture and design of a publish subscribe messaging system tailored for big data collecting and analytics]]></title>

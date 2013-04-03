@@ -9,7 +9,7 @@
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="I&#8217;ve written a series of tutorials showing to put wsdl driven development into practice on iOS platform using Pico framework. In tutorial 3 and &hellip;">
+  <meta name="description" content="Step 0 : Prerequisite To use Luxun, you need to have JDK 1.6 or above installed on your operating system, and Luxun supports Windows and Linux &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -75,6 +75,110 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
+        <h1 class="entry-title"><a href="/blog/2013/04/03/luxun-quick-start/">Luxun Quick Start</a></h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-03T17:01:00+08:00" pubdate data-updated="true">Apr 3<span>rd</span>, 2013</time>
+        
+         | <a href="/blog/2013/04/03/luxun-quick-start/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>Step 0 : Prerequisite</h2>
+
+<p>To use Luxun, you need to have JDK 1.6 or above installed on your operating system, and Luxun supports <strong><em>Windows</em></strong> and <strong><em>Linux</em></strong> operation systems.</p>
+
+<h2>Step 1 :</h2>
+
+<p>Download a recent stable release by following instructions on <a href="https://github.com/bulldog2011/luxun">Luxun github site</a>, then extract zip file to a local folder.  Current(when this post is written) stable release is <a href="https://github.com/bulldog2011/bulldog-repo/raw/master/repo/releases/com/leansoft/luxun/0.6.0/luxun-0.6.0-bin.zip">0.6.0</a>.</p>
+
+<p>Luxun distribution provides scripts for both Windows and Linux environments, the demo below is made in a windows environment, if you are using Linux environment, please change script accordingly.</p>
+
+<h2>Step 2 : Start the server</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>D:\test\luxun-0.6.0>bin\server.bat conf\server.properties
+</span><span class='line'>2013-04-03 16:36:18.856 INFO  [LuxunServer] Starting luxun server 0.6
+</span><span class='line'>2013-04-03 16:36:18.872 INFO  [LogManager] starting log cleaner every 600000 ms.
+</span><span class='line'>2013-04-03 16:36:18.888 INFO  [ThriftServer] Wating server to start, time waited : 0 s.
+</span><span class='line'>2013-04-03 16:36:19.902 INFO  [ThriftServer] Thrift server started on port : 9092
+</span><span class='line'>2013-04-03 16:36:19.902 INFO  [LuxunServer] Server started.</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Step 3 : Send some messages</h2>
+
+<p>Luxun comes with a a command line client that will take input from standard input and send it out as messages to the Luxun server. Each line will be sent as a separate message. The topic <code>demo</code> is created automatically when messages are sent to it. You should see something like this:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>D:\test\luxun-0.6.0>bin\producer-console.bat --broker-list 0:localhost:9092 --topic demo
+</span><span class='line'>Enter your message and exit with empty string.
+</span><span class='line'>> Welcome to Luxun
+</span><span class='line'>Message sent : Welcome to Luxun
+</span><span class='line'>> 鲁迅是一个伟大的中国作家
+</span><span class='line'>Message sent : 鲁迅是一个伟大的中国作家
+</span><span class='line'>></span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Step 4 : Start a consumer</h2>
+
+<p>Luxun also has a command line consumer that will dump out messages to standard output.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>D:\test\luxun-0.6.0>bin\simple-consumer-console --topic demo --server luxun://localhost:9092
+</span><span class='line'>
+</span><span class='line'>[1] 0: Welcome to Luxun
+</span><span class='line'>[2] 1: 鲁迅是一个伟大的中国作家</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If you have each of the above commands running in a different terminal then you should now be able to type messages into the producer terminal and see them appear in the consumer terminal.</p>
+
+<p>Both of these command line tools have additional options. Running the command with no arguments will display usage information documenting them in more detail.</p>
+
+<p><code>simple-consumer-console</code> is built on Luxun&#8217;s simple consumer, there is also a similar <code>consumer-console</code> which is built on Luxun&#8217;s advanced consumer. Both can be used for demo and testing.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -518,51 +622,6 @@ Suppose we have a queue for log collecting, at the backend, we have two(or more)
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/">Schema Driven Web Service Client Development on Android, Part 2: eBay Search App</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-02-19T20:47:00+08:00" pubdate data-updated="true">Feb 19<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This is the second part of my schema driven web service client development on Android series, in <a href="http://bulldog2011.github.com/blog/2013/02/17/schema-driven-on-android-part-1-hello-ebay-finding/">part one</a>, I introduced the blueprint of scheam driven development on Android, then I created a web service client proxy for eBay Finding API and built a minimum App as demo. In this second part, I will continue to create a functional eBay search app on Android by leveraging the proxy created in part one.</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/02/19/schema-driven-on-android-part-2-ebay-search/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -579,7 +638,7 @@ Suppose we have a queue for log collecting, at the backend, we have two(or more)
     <li class='category'><a href='/blog/categories/big-queue/'>big queue (7)</a></li>
 <li class='category'><a href='/blog/categories/design/'>design (3)</a></li>
 <li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
-<li class='category'><a href='/blog/categories/luxun/'>luxun (1)</a></li>
+<li class='category'><a href='/blog/categories/luxun/'>luxun (2)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
 <li class='category'><a href='/blog/categories/nano/'>nano (9)</a></li>
 <li class='category'><a href='/blog/categories/pico/'>pico (7)</a></li>
@@ -589,6 +648,10 @@ Suppose we have a queue for log collecting, at the backend, we have two(or more)
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/04/03/luxun-quick-start/">luxun quick start</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to/">pico and ebay trading api integration how to</a>
@@ -604,10 +667,6 @@ Suppose we have a queue for log collecting, at the backend, we have two(or more)
     
       <li class="post">
         <a href="/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">Pico Tutorial 3 - Hello eBay Finding</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/03/28/pico-tutorial-2-a-currency-converter-sample/">Pico Tutorial 2 - a Currency Converter Sample</a>
       </li>
     
   </ul>

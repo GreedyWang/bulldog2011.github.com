@@ -4,7 +4,7 @@
   <title><![CDATA[Category: design | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/design/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-08T16:06:32+08:00</updated>
+  <updated>2013-04-08T16:07:18+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -973,7 +973,7 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 
 <p><img class="center" src="/images/luxun/consumer_group.png" width="400" height="600"></p>
 
-<p>Although Luxun only provides two kinds of consumer interface, it does limit user to build more advanced consuming semantics, such as consume by index, transactional consuming, etc, by extending the raw consuming interface provide by Luxun.</p>
+<p>Although Luxun only provides two kinds of consumer interface, it does not limit user to build more advanced consuming semantics, such as consume by index, transactional consuming, etc, by extending the raw consuming interface provide by Luxun.</p>
 
 <h1>Management &amp; Monitoring</h1>
 

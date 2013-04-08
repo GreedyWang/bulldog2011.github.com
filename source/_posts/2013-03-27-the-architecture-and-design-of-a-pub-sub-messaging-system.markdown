@@ -572,7 +572,7 @@ If different consumers or consumer groups use different `group id`(or `fanout id
 
 {% img center /images/luxun/consumer_group.png 400 600 %}
 
-Although Luxun only provides two kinds of consumer interface, it does limit user to build more advanced consuming semantics, such as consume by index, transactional consuming, etc, by extending the raw consuming interface provide by Luxun.
+Although Luxun only provides two kinds of consumer interface, it does not limit user to build more advanced consuming semantics, such as consume by index, transactional consuming, etc, by extending the raw consuming interface provide by Luxun.
 
 # Management & Monitoring
 Luxun is a system software, no fancy UI, management and monitoring are de factor UI of Luxun, also essential parts of Luxun architecture.

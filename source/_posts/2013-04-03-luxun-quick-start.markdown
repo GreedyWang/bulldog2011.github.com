@@ -506,6 +506,59 @@ public class LogEventDecoder implements Decoder<LogEvent> {
 
 {% endcodeblock %}
 
+####Consume messages with different fanout id
+
+{% codeblock SimpleDemo.java lang:java https://github.com/bulldog2011/luxun/blob/master/src/test/java/com/leansoft/luxun/quickstart/SimpleDemo.java source %}
+
+	@Test
+	public void consumeMessageWithDifferentFanoutId() throws Exception {
+		Properties props = new Properties();
+		props.put("serializer.class", StringEncoder.class.getName());
+		props.put("broker.list", broker1);
+		
+		ProducerConfig config = new ProducerConfig(props);
+		Producer<String, String> producer = new Producer<String, String>(config);
+		
+		for(int i = 0; i < 100; i++) {
+			ProducerData<String, String> data = new ProducerData<String, String>("test-topic", "test-message" + i);
+			producer.send(data);
+		}
+		
+		producer.close(); // finish with the producer
+		
+		// consume by different fanout id independently
+		String fanoutId = "group-a";
+		List<MessageList> listOfMessageList = simpleConsumer1.consume("test-topic", fanoutId, 10000);
+		assertTrue(listOfMessageList.size() == 100);
+		for(int i = 0; i < 100; i++) {
+			MessageList messageList = listOfMessageList.get(i);
+			assertTrue(messageList.size() == 1);
+			Message message = messageList.get(0);
+			assertEquals("test-message" + i, new String(message.getBytes()));
+		}
+		
+		fanoutId = "group-b";
+		listOfMessageList = simpleConsumer1.consume("test-topic", fanoutId, 10000);
+		assertTrue(listOfMessageList.size() == 100);
+		for(int i = 0; i < 100; i++) {
+			MessageList messageList = listOfMessageList.get(i);
+			assertTrue(messageList.size() == 1);
+			Message message = messageList.get(0);
+			assertEquals("test-message" + i, new String(message.getBytes()));
+		}
+		
+		fanoutId = "group-c";
+		listOfMessageList = simpleConsumer1.consume("test-topic", fanoutId, 10000);
+		assertTrue(listOfMessageList.size() == 100);
+		for(int i = 0; i < 100; i++) {
+			MessageList messageList = listOfMessageList.get(i);
+			assertTrue(messageList.size() == 1);
+			Message message = messageList.get(0);
+			assertEquals("test-message" + i, new String(message.getBytes()));
+		}
+	}
+
+{% endcodeblock %}
 
 ## Step 6 : Study advanced demo
 You can find the source of an advanced demo [here](https://github.com/bulldog2011/luxun/blob/master/src/test/java/com/leansoft/luxun/quickstart/AdvancedDemo.java), this demo shows:
@@ -513,3 +566,22 @@ You can find the source of an advanced demo [here](https://github.com/bulldog201
 2. Multiple threads concurrent producing and consuming
 3. The use of `StreamFactory` to create advanced stream style consumers
 4. Group consuming
+
+Below is a figure vividly show the demo scenario:
+{% img center /images/luxun/demo.png 400 600 %}
+
+>1. There are two brokers.
+2. There are two topics, topic `star` and topic `moon`.
+3. Two topic `star` producer threads(marked as green) will produce topic `star` messages to two brokers.
+4. Four topic `moon` producer threads(marked as blue) will produce topic `moon` messages to two brokers.
+5. There are two consumer groups.
+6. In consumer group A, there are two topic `star` consumer threads(marked as green) and one topic `moon` consumer thread(marked as blue).
+7. In consume group B, there are four topic `star` consumer threads(marked as green) and two topic `moon` consumer threads(marked as blue).
+
+Within same consumer group, message for a topic will be consumed by one and only one consumer, for example, in consumer group B, although there are four topic `star` consumers, every topic `star` message can only be consumed by exact one topic `star` consumer, this is just the `consume once` queue semantics.
+
+Among different consumer groups, message for a topic will be consumed by each consumer group, for example, both `star` consumers in consumer group A and group B will get their respective topic `star` message copy, this is just the `fanout` queue semantics.
+
+
+
+

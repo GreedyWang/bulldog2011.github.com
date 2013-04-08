@@ -965,6 +965,105 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
+<h4>Consume messages with different fanout id</h4>
+
+<figure class='code'><figcaption><span>SimpleDemo.java </span><a href='https://github.com/bulldog2011/luxun/blob/master/src/test/java/com/leansoft/luxun/quickstart/SimpleDemo.java'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'> <span class="nd">@Test</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">consumeMessageWithDifferentFanoutId</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">Properties</span> <span class="n">props</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Properties</span><span class="o">();</span>
+</span><span class='line'>      <span class="n">props</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;serializer.class&quot;</span><span class="o">,</span> <span class="n">StringEncoder</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+</span><span class='line'>      <span class="n">props</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;broker.list&quot;</span><span class="o">,</span> <span class="n">broker1</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">ProducerConfig</span> <span class="n">config</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ProducerConfig</span><span class="o">(</span><span class="n">props</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">Producer</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">producer</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Producer</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;(</span><span class="n">config</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="n">ProducerData</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">data</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ProducerData</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;(</span><span class="s">&quot;test-topic&quot;</span><span class="o">,</span> <span class="s">&quot;test-message&quot;</span> <span class="o">+</span> <span class="n">i</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">producer</span><span class="o">.</span><span class="na">send</span><span class="o">(</span><span class="n">data</span><span class="o">);</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">producer</span><span class="o">.</span><span class="na">close</span><span class="o">();</span> <span class="c1">// finish with the producer</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="c1">// consume by different fanout id independently</span>
+</span><span class='line'>      <span class="n">String</span> <span class="n">fanoutId</span> <span class="o">=</span> <span class="s">&quot;group-a&quot;</span><span class="o">;</span>
+</span><span class='line'>      <span class="n">List</span><span class="o">&lt;</span><span class="n">MessageList</span><span class="o">&gt;</span> <span class="n">listOfMessageList</span> <span class="o">=</span> <span class="n">simpleConsumer1</span><span class="o">.</span><span class="na">consume</span><span class="o">(</span><span class="s">&quot;test-topic&quot;</span><span class="o">,</span> <span class="n">fanoutId</span><span class="o">,</span> <span class="mi">10000</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">assertTrue</span><span class="o">(</span><span class="n">listOfMessageList</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">==</span> <span class="mi">100</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="n">MessageList</span> <span class="n">messageList</span> <span class="o">=</span> <span class="n">listOfMessageList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">assertTrue</span><span class="o">(</span><span class="n">messageList</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">==</span> <span class="mi">1</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">Message</span> <span class="n">message</span> <span class="o">=</span> <span class="n">messageList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">assertEquals</span><span class="o">(</span><span class="s">&quot;test-message&quot;</span> <span class="o">+</span> <span class="n">i</span><span class="o">,</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">getBytes</span><span class="o">()));</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">fanoutId</span> <span class="o">=</span> <span class="s">&quot;group-b&quot;</span><span class="o">;</span>
+</span><span class='line'>      <span class="n">listOfMessageList</span> <span class="o">=</span> <span class="n">simpleConsumer1</span><span class="o">.</span><span class="na">consume</span><span class="o">(</span><span class="s">&quot;test-topic&quot;</span><span class="o">,</span> <span class="n">fanoutId</span><span class="o">,</span> <span class="mi">10000</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">assertTrue</span><span class="o">(</span><span class="n">listOfMessageList</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">==</span> <span class="mi">100</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="n">MessageList</span> <span class="n">messageList</span> <span class="o">=</span> <span class="n">listOfMessageList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">assertTrue</span><span class="o">(</span><span class="n">messageList</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">==</span> <span class="mi">1</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">Message</span> <span class="n">message</span> <span class="o">=</span> <span class="n">messageList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">assertEquals</span><span class="o">(</span><span class="s">&quot;test-message&quot;</span> <span class="o">+</span> <span class="n">i</span><span class="o">,</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">getBytes</span><span class="o">()));</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">fanoutId</span> <span class="o">=</span> <span class="s">&quot;group-c&quot;</span><span class="o">;</span>
+</span><span class='line'>      <span class="n">listOfMessageList</span> <span class="o">=</span> <span class="n">simpleConsumer1</span><span class="o">.</span><span class="na">consume</span><span class="o">(</span><span class="s">&quot;test-topic&quot;</span><span class="o">,</span> <span class="n">fanoutId</span><span class="o">,</span> <span class="mi">10000</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">assertTrue</span><span class="o">(</span><span class="n">listOfMessageList</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">==</span> <span class="mi">100</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="n">MessageList</span> <span class="n">messageList</span> <span class="o">=</span> <span class="n">listOfMessageList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">assertTrue</span><span class="o">(</span><span class="n">messageList</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">==</span> <span class="mi">1</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">Message</span> <span class="n">message</span> <span class="o">=</span> <span class="n">messageList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>          <span class="n">assertEquals</span><span class="o">(</span><span class="s">&quot;test-message&quot;</span> <span class="o">+</span> <span class="n">i</span><span class="o">,</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="na">getBytes</span><span class="o">()));</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
 <h2>Step 6 : Study advanced demo</h2>
 
 <p>You can find the source of an advanced demo <a href="https://github.com/bulldog2011/luxun/blob/master/src/test/java/com/leansoft/luxun/quickstart/AdvancedDemo.java">here</a>, this demo shows:</p>
@@ -976,6 +1075,24 @@
 <li>Group consuming</li>
 </ol>
 </blockquote>
+
+<p>Below is a figure vividly show the demo scenario:
+<img class="center" src="/images/luxun/demo.png" width="400" height="600"></p>
+
+<blockquote><ol>
+<li>There are two brokers.</li>
+<li>There are two topics, topic <code>star</code> and topic <code>moon</code>.</li>
+<li>Two topic <code>star</code> producer threads(marked as green) will produce topic <code>star</code> messages to two brokers.</li>
+<li>Four topic <code>moon</code> producer threads(marked as blue) will produce topic <code>moon</code> messages to two brokers.</li>
+<li>There are two consumer groups.</li>
+<li>In consumer group A, there are two topic <code>star</code> consumer threads(marked as green) and one topic <code>moon</code> consumer thread(marked as blue).</li>
+<li>In consume group B, there are four topic <code>star</code> consumer threads(marked as green) and two topic <code>moon</code> consumer threads(marked as blue).</li>
+</ol>
+</blockquote>
+
+<p>Within same consumer group, message for a topic will be consumed by one and only one consumer, for example, in consumer group B, although there are four topic <code>star</code> consumers, every topic <code>star</code> message can only be consumed by exact one topic <code>star</code> consumer, this is just the <code>consume once</code> queue semantics.</p>
+
+<p>Among different consumer groups, message for a topic will be consumed by each consumer group, for example, both <code>star</code> consumers in consumer group A and group B will get their respective topic <code>star</code> message copy, this is just the <code>fanout</code> queue semantics.</p>
 </div>
 
 

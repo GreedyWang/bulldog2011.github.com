@@ -568,10 +568,10 @@ You can find the source of an advanced demo [here](https://github.com/bulldog201
 4. Group consuming
 
 Below is a figure vividly show the demo scenario:
-{% img center /images/luxun/demo.png 400 600 %}
+{% img center /images/luxun/demo.png 600 800 %}
 
 >1. There are two brokers.
-2. There are two topics, topic `star` and topic `moon`.
+2. There are two topics, topic `star`(marked as green) and topic `moon`(marked as blue), in each broker.
 3. Two topic `star` producer threads(marked as green) will produce topic `star` messages to two brokers.
 4. Four topic `moon` producer threads(marked as blue) will produce topic `moon` messages to two brokers.
 5. There are two consumer groups.

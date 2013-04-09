@@ -4,7 +4,7 @@
   <title><![CDATA[Category: design | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/design/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-08T16:20:06+08:00</updated>
+  <updated>2013-04-09T15:40:45+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -956,20 +956,32 @@ reduce bandwidth and storage usage to an acceptable level. Most of big data like
 </ul>
 </blockquote>
 
-<p>The the concrete <code>IStreamFactory</code> implementation will return a list of message streams per topic, then you can delegate these message streams to different threads for concurrent consuming.
-Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn a couple of consuming threads(one thread for one broker) that will concurrently consume messages in target topic in Luxun servers, and put the consumed messages into a blocking queue, <code>MessageStream</code> abstraction is just a wrapper around the blocking queue with additional <code>Iterable</code> support, when upper layer threads concurrently consume on their respective streams, they are actually contenting messages in one blocking queue.</p>
+<p>The concrete <code>IStreamFactory</code> implementation will return a list of message streams per topic, then you can delegate these message streams to different threads for concurrent consuming.
+Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn a couple of fetcher threads(one thread for one broker) that will concurrently fetch messages in target topic in Luxun servers, and put the fetched messages into a blocking queue, <code>MessageStream</code> abstraction is just a wrapper around the blocking queue with additional <code>Iterable</code> support, when upper layer threads concurrently consume on their respective streams, they are actually contenting messages in one blocking queue.</p>
 
 <p><img class="center" src="/images/luxun/concurrent_consuming.png" width="400" height="600"></p>
 
 <p>Advanced consumer has encapsulated the message decoding flow, so when you iterate on the message stream, you will get message in user format directly.</p>
 
-<p>Similar to producer, consumer uses a simple and random policy for distributed consuming, the spawned  threads will continuously check broker for message, if no message available in a certain broker, the corresponding thread will back off till message is available again, this can avoid frequent while fruitless server pull.</p>
+<p>Similar to producer, consumer uses a simple and random policy for distributed consuming, the spawned  fetcher threads will continuously check broker for message, if no message available in a certain broker, the corresponding thread will back off till message is available again, this can avoid frequent while fruitless server pull.</p>
 
-<p>When you finish with consuming, call <code>close</code> on the <code>IStreamFactory</code> will stop the underlying consuming threads, then wait the blocking queue to be emptied by upper threads. Call <code>close</code> is a must to avoid message lose.</p>
+<p>When you finish with consuming, call <code>close</code> on the <code>IStreamFactory</code> will stop the underlying fetcher threads, then wait the blocking queue to be emptied by upper consuming threads. Call <code>close</code> is a must to avoid message lose.</p>
 
-<p>In case one consumer is not enough to keep up with the speed of producers, several consumer can form a <code>consumer group</code>, in such case, every consumer in the same group will use same <code>group id</code>(or <code>fanout id</code>), and every message will be consumed by one and only one consumer. This is just the <code>consume once semantics</code>.</p>
+<p>In case one consumer is not enough to keep up with the speed of producers, several consumer can form a <code>consumer group</code>, in such case, every consumer in the same group will use same <code>group id</code>(or <code>fanout id</code>), and every message in a topic will be consumed by one and only one consumer. This is just the <code>consume once semantics</code>.</p>
 
-<p>If different consumers or consumer groups use different <code>group id</code>(or <code>fanout id</code>) to consume messages in same topic, then every consumer(or consumer group) can consume independently, means every message in the topic will go to every consumer(or consume group). This is just the <code>fanout queue semantics</code>.</p>
+<p>If different consumers or consumer groups use different <code>group id</code>(or <code>fanout id</code>) to consume messages in same topic, then every consumer(or consumer group) can consume independently, means every message in a topic will go to every consumer(or consume group). This is just the <code>fanout queue semantics</code>.</p>
+
+<p>Below is a figure vividly shows the <code>consume once</code> queue, <code>fanout</code> queue and <code>group consuming</code> semantics, in the figure:</p>
+
+<blockquote><ol>
+<li>There is a topic called <code>moon</code> distributed on four Luxun brokers.</li>
+<li>There are two topic <code>moon</code> consuming groups, group A and group B.</li>
+<li>In group A, there are four topic <code>moon</code> consumers.</li>
+<li>In group B, there are six topic <code>moon</code> consumers.</li>
+</ol>
+</blockquote>
+
+<p>Within a consumer group, a message in a topic can only be consumed by exact one consumer, for example, in consumer group A, message marked red can only be consumed by exact on consumer. Among different consumer groups, a message can be consumed by respective groups independently, for example, both group A and B will receive a separate copy of message marked green.</p>
 
 <p><img class="center" src="/images/luxun/consumer_group.png" width="400" height="600"></p>
 
@@ -1002,7 +1014,7 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 </li>
 <li>Luxun leveraged <a href="http://thrift.apache.org/">Thrift RPC</a> as communication layer, while Kafka built its custom NIO communication layer and messaging protocol, custom NIO layer may have better performance, while Thrift makes generating communication infrastructure and cross-language clients(producer or consumer) fairy simple, this is a typical maintainability over performance design decision.</li>
 <li>Luxun message consuming is index(array like) based, while Kafka message consuming is offset based, we believe index access mode can simplify design and can separate error domain better than offset.</li>
-<li>Luxun uses simple and random distribution mechanism for scalability, similar to Kestrel, each server handles a set of reliable, ordered message queues. When you put a cluster of these server together, with no cross communication, and pick a server at random whenever you do a <code>produce</code> or <code>consume</code>, you end up with a reliable, loosely ordered message queue(in many situations, loose ordering is sufficient). On the other hand, Kafka relies on Zookeeper for distributed coordination, We believe Zookeeper is still too heavy-weight for small to medium sized companies(the main targets of Luxun), and the learning curve is still steep for average developers. Of cause, Luxun has extension point left for future possible Zookeeper integration.</li>
+<li>Luxun uses simple and random distribution mechanism for scalability, similar to <a href="https://github.com/robey/kestrel">Kestrel</a>, each server handles a set of reliable, ordered message queues. When you put a cluster of these server together, with no cross communication, and pick a server at random whenever you do a <code>produce</code> or <code>consume</code>, you end up with a reliable, loosely ordered message queue(in many situations, loose ordering is sufficient). On the other hand, Kafka relies on Zookeeper for distributed coordination, We believe Zookeeper is still too heavy-weight for small to medium sized companies(the main targets of Luxun), and the learning curve is still steep for average developers. Of cause, Luxun has extension point left for future possible Zookeeper integration.</li>
 <li>Luxun only supports server level partitioning - partition a topic on different servers, while Kafka supports partitioning within a topic. Our performance test show partitioning within a topic has no performance gain, at the same time, it makes design complex.</li>
 </ol>
 </blockquote>

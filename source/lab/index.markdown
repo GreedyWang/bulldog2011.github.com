@@ -15,7 +15,7 @@ Below are the specs of the machine I am using for my daily development and bench
 * ASUS P8B75-V Board  
 * Seagate 2TB 7200RPM 64MB Cache SATA3(ST2000DM001)   
 * OCZ Vertex 4 128GB (VTX4-25SAT3-128G)  
-* Windows 7 Ultimate OS and CentOS 6.2 dual boot, Win7 installed on HD, CentOS installed on SSD.  
+* Windows 7 Ultimate OS + CentOS 6.3 dual boot, Win7 installed on HD, CentOS installed on SSD.  
 * Java(TM) SE Runtime Environment (build 1.6.0_38-b05)  
 * Java HotSpot(TM) 64-Bit Server VM (build 20.13-b02, mixed mode)  
 
@@ -38,7 +38,7 @@ This is a `Hackintosh` I bought from an online computer store.
 >* Intel(R) Core(TM) i5-2450M CPU @ 2.50GHz
 * 10(2 + 8)GB DDR3-1333MHz Memory
 * 320GB 5400RPM HD
-* Windows 7 Ultimate OS
+* Windows 7 Ultimate OS + Ubuntu 12.10 dual boot
 * Java(TM) SE Runtime Environment (build 1.6.0_38-b05)  
 * Java HotSpot(TM) 64-Bit Server VM (build 20.13-b02, mixed mode)  
 

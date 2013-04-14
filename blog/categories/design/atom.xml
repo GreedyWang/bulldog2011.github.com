@@ -4,7 +4,7 @@
   <title><![CDATA[Category: design | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/design/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-13T17:01:49+08:00</updated>
+  <updated>2013-04-14T16:11:08+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -1019,7 +1019,7 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 </ol>
 </blockquote>
 
-<p>The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.</p>
+<p>The difference above is just difference, it's not to say that one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.</p>
 
 <h2>Contributions</h2>
 

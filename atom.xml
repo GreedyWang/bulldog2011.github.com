@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-14T16:11:08+08:00</updated>
+  <updated>2013-04-15T10:51:37+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,74 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[WSDL Driven Development on Android - the Big Picture]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture/"/>
+    <updated>2013-04-15T10:14:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture</id>
+    <content type="html"><![CDATA[<p>WSDL driven development is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are leveraged by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxies can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and service invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only dramatically reduce initial development cost, but reduce long term maintenance cost.</p>
+
+<!--more-->
+
+
+<p>Although nowadays there is a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it&#8217;s very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
+
+<p>Can WSDL driven development be put into practice on Android platform? Yes, now with <a href="https://github.com/bulldog2011/nano">Nano Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for Android</a>, you can also leverage WSDL driven development technology on iOS platform, dramatically improving your application development speed.</p>
+
+<p>Let&#8217;s see the big picture:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano/big_picture.png" width="600" height="800"></p>
+
+<p>The picture above is the blueprint of WSDL driven development on Android. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can&#8217;t be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/nano">Nano Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your Android app, your app issues request on service proxy, the proxy passes the request to the Nano runtime framework which will delegate the object to XML/SOAP marshalling work to Nano binding framework then send serialized XML/SOAP request to external service through <a href="https://github.com/loopj/android-async-http">loopj async HTTP client</a> component, when an XML/SOAP response is received by the HTTP client component, the Nano runtime framework will also delegate the XML/SOAP to object unmarshalling work to Nano binding framework and passes the deserialized response object to the proxy which will eventually return the response object back to the calling app.</p>
+
+<p>We used the synchronous flow in the picture just for simple demonstration, the real call flow in the runtime is asynchronous, by leveraging Java <code>Thread</code> and <code>ThreadPoolExecutor</code>, in order not to block main UI thread.</p>
+
+<p>The Nano binding framework is the core of the Nano runtime, the real object<->xml binding magic happens here, below is the architecture of the binding runtime:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/pico/binding.png" width="500" height="600"></p>
+
+<p>There are four main components:</p>
+
+<blockquote><ol>
+<li><strong><em>Marshaller</em></strong> - responsible for object to xml marshalling</li>
+<li><strong><em>Unmarshaller</em></strong> - responsible for xml to object unmarshalling</li>
+<li><strong><em>BindingSchema</em></strong> - store object<->xml mapping information, used by both Marshaller and Unmarshaller to guide the marshalling/unmarshalling process at runtime, schema is extracted from class annotations and is cached for better performance.</li>
+<li><strong><em>Converter</em></strong> - type converter for primitive types or frequently used types.</li>
+</ol>
+</blockquote>
+
+<p>The marshalling/unmarshalling algorithm is recursive in nature:</p>
+
+<blockquote><ol>
+<li>for field of primitive or frequently used type, use corresponding converter to convert the field directly.</li>
+<li>for field of object type, convert the fields of the object one by one and recursively.</li>
+</ol>
+</blockquote>
+
+<p>The code generator component is based on <a href="http://docs.oracle.com/javase/6/docs/technotes/tools/share/wsimport.html">JAX-WS Wsimport</a> and <a href="http://freemarker.org/">Freemarker</a> template engine, see the whole architecture below:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/pico/codegen-arch.png" width="600" height="750"></p>
+
+<p>The whole architecture can be summarized as <strong><em>Model + Template = Code</em></strong>, code generation flow as following:</p>
+
+<blockquote><ol>
+<li>WSDL doc is first fed into Wsimport and a JAXB/JAX-WS model is generated.</li>
+<li>The JAXB/JAX-WS model is then transformed into a language independent intermediate codegen model.</li>
+<li>The codegen model and corresponding target language templates(Objective-C or Android) are then fed into the Freemarker template engine.</li>
+<li>The Freemarker template engine will eventually transform the in-memory model into target code, guided by the templates.</li>
+</ol>
+</blockquote>
+
+<p>As I know, there is no existing WSDL code generation tool tailored for Android platform, the mwsc code generator just filled this gap, it is backed by JAX-WS Wsimport, which is mature and stable, and can recognize most standard WSDL/Schema components, by delegating the most tricky and complex wsdl model transformation task to Wsimport, the mwsc code generator solved the WSDL to Android Java(or Objective-C) problem in a simple while elegant way.</p>
+
+<p>The mwsc code generator not only generates simple bean classes from WSDL/Schema, but also generates the XML<->object mapping information(schema) and records these information in the class as Java annotations, the meta-data will later be leveraged by Nano binding framework to guide the XML<->Object transformation at runtime.</p>
+
+<p>With a generic code generation tool and a generic web service client runtime, web service based app development on Android platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile Android app development.</p>
+
+<p>In later posts, I will show how to put WSDL driven Android app development into practice in a series of tutorials, just stay tuned.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[luxun quick start]]></title>
@@ -5126,26 +5194,26 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[wsdl driven development on iOS - the big picture]]></title>
+    <title type="html"><![CDATA[WSDL Driven Development on iOS - the Big Picture]]></title>
     <link href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/"/>
     <updated>2013-03-25T20:03:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture</id>
-    <content type="html"><![CDATA[<p>WSDL driven development is is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxy can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only significantly reduce initial development cost, but reduce long term maintenance cost.</p>
+    <content type="html"><![CDATA[<p>WSDL driven development is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxies can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and service invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only dramatically reduce initial development cost, but reduce long term maintenance cost.</p>
 
 <!--more-->
 
 
 <p>Although nowadays there is a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it&#8217;s very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
 
-<p>Can WSDL driven development be put into practice on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, tremendously improving your application development speed.</p>
+<p>Can WSDL driven development be put into practice on iOS platform? Yes, now with <a href="https://github.com/bulldog2011/pico">Pico Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for iOS</a>, you can also leverage WSDL driven development technology on iOS platform, dramatically improving your application development speed.</p>
 
 <p>Let&#8217;s see the big picture:</p>
 
 <p><img class="center" src="http://bulldog2011.github.com/images/pico/big_picture.png" width="600" height="800"></p>
 
-<p>The picture above is the blueprint of WSDL driven development on iOS. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can&#8217;t be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/pico">Pico Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your iOS app, your app issues request on service proxy, the proxy passes the request to the Pico runtime framework which will delegate the object to XML/SOAP marshalling work to Pico binding framework then send XML/SOAP request to external service through AFNetworking HTTP client component, when an XML/SOAP response is received by the HTTP client component, the Pico runtime framework will also delegate the XML/SOAP to object unmarshalling work to Pico binding framework and passes the response object to the proxy which will eventually return the response object back to the calling app.</p>
+<p>The picture above is the blueprint of WSDL driven development on iOS. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can&#8217;t be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/pico">Pico Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your iOS app, your app issues request on service proxy, the proxy passes the request to the Pico runtime framework which will delegate the object to XML/SOAP marshalling work to Pico binding framework then send serialized XML/SOAP request to external service through <a href="https://github.com/AFNetworking/AFNetworking">AFNetworking HTTP client</a> component, when an XML/SOAP response is received by the HTTP client component, the Pico runtime framework will also delegate the XML/SOAP to object unmarshalling work to Pico binding framework and passes the deserialized response object to the proxy which will eventually return the response object back to the calling app.</p>
 
-<p>We used the synchronous flow in the picture just for convenient demonstration, the real call flow in the runtime is asynchronous, by leveraging NSOperation, NSOperationQueue and GCD, in order not to block main UI thread.</p>
+<p>We used the synchronous flow in the picture just for simple demonstration, the real call flow in the runtime is asynchronous, by leveraging <code>NSOperation</code>, <code>NSOperationQueue</code> and <code>GCD</code>, in order not to block main UI thread.</p>
 
 <p>The Pico binding framework is the core of the Pico runtime, the real object<->xml binding magic happens here, below is the architecture of the binding runtime:</p>
 
@@ -5164,8 +5232,8 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 <p>The marshalling/unmarshalling algorithm is recursive in nature:</p>
 
 <blockquote><ol>
-<li>for fields of primitive or frequently used types, use corresponding converter to convert the field directly.</li>
-<li>for fields of object type, convert the fields of the object one by one and recursively.</li>
+<li>for field of primitive or frequently used type, use corresponding converter to convert the field directly.</li>
+<li>for field of object type, convert the fields of the object one by one and recursively.</li>
 </ol>
 </blockquote>
 
@@ -5185,7 +5253,7 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 
 <p>There are other WSDL to Objective-C code generation tools, like <a href="http://code.google.com/p/wsdl2objc/">wsdl2objc</a> and <a href="http://sudzc.com/">SudzC</a>, it&#8217;s ok to use these tools to generate code from simple wsdl, but when fed with an industry level wsdl like eBay or Amazon wsdl, seems these tools will always break. Unlike these simple tools, the mwsc code generator provided by Pico framework is backed by JAX-WS Wsimport, which is mature and stable, and can recognize most standard WSDL/Schema components, by delegating the most tricky and complex wsdl model transformation task to Wsimport, the mwsc code generator solved the WSDL to Objective-C(or Android Java) problem in a simple while elegant way.</p>
 
-<p>The mwsc code generator not only generates simple bean classes from WSDL/Schema, but also generates the XML<->object mapping information(schema) and record these information in the class as meta-data, the meta-data will later be leveraged by Pico binding framework to guide the XML<->Object transformation at runtime.</p>
+<p>The mwsc code generator not only generates simple bean classes from WSDL/Schema, but also generates the XML<->object mapping information(schema) and records these information in the class as meta-data, the meta-data will later be leveraged by Pico binding framework to guide the XML<->Object transformation at runtime.</p>
 
 <p>With a generic code generation tool and a generic web service client runtime, web service based app development on iOS platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile iOS app development.</p>
 
@@ -9293,207 +9361,6 @@ Note that when you read back, you need to explictly tell Nano the target class n
 <h3>5. Now Your Turn</h3>
 
 <p>The usage of Nano can&#8217;t be simpler, now it&#8217;s your turn to try Nano framework, if necessary, you can find the whole source of this tutorial <a href="https://github.com/bulldog2011/nano/tree/master/sample/helloworld">here</a>.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Producing and consuming 4TB log daily on one commodity machine]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/01/28/log-collecting/"/>
-    <updated>2013-01-28T13:10:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/01/28/log-collecting</id>
-    <content type="html"><![CDATA[<p>I have built a <a href="https://github.com/bulldog2011/bigqueue">big queue</a>, and I have <a href="http://bulldog2011.github.com/blog/2013/01/27/thrift-queue/">turned it into a Thrift based queue service</a>, in this post, I will show you how to collect logs using this queue service, also, I will show some performance number to let you know the capability of big queue as a log collecting tool.</p>
-
-<h3>Collecting and Consuming Logs using Thrift based Queue Serivce</h3>
-
-<p>Big queue was originally designed for log collecting and analysis scenario, it&#8217;s very simple to collecting logs using big queue, all you need to do are:</p>
-
-<!--more-->
-
-
-<blockquote><p>At producing/collecting side:</p></blockquote>
-
-<pre><code>    1. Generate Log accoding to your app logic  
-    2. Serialize it into binary data  
-    3. Put the data into big queue through Thrift RPC call. 
-</code></pre>
-
-<blockquote><p>At consuming/analysis side:</p></blockquote>
-
-<pre><code>    1. Pull data from big queue through Thrift RPC call  
-    2. Deserialize data into log object  
-    3. Analyze log according your real needs.
-</code></pre>
-
-<p>That&#8217;s it.</p>
-
-<p>Big queue only accepts binary data as input and will return binary data as output, so you are responsible for the serialization/deserialization part, I would recommend Thrift as as a serialization protocol since it is light-weight, high performance and cross-language, here is a simple log format I defined using Thrift IDL(Note: this is the bare minimum, you need to adapt and enhance according to your real needs):</p>
-
-<pre><code>    namespace java com.leansoft.logging.thrift
-
-    // The level of log event
-    enum LogLevel {
-      DEBUG = 0,
-      INFO = 1,
-      WARN = 2,
-      ERROR = 3,
-      FATAL = 4
-    }
-
-    struct LogEvent
-    {
-        1: i64 createdTime,
-        2: string hostId,
-        3: LogLevel logLevel,
-        4: string message
-    }
-</code></pre>
-
-<p>With log format defined, I can easily generate class for my target lanague, like Java or CSharp, then with TSerializer and TDeserializer helpers from Thrift, I can easilty serialize log object into binary data or deserialize binary data back into log object, this is typcial serialization use case of Thrift.</p>
-
-<p>You many choose any other serialization framework(like protocol buffer, Avro, etc) you like, big queue is serialization independent, it only sees bytes without caring about content inside the bytes.</p>
-
-<p><a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue/src/com/leansoft/thriftqueue/load">Here</a> are the code I used to test the log collecting capability of big queue, you may find it useful.</p>
-
-<p>By the way, this is just the bare minimum, in real world, you may build &#8216;Agent&#8217; which encapsulates all details above and only expose simple interface to outside user for log collecting, inside the &#8216;Agent&#8217;, some optimizations like async batching and compression can further improve the performance of the log collector.</p>
-
-<h3>Performance Test</h3>
-
-<p>I&#8217;ve did some basic performance test to validate the performance of my Thrift based queue service, the full hardware spec for server is <a href="http://bulldog2011.github.com/lab/">here</a>, on the client side, I just used my ordinary notebook(Intel i5 2.5GHz CPU, 10G memory and Win7 OS) to simulate multiple clients producing and consuming scenario, full source is <a href="https://github.com/bulldog2011/bigqueue/tree/master/samples/thriftqueue/src/com/leansoft/thriftqueue/load">here</a>, I used a cheap 1Gbps switch between server and clients to simulate reald world scenarion, below are the performance numbers:</p>
-
-<ol>
-<li>Sequential Test - Producing then Consuming</li>
-</ol>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>*******************************************************
-</span><span class='line'>Producer Report:
-</span><span class='line'>*******************************************************
-</span><span class='line'>Log producer thread number : 50
-</span><span class='line'>Test duration(s) : 279.144
-</span><span class='line'>Total logs sent : 10000000
-</span><span class='line'>Log sending success count : 10000000
-</span><span class='line'>Log sending failure count : 0
-</span><span class='line'>Log sending exception count : 0
-</span><span class='line'>Total byes produced : 20105400000
-</span><span class='line'>Average log size(byte) : 2010.54
-</span><span class='line'>Throughput(MB/s) : 68.68857507621235
-</span><span class='line'>Average log sending delay(ms) : 1.2961799
-</span><span class='line'>
-</span><span class='line'>*******************************************************
-</span><span class='line'>Consumer Report:
-</span><span class='line'>*******************************************************
-</span><span class='line'>Log consumer thread number : 50
-</span><span class='line'>Test duration(s) : 274.157
-</span><span class='line'>Total logs received : 10000000
-</span><span class='line'>Log receiving success count : 10000000
-</span><span class='line'>Log receiving failure count : 0
-</span><span class='line'>Log receiving exception count : 0
-</span><span class='line'>Total byes received : 20105400000
-</span><span class='line'>Average log size(byte) : 2010.54
-</span><span class='line'>Throughput(MB/s) : 69.93804134519353
-</span><span class='line'>Average log receiving delay(ms) : 1.3691828</span></code></pre></td></tr></table></div></figure>
-
-
-<ol>
-<li>Concurrent Test - Producing and Consuming currently</li>
-</ol>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>*******************************************************
-</span><span class='line'>Concurrency Test Report:
-</span><span class='line'>*******************************************************
-</span><span class='line'>Producer Report:
-</span><span class='line'>*******************************************************
-</span><span class='line'>Log producer thread number : 50
-</span><span class='line'>Test duration(s) : 395.692
-</span><span class='line'>Total logs sent : 10000000
-</span><span class='line'>Log sending success count : 10000000
-</span><span class='line'>Log sending failure count : 0
-</span><span class='line'>Log sending exception count : 0
-</span><span class='line'>Total byes produced : 21588200000
-</span><span class='line'>Average log size(byte) : 2158.82
-</span><span class='line'>Throughput(MB/s) : 52.03064979186187
-</span><span class='line'>Average log sending delay(ms) : 1.8724801
-</span><span class='line'>
-</span><span class='line'>*******************************************************
-</span><span class='line'>Consumer Report:
-</span><span class='line'>*******************************************************
-</span><span class='line'>Log consumer thread number : 50
-</span><span class='line'>Test duration(s) : 395.692
-</span><span class='line'>Total logs received : 10000000
-</span><span class='line'>Log receiving success count : 10000000
-</span><span class='line'>Log receiving failure count : 0
-</span><span class='line'>Log receiving exception count : 0
-</span><span class='line'>Total byes received : 21588200000
-</span><span class='line'>Average log size(byte) : 2158.82
-</span><span class='line'>Throughput(MB/s) : 52.03064979186187
-</span><span class='line'>Average log receiving delay(ms) : 1.8693821</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Even in concurrent scenario, big queue can concurrently producing and consuming around 50MBbs log data, this is equal to 50 * 3600 * 24 / (1024 * 1024) = 4.11 TB daily, amazing!</p>
-
-<p>Regarding resource usage, CPU and memory usage on both server side and client side are under normal load, while network and disk IO are quite high on server side.
-According to my observation, big queue is extremely fast, only limited by network and disk IO bandwidth.</p>
-
-<h3>Final Word</h3>
-
-<p>Big queue is extremely fast, only limited by network and disk IO bandwidth, while at the same time it&#8217;s persistent and reliable, this makes big queue a nature fit for log data collecting and analysis, I would recommend you to try big queue as a log collecting tool and let me know your real world experience with big queue by leaving feedback on this post.</p>
 ]]></content>
   </entry>
   

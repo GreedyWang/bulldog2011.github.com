@@ -4,7 +4,7 @@
   <title><![CDATA[Category: nano | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/nano/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-14T16:11:08+08:00</updated>
+  <updated>2013-04-15T10:51:37+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,74 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[WSDL Driven Development on Android - the Big Picture]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture/"/>
+    <updated>2013-04-15T10:14:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture</id>
+    <content type="html"><![CDATA[<p>WSDL driven development is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are leveraged by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxies can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and service invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only dramatically reduce initial development cost, but reduce long term maintenance cost.</p>
+
+<!--more-->
+
+
+<p>Although nowadays there is a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it's very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
+
+<p>Can WSDL driven development be put into practice on Android platform? Yes, now with <a href="https://github.com/bulldog2011/nano">Nano Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for Android</a>, you can also leverage WSDL driven development technology on iOS platform, dramatically improving your application development speed.</p>
+
+<p>Let's see the big picture:</p>
+
+<p><img class="center" src="/images/nano/big_picture.png" width="600" height="800"></p>
+
+<p>The picture above is the blueprint of WSDL driven development on Android. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can't be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/nano">Nano Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your Android app, your app issues request on service proxy, the proxy passes the request to the Nano runtime framework which will delegate the object to XML/SOAP marshalling work to Nano binding framework then send serialized XML/SOAP request to external service through <a href="https://github.com/loopj/android-async-http">loopj async HTTP client</a> component, when an XML/SOAP response is received by the HTTP client component, the Nano runtime framework will also delegate the XML/SOAP to object unmarshalling work to Nano binding framework and passes the deserialized response object to the proxy which will eventually return the response object back to the calling app.</p>
+
+<p>We used the synchronous flow in the picture just for simple demonstration, the real call flow in the runtime is asynchronous, by leveraging Java <code>Thread</code> and <code>ThreadPoolExecutor</code>, in order not to block main UI thread.</p>
+
+<p>The Nano binding framework is the core of the Nano runtime, the real object<->xml binding magic happens here, below is the architecture of the binding runtime:</p>
+
+<p><img class="center" src="/images/pico/binding.png" width="500" height="600"></p>
+
+<p>There are four main components:</p>
+
+<blockquote><ol>
+<li><strong><em>Marshaller</em></strong> - responsible for object to xml marshalling</li>
+<li><strong><em>Unmarshaller</em></strong> - responsible for xml to object unmarshalling</li>
+<li><strong><em>BindingSchema</em></strong> - store object<->xml mapping information, used by both Marshaller and Unmarshaller to guide the marshalling/unmarshalling process at runtime, schema is extracted from class annotations and is cached for better performance.</li>
+<li><strong><em>Converter</em></strong> - type converter for primitive types or frequently used types.</li>
+</ol>
+</blockquote>
+
+<p>The marshalling/unmarshalling algorithm is recursive in nature:</p>
+
+<blockquote><ol>
+<li>for field of primitive or frequently used type, use corresponding converter to convert the field directly.</li>
+<li>for field of object type, convert the fields of the object one by one and recursively.</li>
+</ol>
+</blockquote>
+
+<p>The code generator component is based on <a href="http://docs.oracle.com/javase/6/docs/technotes/tools/share/wsimport.html">JAX-WS Wsimport</a> and <a href="http://freemarker.org/">Freemarker</a> template engine, see the whole architecture below:</p>
+
+<p><img class="center" src="/images/pico/codegen-arch.png" width="600" height="750"></p>
+
+<p>The whole architecture can be summarized as <strong><em>Model + Template = Code</em></strong>, code generation flow as following:</p>
+
+<blockquote><ol>
+<li>WSDL doc is first fed into Wsimport and a JAXB/JAX-WS model is generated.</li>
+<li>The JAXB/JAX-WS model is then transformed into a language independent intermediate codegen model.</li>
+<li>The codegen model and corresponding target language templates(Objective-C or Android) are then fed into the Freemarker template engine.</li>
+<li>The Freemarker template engine will eventually transform the in-memory model into target code, guided by the templates.</li>
+</ol>
+</blockquote>
+
+<p>As I know, there is no existing WSDL code generation tool tailored for Android platform, the mwsc code generator just filled this gap, it is backed by JAX-WS Wsimport, which is mature and stable, and can recognize most standard WSDL/Schema components, by delegating the most tricky and complex wsdl model transformation task to Wsimport, the mwsc code generator solved the WSDL to Android Java(or Objective-C) problem in a simple while elegant way.</p>
+
+<p>The mwsc code generator not only generates simple bean classes from WSDL/Schema, but also generates the XML<->object mapping information(schema) and records these information in the class as Java annotations, the meta-data will later be leveraged by Nano binding framework to guide the XML<->Object transformation at runtime.</p>
+
+<p>With a generic code generation tool and a generic web service client runtime, web service based app development on Android platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile Android app development.</p>
+
+<p>In later posts, I will show how to put WSDL driven Android app development into practice in a series of tutorials, just stay tuned.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Schema driven web service client development on Android, Part 2: eBay Search App]]></title>
@@ -995,223 +1063,6 @@ protected File doInBackground(Object... args) {</p>
 <h3>Conclusion</h3>
 
 <p>Without automatic xml binding tool, data serialization and deserialization on Android is a tedious and time-consuming development task, needless to say later maintenance. The Nano xml binding framework can greatly accelerate xml based Android application development by automating the tedious and error-prone xml binding tasks, letting developers put more focus on their application logic instead of xml parsing.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[nano benchmark on android]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/02/08/nano-benchmark-on-android/"/>
-    <updated>2013-02-08T10:04:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/02/08/nano-benchmark-on-android</id>
-    <content type="html"><![CDATA[<p>Since I have built a light-weight XML/JSON binding framework tailored for Android platform, I want to test its performance on Android when compared with typical xml parsers on Android like SAX, DOM and Xml Pull, I will show you detailed test results in this post.</p>
-
-<!--more-->
-
-
-<p>I did the benchmark on my own mobile phone(it was quite cheap when I bought it:)), below is the spec of my mobile phone:</p>
-
-<blockquote><ol>
-<li>Brand : Samsung SCH-i559(Galaxy Mini)</li>
-<li>CPU : ARM6 600MHz</li>
-<li>RAM : 128MB</li>
-<li>OS : Android 2.2.1</li>
-</ol>
-</blockquote>
-
-<p>The payload I used is a faked person list, you can find the scheam <a href="https://github.com/bulldog2011/nano/blob/master/performance/nano-vs-jaxb/src/main/resources/person.xsd">here</a> and all payloads <a href="https://github.com/bulldog2011/nano/tree/master/performance/nano-on-android/assets">here</a>, I created these payloads with Nano and an auto-fake data generator called <a href="http://www.jemos.eu/projects/podam/">podam</a>. I tested 3 kinds of payload size :</p>
-
-<blockquote><ol>
-<li>10 records - 4KB xml, 2KB json</li>
-<li>50 records - 17KB xml, 9KB json</li>
-<li>300 records - 100KB xml, 50KB json</li>
-</ol>
-</blockquote>
-
-<p>Basically, the size of json payload is almost half of the size of xml, this is because json has a more compact messsage format, the 300 records case is used for testing performance when dealing with big payload size.</p>
-
-<p>The benchmark program itself is a typcial Android application, I adaped the test project from <a href="http://www.developer.com/ws/android/development-tools/Android-XML-Parser-Performance-3824221.htm">this</a> post, I added Nano cases and SAX, DOM, XML pull parsing cases in the benchmark program, you can download the whole benchmark program <a href="https://github.com/bulldog2011/nano/tree/master/performance/nano-on-android">here</a>.</p>
-
-<p>Below is the UI of the benchmark application on PC emulator,</p>
-
-<p><img src="/images/nano/nano-benchmark-app1.png" width="300" height="600">  <img src="/images/nano/nano-benchmark-app2.png" width="300" height="600"></p>
-
-<p>following choices are avaliable for combined benchmark:</p>
-
-<blockquote><ol>
-<li>Thread Number - 1, 3, 5 threads</li>
-<li>Payload Size - 10, 50, 300 records</li>
-<li>Test Type - Nano Xml Read, Nano Json Read, SAX Read, DOM Read, XML Pull Read, Nano Xml Write, Nano Json Write</li>
-</ol>
-</blockquote>
-
-<h3>Test Result</h3>
-
-<p><strong><em>Note:</em></strong></p>
-
-<blockquote><ol>
-<li>the unit of test result is milliseconds</li>
-<li>all test results are average of 20 runs.</li>
-<li>for read test, the time includes file reading time, for write test, serialized content is only written in memory, not real file.</li>
-</ol>
-</blockquote>
-
-<h4>1 Thread Read(Unmarshall) Test</h4>
-
-<table>
-   <tr>
-      <td>[Records]</td>
-      <td>[Nano XML]</td>
-      <td>[Nano JSON]</td>
-      <td>[RAW SAX]</td>
-      <td>[RAW DOM]</td>
-      <td>[RAW Pull]</td>
-   </tr>
-   <tr>
-      <td>10</td>
-      <td>34</td>
-      <td>31</td>
-      <td>18</td>
-      <td>53</td>
-      <td>24</td>
-   </tr>
-   <tr>
-      <td>50</td>
-      <td>133</td>
-      <td>67</td>
-      <td>70</td>
-      <td>217</td>
-      <td>90</td>
-   </tr>
-   <tr>
-      <td>300</td>
-      <td>724</td>
-      <td>292</td>
-      <td>388</td>
-      <td>1318</td>
-      <td>497</td>
-   </tr>
-</table>
-
-
-<p></p>
-
-<h4>3 Threads Read(Unmarshall) Test</h4>
-
-<table>
-   <tr>
-      <td>[Records]</td>
-      <td>[Nano XML]</td>
-      <td>[Nano JSON]</td>
-      <td>[RAW SAX]</td>
-      <td>[RAW DOM]</td>
-      <td>[RAW Pull]</td>
-   </tr>
-   <tr>
-      <td>10</td>
-      <td>102</td>
-      <td>99</td>
-      <td>53</td>
-      <td>163</td>
-      <td>76</td>
-   </tr>
-   <tr>
-      <td>50</td>
-      <td>405</td>
-      <td>215</td>
-      <td>206</td>
-      <td>713</td>
-      <td>272</td>
-   </tr>
-   <tr>
-      <td>300</td>
-      <td>2318</td>
-      <td>951</td>
-      <td>1186</td>
-      <td>3812</td>
-      <td>1599</td>
-   </tr>
-</table>
-
-
-<p></p>
-
-<h4>1 Thread Write(Marshall) Test</h4>
-
-<table>
-   <tr>
-      <td>[Records] </td>
-      <td>[Nano XML]</td>
-      <td>[Nano JSON]</td>
-   </tr>
-   <tr>
-      <td>10</td>
-      <td>15</td>
-      <td>23</td>
-   </tr>
-   <tr>
-      <td>50</td>
-      <td>61</td>
-      <td>87</td>
-   </tr>
-   <tr>
-      <td>300</td>
-      <td>403</td>
-      <td>508</td>
-   </tr>
-</table>
-
-
-<p></p>
-
-<h4>3 Threads Write(Marshall) Test</h4>
-
-<table>
-   <tr>
-      <td>[Records] </td>
-      <td>[Nano XML]</td>
-      <td>[Nano JSON]</td>
-   </tr>
-   <tr>
-      <td>10</td>
-      <td>39</td>
-      <td>60</td>
-   </tr>
-   <tr>
-      <td>50</td>
-      <td>118</td>
-      <td>276</td>
-   </tr>
-   <tr>
-      <td>300</td>
-      <td>1290</td>
-      <td>1664</td>
-   </tr>
-</table>
-
-
-<p></p>
-
-<h3>Conclusion</h3>
-
-<h4>For Read Test:</h4>
-
-<ol>
-<li>Of all the tests, the best performers are Nano JSON and RAW SAX, this is not to say that the parsing speed of JSON is identical to SAX, but JSON message format is more compact, and its payload size is almost half of XML, leading to better performance.</li>
-<li>Of all the tests, the worst performer is RAW DOM, this is obvious since DOM needs to put whole doc tree in memory and this will triger much GC on memory limited mobile device, leading to much slower speed.</li>
-<li>The performance of Nano XML is in the middle, internally, Nano XML also use SAX paring technology, but it also needs to do automatic binding by reflection, this causes Nano XML to lose almost half of its performance, however, one the other hand, the maintainability and development effciency of Nano XML are much better than SAX.</li>
-</ol>
-
-
-<h4>For Write Test:</h4>
-
-<p>Both Nano XML and Nano JSON perform quite good, in singe thread case they both can serialize 300 records(100KB xml, 50KB json) with less than half second.</p>
-
-<p>Another finding is, there is almost a linear relationship between thread number and performance, when more threads are addded to benchmark, performance will degrade in proportion, considering the computation resource limitation of mobile device, it's not advisable to do multi-threading xml parsing on mobile device.</p>
-
-<h3>My Recommendation:</h3>
-
-<p>If your mobile application is performance critical, Nano JSON or RAW SAX is the way to go, I perfer Nano JSON since its automatic binding feature will have better maintainability and can impove development effciency a lot.<br/>
-In other cases, Nano XML is also a good choice since it's a good balance among maintainability, development effciency, readability and performance. This is especially the case when you have a complex business domain, in such case, parsing a large amount of domain class will be a big development headache, never to say later maintenance, instead, the automatic code generation and binding features of Nano binding framework will be a big help in such case.</p>
 ]]></content>
   </entry>
   

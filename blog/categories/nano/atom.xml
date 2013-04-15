@@ -4,7 +4,7 @@
   <title><![CDATA[Category: nano | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/nano/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-15T10:51:37+08:00</updated>
+  <updated>2013-04-15T22:11:51+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,498 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Nano Tutorial 1 - a Number Conversion Sample]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/04/15/nano-tutorial-1-a-number-conversion-sample/"/>
+    <updated>2013-04-15T20:14:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/04/15/nano-tutorial-1-a-number-conversion-sample</id>
+    <content type="html"><![CDATA[<p>This is the first post of Nano Tutorial Series, in this post, I will show you how easy to use <a href="https://github.com/bulldog2011/nano">Nano framework</a> to put WSDL driven application development on Android platform into practice. If this is the first time you get to know Nano, then after this tutorial, you will basically understand what Nano can do for you, and the basic development process when using Nano to carry out WSDL driven development on Android. If you want to see the big picture, please read <a href="http://bulldog2011.github.io/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture/">this post</a> first.</p>
+
+<p>The whole source of this demo is <a href="https://github.com/bulldog2011/nano/tree/master/sample/webservice/NumberConverter">here</a>.</p>
+
+<p>WSDL driven development using Nano framework has following steps:</p>
+
+<blockquote><ol>
+<li>Generate Java proxy from WSDL</li>
+<li>Create new Android project, add Nano runtime and generated proxy into your project</li>
+<li>Implement appliction logic and UI, call proxy to invoke web service as needed.</li>
+</ol>
+</blockquote>
+
+<p>Let me cut to the point and show you each step using a simple <a href="http://www.dataaccess.com/webservicesserver/numberconversion.wso">Number Conversion</a> web serivce from <a href="http://www.dataaccess.com/">Data Access Worldwide</a>.</p>
+
+<!--more-->
+
+
+<h2>Step 1 - Generate Java Proxy from WSDL</h2>
+
+<p>Nano has an accompanying code generator which can generate Java proxy for Android from wsdl, the tool is called <a href="https://github.com/bulldog2011/mwsc">mwsc</a>, please download the latest zip package <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/mwsc/0.6.0/mwsc-0.6.0-bin.zip">here</a> then extract it into your local folder.
+<strong><em>Note</em></strong> : mwsc code generator needs Java 1.6 or above to run, so please ensure Java is installed on your OS, if not, please install it first.</p>
+
+<p>The command line script <code>mwsc.bat</code> is in the bin folder, note, <code>mwsc.bat</code> is for windows, for linux, please use <code>mwsc</code> in the same folder. Before code generation, you may optionally create a folder as your code generation target(for example, <code>generated</code>), otherwise, mwsc will generate code in current folder. Now let's generate code from wsdl by running flowing command in the terminal:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>bin\mwsc.bat -nano -d generated http://www.dataaccess.com/webservicesserver/numberconversion.wso?WSDL&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>If everything works fine, you will see the code generator output <code>generating code…</code> and <code>done</code> at the end, the target proxy will be generated in the <code>generated</code> folder.</p>
+
+<h2>Step 2 - Create New Android Project, Add Nano Library and Generated Proxy into Your Project</h2>
+
+<p>Now let's create a simple Android project in eclipse(or other IDE you prefer), then you need to:</p>
+
+<blockquote><ol>
+<li>Download <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/nano/0.7.0/nano-0.7.0.jar">latest nano library jar</a> and add it to the <code>libs</code> folder of your Android project.</li>
+<li>Drag the above generated proxy into the <code>src</code> folder of your Android project.</li>
+<li>Add following user permissions in the <code>AndroidManifest.xml</code> file to enable network access. <br/>
+<code>xml
+ &lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+ &lt;uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /&gt;
+</code></li>
+</ol>
+</blockquote>
+
+<p>Now since both Nano runtime library and the NumberConversion web service proxy have been added in the project, you can try to refresh(or build) the project, if no build error, job well done, you can continue to the next step, otherwise, please do some troubleshooting, or check the source of this tutorial(in the sample/webservice folder).</p>
+
+<p>Below is an eclipse package explorer screenshot after finishing this step:</p>
+
+<p><img class="center" src="/images/nano/tutorial01/screen_shot1.png" width="600" height="800"></p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>A SOAP web service client called <code>NumberConversionSoapType_SOAPClient</code> has been generated in the <code>com.dataaccess.webservicesserver.client</code> package, it's the main proxy to the external number conversion service, you can invoke number conversion service by calling methods on a <code>NumberConversionSoapType_SOAPClient</code> instance. As a Nano best practice, it's not necessary for you to initiate a new client everytime you need to call service, a singleton client instance is enough for the whole application, so before writing any application logic, let's create a shared NumberConversion service client for later use first, see code below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>NumberConversionServiceClient.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/NumberConverter/src/com/dataaccess/service/NumberConversionServiceClient.java'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">dataaccess</span><span class="o">.</span><span class="na">service</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.dataaccess.webservicesserver.client.NumberConversionSoapType_SOAPClient</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="o">*</span> <span class="n">The</span> <span class="n">Number</span> <span class="n">Conversion</span> <span class="n">Web</span> <span class="n">Service</span><span class="o">,</span> <span class="n">implemented</span> <span class="n">with</span> <span class="n">Visual</span> <span class="n">DataFlex</span><span class="o">,</span>
+</span><span class='line'> <span class="o">*</span> <span class="n">provides</span> <span class="n">functions</span> <span class="n">that</span> <span class="n">convert</span> <span class="n">numbers</span> <span class="n">into</span> <span class="n">words</span> <span class="n">or</span> <span class="n">dollar</span> <span class="n">amounts</span><span class="o">.</span>
+</span><span class='line'> <span class="o">*</span>
+</span><span class='line'> <span class="o">*</span> <span class="nl">http:</span><span class="c1">//www.dataaccess.com/webservicesserver/numberconversion.wso</span>
+</span><span class='line'> <span class="o">*</span>
+</span><span class='line'> <span class="o">*</span> <span class="nd">@author</span> <span class="n">bulldog</span>
+</span><span class='line'> <span class="o">*</span>
+</span><span class='line'> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">NumberConversionServiceClient</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="c1">// target endpoint</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">numberConversionServiceUrl</span> <span class="o">=</span> <span class="s">&quot;http://www.dataaccess.com/webservicesserver/numberconversion.wso&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">private</span> <span class="kd">static</span> <span class="kd">volatile</span> <span class="n">NumberConversionSoapType_SOAPClient</span> <span class="n">client</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// get a shared client</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="n">NumberConversionSoapType_SOAPClient</span> <span class="nf">getSharedClient</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">client</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">synchronized</span><span class="o">(</span><span class="n">NumberConversionServiceClient</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">if</span> <span class="o">(</span><span class="n">client</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">client</span> <span class="o">=</span> <span class="k">new</span> <span class="n">NumberConversionSoapType_SOAPClient</span><span class="o">();</span>
+</span><span class='line'>                <span class="n">client</span><span class="o">.</span><span class="na">setEndpointUrl</span><span class="o">(</span><span class="n">numberConversionServiceUrl</span><span class="o">);</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">client</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The code is quite self-explanatory, the <code>getSharedClient</code> static factory method just returns a NumberConversionSoapType_SOAPClient(generated from wsdl, extending <code>NanoSOAPClient</code> framework class) instance with specified target service endpoint address, and there will be only one such client instance within the application.</p>
+
+<p>Now time to the UI part, for this simple demo, we only need an <code>EditText</code> for number input, and two <code>Button</code>, one for number to dollars conversion, the other for number to words conversion, see graphical layout screenshot below:</p>
+
+<p><img class="center" src="/images/nano/tutorial01/screen_shot2.png" width="400" height="600"></p>
+
+<p>Now let's implement application logic by calling the <code>numberToWords</code> or <code>numberToDollars</code> services, with the help of the NumberConversion service proxy generated from WSDL, web service call through Nano is extremely simple, let's review and understand the generated numberToWords proxy interface first before writing calling logic:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>NumberConversionSoapType_SOAPClient.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/NumberConverter/src/com/dataaccess/webservicesserver/client/NumberConversionSoapType_SOAPClient.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="c1">// Generated by wsdl compiler for android/java</span>
+</span><span class='line'><span class="c1">// DO NOT CHANGE!</span>
+</span><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">dataaccess</span><span class="o">.</span><span class="na">webservicesserver</span><span class="o">.</span><span class="na">client</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.leansoft.nano.ws.SOAPServiceCallback</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.ws.NanoSOAPClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.dataaccess.webservicesserver.NumberToDollars</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.dataaccess.webservicesserver.NumberToWords</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.dataaccess.webservicesserver.NumberToWordsResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.dataaccess.webservicesserver.NumberToDollarsResponse</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="n">This</span> <span class="kd">class</span> <span class="nc">is</span> <span class="n">the</span> <span class="n">SOAP</span> <span class="n">client</span> <span class="n">to</span> <span class="n">the</span> <span class="n">NumberConversionSoapType</span> <span class="n">Web</span> <span class="n">Service</span><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">NumberConversionSoapType_SOAPClient</span> <span class="kd">extends</span> <span class="n">NanoSOAPClient</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> Returns the word corresponding to the positive number passed as parameter. Limited to quadrillions.</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">numberToWords</span><span class="o">(</span><span class="n">NumberToWords</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">NumberToWordsResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">NumberToWordsResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> Returns the non-zero dollar amount of the passed number.</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">numberToDollars</span><span class="o">(</span><span class="n">NumberToDollars</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">NumberToDollarsResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">NumberToDollarsResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>This is just a plain old interface generated from wsdl, unlike normal interface, this interface is asynchronous, when you call <code>numberToWords</code> service, you need to provide a request of type <code>NumberToWords</code> as first parameter, also you need to provide(or register) a callback implementing interface <code>SOAPServiceCallback</code>, see definition of this interface below:
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>XMLServiceCallback.java </span><a href='https://github.com/bulldog2011/nano/blob/master/src/main/java/com/leansoft/nano/ws/XMLServiceCallback.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">ws</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kt">void</span> <span class="n">onSuccess</span><span class="o">(</span><span class="n">R</span> <span class="n">responseObject</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="n">Throwable</span> <span class="n">error</span><span class="o">,</span> <span class="n">String</span> <span class="n">errorMessage</span><span class="o">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>SOAPServiceCallback.java </span><a href='https://github.com/bulldog2011/nano/blob/master/src/main/java/com/leansoft/nano/ws/SOAPServiceCallback.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">ws</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kt">void</span> <span class="n">onSOAPFault</span><span class="o">(</span><span class="n">Object</span> <span class="n">soapFault</span><span class="o">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><code>SOAPServiceCallback</code> interface supports three callback methods, <code>onSuccess</code>, <code>onFailure</code> and <code>onSOAPFault</code> callbacks, success callback will be called if the service invocation succeed, and you will get a response object of type <code>NumberToWordsResponse</code>, usually, in success callback, you implement response handling logic and update UI according to the response; failure callback will be called if there is any HTTP or Nano parsing error, you may get an Exception and an error message, usually, you implement error handling logic in failure callback and update UI accordingly; soap fault callback will be called if Nano get a SOAP fault from service response, usually, you implement error handling logic in the soap fault callback and update UI accordingly.</p>
+
+<p>By the way, although not necessary, I suggest you to review all proxy code generated by mwsc, this will help you better understand the inner working of Nano.</p>
+
+<p>Let's see the service call implementation in the <code>MainActivity</code> class, a registered <code>onClick</code> method will be triggered when you click the <code>Number To Words</code> button on the UI:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>MainActivity.m </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/NumberConverter/src/com/leansoft/nano/sample/MainActivity.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">Button</span> <span class="n">numberToWordsButton</span> <span class="o">=</span> <span class="o">(</span><span class="n">Button</span><span class="o">)</span> <span class="k">this</span><span class="o">.</span><span class="na">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">numToWordsButton</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">numberToWordsButton</span><span class="o">.</span><span class="na">setOnClickListener</span><span class="o">(</span><span class="k">new</span> <span class="n">OnClickListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">arg0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// get shared client</span>
+</span><span class='line'>        <span class="n">NumberConversionSoapType_SOAPClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">NumberConversionServiceClient</span><span class="o">.</span><span class="na">getSharedClient</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">client</span><span class="o">.</span><span class="na">setDebug</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span> <span class="c1">// enable soap message logging</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// build request</span>
+</span><span class='line'>        <span class="n">NumberToWords</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">NumberToWords</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">number</span> <span class="o">=</span> <span class="o">((</span><span class="n">EditText</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">numerInputText</span><span class="o">)).</span><span class="na">getText</span><span class="o">().</span><span class="na">toString</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">request</span><span class="o">.</span><span class="na">ubiNum</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigInteger</span><span class="o">(</span><span class="n">number</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">NumberFormatException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="s">&quot;Invalid integer number&quot;</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>            <span class="k">return</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// make API call and register callbacks</span>
+</span><span class='line'>        <span class="n">client</span><span class="o">.</span><span class="na">numberToWords</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="k">new</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">NumberToWordsResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="n">NumberToWordsResponse</span> <span class="n">responseObject</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// success</span>
+</span><span class='line'>                <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">responseObject</span><span class="o">.</span><span class="na">numberToWordsResult</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="n">Throwable</span> <span class="n">error</span><span class="o">,</span> <span class="n">String</span> <span class="n">errorMessage</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// http or parsing error</span>
+</span><span class='line'>                <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">errorMessage</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSOAPFault</span><span class="o">(</span><span class="n">Object</span> <span class="n">soapFault</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// soap fault</span>
+</span><span class='line'>                <span class="n">Fault</span> <span class="n">fault</span> <span class="o">=</span> <span class="o">(</span><span class="n">Fault</span><span class="o">)</span><span class="n">soapFault</span><span class="o">;</span>
+</span><span class='line'>                <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">fault</span><span class="o">.</span><span class="na">faultstring</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">});</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The call logic can't simpler, I've added comments in the service call code for you to better understand the call flow. Also, I've enabled the debug mode of the proxy, so you can see the detailed request/response messages when you run the demo, this feature is extremely useful for troubleshooting.</p>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>Now it's time to run the demo, let's try it in the simulator(you may use a real device of course ),  below is a screenshot of the simulator after converting a number to dollars:</p>
+
+<p><img class="center" src="/images/nano/tutorial01/screen_shot3.png" width="400" height="600"></p>
+
+<p>You can also find the debug output in the Android LogCat, like below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281): Sending request to : http://www.dataaccess.com/webservicesserver/numberconversion.wso
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281): Request HTTP headers :
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281): {
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281):     Accept="text/xml"
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281): }
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281): Request message :
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281): &lt;?xml version='1.0' encoding='UTF-8' ?>
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281): &lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.dataaccess.com/webservicesserver/">
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281):   &lt;soapenv:Body>
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281):     &lt;NumberToDollars>
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281):       &lt;dNum>128.32&lt;/dNum>
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281):     &lt;/NumberToDollars>
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281):   &lt;/soapenv:Body>
+</span><span class='line'>04-15 13:54:26.146: D/NanoSOAPClient(281): &lt;/soapenv:Envelope>
+</span><span class='line'>04-15 13:54:27.356: D/SOAPHttpResponseHandler(281): Response HTTP status : 200
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281): Response HTTP headers :
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281): {
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281):     Web-Service="Visual DataFlex 17.0"
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281):     Content-Type="text/xml; charset=utf-8"
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281):     Date="Mon, 15 Apr 2013 13:54:52 GMT"
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281):     Content-Length="397"
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281):     X-Powered-By="ASP.NET"
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281):     Server="Microsoft-IIS/6.0"
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281):     Cache-Control="private, max-age=0"
+</span><span class='line'>04-15 13:54:27.366: D/SOAPHttpResponseHandler(281): }
+</span><span class='line'>04-15 13:54:27.376: D/SOAPHttpResponseHandler(281): Response message :
+</span><span class='line'>04-15 13:54:27.376: D/SOAPHttpResponseHandler(281): &lt;?xml version="1.0" encoding="utf-8"?>
+</span><span class='line'>04-15 13:54:27.376: D/SOAPHttpResponseHandler(281): &lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+</span><span class='line'>04-15 13:54:27.376: D/SOAPHttpResponseHandler(281):   &lt;soap:Body>
+</span><span class='line'>04-15 13:54:27.376: D/SOAPHttpResponseHandler(281):     &lt;m:NumberToDollarsResponse xmlns:m="http://www.dataaccess.com/webservicesserver/">
+</span><span class='line'>04-15 13:54:27.376: D/SOAPHttpResponseHandler(281):       &lt;m:NumberToDollarsResult>one hundred and twenty eight dollars and thirty two cents&lt;/m:NumberToDollarsResult>
+</span><span class='line'>04-15 13:54:27.376: D/SOAPHttpResponseHandler(281):     &lt;/m:NumberToDollarsResponse>
+</span><span class='line'>04-15 13:54:27.376: D/SOAPHttpResponseHandler(281):   &lt;/soap:Body>
+</span><span class='line'>04-15 13:54:27.376: D/SOAPHttpResponseHandler(281): &lt;/soap:Envelope></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>If you have any problem to run the demo, please check the debug output first.</p>
+
+<p>Now you see the Power of Nano framework, you don't get troubled with error prone and tedious SOAP/XML parsing or http handling, the generic Nano framework will do these stuff for you, you only need to use a plain old asynchronous interface for service invocation, this can not only accelerate application development, but reduce the long term maintenance cost.</p>
+
+<p>NumberConversion is just a bare minimum demo, there are other more featured demos(like Amazon, eBay search demo) in the sample folder of Nano project, please try them to better understand how Nano works, then you can begin to develop your own service based applications, using wsdl driven methodology supported by Nano.</p>
+
+<p>See your next great Android application!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[WSDL Driven Development on Android - the Big Picture]]></title>
@@ -796,273 +1288,6 @@ import com.javacodegeeks.android.apps.moviesearchapp.model.MovieSearchResult;</p
 <p>You may get the whole source of the adapted application <a href="https://github.com/bulldog2011/nano/tree/master/sample/AndroidMovieSearchAppProject">here</a>.</p>
 
 <p>At last, I would thank the original author again for a great tutorial he has written!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[nano on android tutorial 1]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1/"/>
-    <updated>2013-02-10T16:09:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/02/10/nano-on-android-tutorial-1</id>
-    <content type="html"><![CDATA[<p>This is my first post showing how to use Nano on Android, in this post, I will show you how to use Nano to export and import a set of domain object as XML to/from the SD card on Android. Nano is tailored for Android platform, you will see in this post how Nano can greatly simplify tedious and boring object and xml binding task in Android application development.</p>
-
-<!--more-->
-
-
-<h3>Prerequisite</h3>
-
-<p>Nano is quite light, On Android platform, it has no 3rd party jar dependency, all you need to do is to create a noraml Android project and add reference to the Nano jar, you can find latest Nano jar by following link <a href="https://github.com/bulldog2011/nano">here</a>, by the way, if necessary, you may also reference Nano source directly in your project.</p>
-
-<h3>Define Domain Classes</h3>
-
-<p>As usual project, let's define domain classes first. The set of domain classes is small but illustrates how to serialize both aggregations and lists of other domain classes. At the root is an Organization class, that has a name, Address object and a list of Person objects. Each Person object has a name and an Address object. Below are the definitions of these domain classses, note, get/set methods are omitted to save space.</p>
-
-<h4>Organization</h4>
-
-<p>``` java</p>
-
-<p>package com.leansoft.nano.sample.domain;</p>
-
-<p>import java.util.ArrayList;
-import java.util.List;</p>
-
-<p>import com.leansoft.nano.annotation.Attribute;
-import com.leansoft.nano.annotation.Default;</p>
-
-<p>@Default
-public class Organization {</p>
-
-<pre><code>private String name;
-
-private Address address = new Address();
-
-private List&lt;Person&gt; staff = new ArrayList&lt;Person&gt;();
-
-@Attribute
-private int count;
-</code></pre>
-
-<p>}</p>
-
-<p>```</p>
-
-<h4>Address</h4>
-
-<p>``` java</p>
-
-<p>package com.leansoft.nano.sample.domain;</p>
-
-<p>import com.leansoft.nano.annotation.Default;</p>
-
-<p>@Default
-public class Address {</p>
-
-<pre><code>private String street;
-private String code;
-private String city;
-</code></pre>
-
-<p>}</p>
-
-<p>```</p>
-
-<h4>Person</h4>
-
-<p>``` java</p>
-
-<p>package com.leansoft.nano.sample.domain;</p>
-
-<p>import com.leansoft.nano.annotation.Default;</p>
-
-<p>@Default
-public class Person {</p>
-
-<pre><code>private String name;
-private Address address = new Address();
-</code></pre>
-
-<p>}</p>
-
-<p>```</p>
-
-<p>Note, all domain classes are annotated with @Default Nano annotation, indicating that all fields of the class will be mapped to xml element during serialization, except that on the count filed of Organization, there is an explicit @Attribute annotation, indicating that the count field will be mapped to xml attribute during serialization.</p>
-
-<p>Also, I've build a Generator class to auto-generate faked organization with faked person list, to save space, I don't  want to dump the Generator code here, you can find the source <a href="https://github.com/bulldog2011/nano/blob/master/sample/nano-and-android/src/com/leansoft/nano/sample/domain/Generator.java">here</a>.</p>
-
-<h3>The Sample Flow</h3>
-
-<p>The sample has a quite simple flow :  <br/>
-1. On applicaton startup, auto-generate a faked organization with a random number of persons.<br/>
-2. On click the 'Export Data' button, serialize the organization to xml on SD card using Nano Xml writer, then update status text with bytes written.<br/>
-3. On click the 'Import Data' button, deserialize the xml on SD card into organization object using Nano Xml reader, then update status text with person size got.</p>
-
-<p><img class="center" src="/images/nano/nano_and_android.png" width="400" height="600"></p>
-
-<p>The main UI of the sample cantains three components:<br/>
-1. A 'Export Data' button for serialization demo. <br/>
-2. A 'Import Data' button for deserialization demo.<br/>
-3. A TextView for status display.</p>
-
-<p><strong><em>Note</em></strong>, faked data generation, export, import may be time consuming tasks depending the size of the data, executing these time consuming tasks directly on main UI thread may block it, leading to application crash, so it's a best practice to encapsulate these tasks as asyn tasks, and to use progress bar to let user know the progress of the task. I have encapsulated these tasks using Android AsyncTask structure, for details, please refer to the source of this demo project(link at the end of this post), for more background about Android AsyncTask, please refer to <a href="http://developer.android.com/reference/android/os/AsyncTask.html">its documentation</a>.</p>
-
-<p>The buttons <strong><em>Export</em></strong> and <strong><em>Import</em></strong> have their click actions tied to the flowing methods:</p>
-
-<p>``` java</p>
-
-<p>Button exportButton = (Button)findViewById(R.id.exportButton);
-exportButton.setOnClickListener( new OnClickListener() {</p>
-
-<pre><code>@Override
-public void onClick(View arg0) {
-
-    ExportTask  task = new ExportTask(MainActivity.this, new OnCompletionListener() {
-        public void onCompletion(Object result) {
-            File file = (File) result;
-            appendStatus(String.format("Written %d bytes to %s", file.length(), file.getAbsolutePath()));
-        }
-    });
-    task.execute(organization, dirName, fileName);
-
-}
-</code></pre>
-
-<p>});</p>
-
-<p>```</p>
-
-<p>``` java</p>
-
-<p>Button importButton = (Button)findViewById(R.id.importButton);
-importButton.setOnClickListener(new OnClickListener() {</p>
-
-<pre><code>@Override
-public void onClick(View v) {
-    ImportTask  task = new ImportTask(MainActivity.this, new OnCompletionListener() {
-        public void onCompletion(Object result) {
-            organization = (Organization) result;
-            appendStatus(String.format("Imported organization '%s' having %d persons",
-                    organization.getName(), organization.getStaff().size()));
-        }
-    });
-    task.execute(dirName, fileName);
-
-}
-</code></pre>
-
-<p>});</p>
-
-<p>```</p>
-
-<p>The <strong><em>ExportTask</em></strong> and <strong><em>ImportTask</em></strong> classes have logic where real Nano marshalling and unmarshalling magic happens:</p>
-
-<h4>Export Logic</h4>
-
-<p>``` java</p>
-
-<p>@Override
-protected File doInBackground(Object... args) {</p>
-
-<pre><code>try {
-    Organization organization = (Organization) args[0];
-    String dirName = (String) args[1];
-    String fileName = (String) args[2];
-    File file = getFile(dirName,  fileName);
-    Writer out = openForWrite(file);
-    IWriter xmlWriter = NanoFactory.getXMLWriter();
-    xmlWriter.write(organization, out);
-    out.close();
-    return file;
-} catch (Exception e) {
-    Log.d(LOG, "Failed to export. ", e);
-    return null;
-}
-</code></pre>
-
-<p>}</p>
-
-<p>```</p>
-
-<h4>Import Logic</h4>
-
-<p>``` java</p>
-
-<p>protected Organization doInBackground(Object... args) {</p>
-
-<pre><code>try {
-    String dirName  = (String) args[0];
-    String fileName = (String) args[1];
-    Reader in = openForRead(getFile(dirName,  fileName));
-    IReader xmlReader = NanoFactory.getXMLReader();
-    Organization org = xmlReader.read(Organization.class, in);
-    in.close();
-    return org;
-} catch (Exception e) {
-    Log.d(LOG, "Failed to import. ", e);
-    return null;
-}
-</code></pre>
-
-<p>}</p>
-
-<p>```</p>
-
-<p>Now you see the power of Nano : there are only 2 lines of marshalling and unmarshalling code, amazing!</p>
-
-<h3>The Resulting XML</h3>
-
-<p>It's easy to pull out the XML file from the SD card using the File Explorer of DDMS.</p>
-
-<p>And here is an extract of its contents:</p>
-
-<p>```xml</p>
-
-<p>&lt;?xml version='1.0' encoding='utf-8' ?>
-<organization count="88">
-  <address></p>
-
-<pre><code>&lt;street&gt;Street LY07&lt;/street&gt;
-&lt;code&gt;VXUSB&lt;/code&gt;
-&lt;city&gt;City SWT&lt;/city&gt;
-</code></pre>
-
-<p>  </address>
-  <staff></p>
-
-<pre><code>&lt;address&gt;
-  &lt;street&gt;Street VRAW&lt;/street&gt;
-  &lt;code&gt;6NEA8&lt;/code&gt;
-  &lt;city&gt;City JLN&lt;/city&gt;
-&lt;/address&gt;
-&lt;name&gt;name ND4Q&lt;/name&gt;
-</code></pre>
-
-<p>  </staff>
-  <staff></p>
-
-<pre><code>&lt;address&gt;
-  &lt;street&gt;Street XW8P&lt;/street&gt;
-  &lt;code&gt;DNSP7&lt;/code&gt;
-  &lt;city&gt;City PXP&lt;/city&gt;
-&lt;/address&gt;
-&lt;name&gt;name 5OMA&lt;/name&gt;
-</code></pre>
-
-<p>  </staff></p>
-
-<p>...</p>
-
-<p>  <name>Org IN3V9</name>
-</organization></p>
-
-<p>```</p>
-
-<h3>The Source</h3>
-
-<p>You can get the whole source of this demo project <a href="https://github.com/bulldog2011/nano/tree/master/sample/nano-and-android">here</a>, by the way, some source is adapted from <a href="http://blog.ribomation.com/2011/07/android-and-xml/">this post</a>, so part of the content of this post should be contributed to the author of that post.</p>
-
-<h3>Conclusion</h3>
-
-<p>Without automatic xml binding tool, data serialization and deserialization on Android is a tedious and time-consuming development task, needless to say later maintenance. The Nano xml binding framework can greatly accelerate xml based Android application development by automating the tedious and error-prone xml binding tasks, letting developers put more focus on their application logic instead of xml parsing.</p>
 ]]></content>
   </entry>
   

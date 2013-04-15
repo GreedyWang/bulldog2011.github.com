@@ -9,7 +9,7 @@
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="WSDL driven development is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are &hellip;">
+  <meta name="description" content="This is the first post of Nano Tutorial Series, in this post, I will show you how easy to use Nano framework to put WSDL driven application &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -75,6 +75,64 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
+        <h1 class="entry-title"><a href="/blog/2013/04/15/nano-tutorial-1-a-number-conversion-sample/">Nano Tutorial 1 - a Number Conversion Sample</a></h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-15T20:14:00+08:00" pubdate data-updated="true">Apr 15<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/04/15/nano-tutorial-1-a-number-conversion-sample/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This is the first post of Nano Tutorial Series, in this post, I will show you how easy to use <a href="https://github.com/bulldog2011/nano">Nano framework</a> to put WSDL driven application development on Android platform into practice. If this is the first time you get to know Nano, then after this tutorial, you will basically understand what Nano can do for you, and the basic development process when using Nano to carry out WSDL driven development on Android. If you want to see the big picture, please read <a href="http://bulldog2011.github.io/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture/">this post</a> first.</p>
+
+<p>The whole source of this demo is <a href="https://github.com/bulldog2011/nano/tree/master/sample/webservice/NumberConverter">here</a>.</p>
+
+<p>WSDL driven development using Nano framework has following steps:</p>
+
+<blockquote><ol>
+<li>Generate Java proxy from WSDL</li>
+<li>Create new Android project, add Nano runtime and generated proxy into your project</li>
+<li>Implement appliction logic and UI, call proxy to invoke web service as needed.</li>
+</ol>
+</blockquote>
+
+<p>Let me cut to the point and show you each step using a simple <a href="http://www.dataaccess.com/webservicesserver/numberconversion.wso">Number Conversion</a> web serivce from <a href="http://www.dataaccess.com/">Data Access Worldwide</a>.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2013/04/15/nano-tutorial-1-a-number-conversion-sample/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -433,14 +491,14 @@
   </header>
 
 
-  <div class="entry-content"><p>This is the first post of Pico Tutorial series, in this post, I will show you how easy to use <a href="https://github.com/bulldog2011/pico">Pico framework</a> to put WSDL driven application development on iOS platform into practice. If this is the first time you get to know Pico, then after this tutorial, you will bascially understand what Pico can do for you, and the basic development process when using Pico to run WSDL driven development on iOS. If you want to see the big picture, plese read <a href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">this post</a> first.</p>
+  <div class="entry-content"><p>This is the first post of Pico Tutorial Series, in this post, I will show you how easy to use <a href="https://github.com/bulldog2011/pico">Pico framework</a> to put WSDL driven application development on iOS platform into practice. If this is the first time you get to know Pico, then after this tutorial, you will bascially understand what Pico can do for you, and the basic development process when using Pico to run WSDL driven development on iOS. If you want to see the big picture, plese read <a href="http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">this post</a> first.</p>
 
 <p>The whole source of this demo is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/StockQuote">here</a>.</p>
 
 <p>WSDL driven development using Pico framework has following steps:</p>
 
 <blockquote><ol>
-<li>Genearte Objective-C proxy from WSDL</li>
+<li>Generate Objective-C proxy from WSDL</li>
 <li>Create new iOS project, add Pico runtime and generated proxy into your project</li>
 <li>Implement appliction logic and UI, call proxy to invoke web service as needed.</li>
 </ol>
@@ -517,51 +575,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">WSDL Driven Development on iOS - the Big Picture</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-03-25T20:03:00+08:00" pubdate data-updated="true">Mar 25<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>WSDL driven development is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are used by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxies can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and service invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only dramatically reduce initial development cost, but reduce long term maintenance cost.</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -580,7 +593,7 @@
 <li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
 <li class='category'><a href='/blog/categories/luxun/'>luxun (2)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
-<li class='category'><a href='/blog/categories/nano/'>nano (10)</a></li>
+<li class='category'><a href='/blog/categories/nano/'>nano (11)</a></li>
 <li class='category'><a href='/blog/categories/pico/'>pico (7)</a></li>
 
   </ul>
@@ -588,6 +601,10 @@
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/04/15/nano-tutorial-1-a-number-conversion-sample/">Nano Tutorial 1 - a Number Conversion Sample</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture/">WSDL Driven Development on Android - the Big Picture</a>
@@ -603,10 +620,6 @@
     
       <li class="post">
         <a href="/blog/2013/03/31/pico-tutoiral-5-hello-amazon-product-advertising-api/">Pico Tutoiral 5 - Hello Amazon Product Advertising API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/03/30/pico-tutorial-4-hello-ebay-shopping/">Pico Tutorial 4 - Hello eBay Shopping</a>
       </li>
     
   </ul>

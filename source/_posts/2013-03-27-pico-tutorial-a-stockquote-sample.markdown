@@ -4,17 +4,17 @@ title: "Pico Tutorial - a StockQuote sample"
 date: 2013-03-27 20:07
 comments: true
 categories: [pico]
-keywords: wsdl, soap, iOS, iPhone
+keywords: wsdl, soap, iOS, iPhone, Objective-C
 description: Pico Tutoiral Series 1 - a StockQuote sample
 ---
 
-This is the first post of Pico Tutorial series, in this post, I will show you how easy to use [Pico framework](https://github.com/bulldog2011/pico) to put WSDL driven application development on iOS platform into practice. If this is the first time you get to know Pico, then after this tutorial, you will bascially understand what Pico can do for you, and the basic development process when using Pico to run WSDL driven development on iOS. If you want to see the big picture, plese read [this post](http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/) first.
+This is the first post of Pico Tutorial Series, in this post, I will show you how easy to use [Pico framework](https://github.com/bulldog2011/pico) to put WSDL driven application development on iOS platform into practice. If this is the first time you get to know Pico, then after this tutorial, you will bascially understand what Pico can do for you, and the basic development process when using Pico to run WSDL driven development on iOS. If you want to see the big picture, plese read [this post](http://bulldog2011.github.com/blog/2013/03/25/wsdl-driven-development-on-ios-the-big-picture/) first.
 
 The whole source of this demo is [here](https://github.com/bulldog2011/pico/tree/master/Examples/StockQuote).
 
 WSDL driven development using Pico framework has following steps:
 
->1. Genearte Objective-C proxy from WSDL
+>1. Generate Objective-C proxy from WSDL
 2. Create new iOS project, add Pico runtime and generated proxy into your project
 3. Implement appliction logic and UI, call proxy to invoke web service as needed.
 
@@ -26,7 +26,7 @@ Let me cut to the point and show you each step using a simple while popular [Sto
 Pico has an accompanying code generator which can generate Objective-C proxy from wsdl, the tool is called [mwsc](https://github.com/bulldog2011/mwsc), please download the latest zip package [here](https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/mwsc/0.5.0/mwsc-0.5.0-bin.zip) then extract it into your local folder. 
 ***Note*** : mwsc code generator needs Java 1.6 or above to run, so please ensure Java is installed on your MacOS, if not, please install it first.
 
-The command line script `mwsc` is in the bin folder, please add executable right to it before you run it, you may optionally create a folder as your code generation target(for example, `generated`), otherwise, mwsc will generate code in current folder, now lets generte code from wsdl by running flowing command in the terminal:
+The command line script `mwsc` is in the bin folder, please add executable right to it before you run it, you may optionally create a folder as your code generation target(for example, `generated`), otherwise, mwsc will generate code in current folder, now let's generate code from wsdl by running flowing command in the terminal:
 
 {% codeblock %}
 
@@ -51,7 +51,7 @@ Now create a group in your project called `Proxy`(or other meaningful name you c
 
 Now since both Pico library and the StockQuote web service proxy have been added in the project, you can try to build the project, if no build error, job well done, you can continue to the next step, otherwise, please do some toubleshooting, or check the source of this tutourial(in the Examples folder of Pico).
 
-Below is an Xcode screenshot after finish this step(please save the screenshot to local then view if the web version is not large enough to view clearly):
+Below is an Xcode screenshot after finishing this step(please save the screenshot to local to view if the web version is not large enough to view clearly):
 
 {% img center /images/pico/tutorial01/screen_shot1.png 600 800 %}
 
@@ -59,7 +59,7 @@ Note, in the demo project, I also added a third party library called Toast which
 
 
 ##Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.
-Pico use [AFNetworking](https://github.com/AFNetworking/AFNetworking) Http client for low level communication, as an AFNetworking best practice, it's not necessary for you to initiate a new client everytime you call service, a singleton client instance is enough for the whole application, so before writing any applicaiton logic, lets create a a shared StockQuote service client for later use, see code below:
+Pico use [AFNetworking](https://github.com/AFNetworking/AFNetworking) Http client for low level communication, as an AFNetworking best practice, it's not necessary for you to initiate a new client everytime you call service, a singleton client instance is enough for the whole application, so before writing any applicaiton logic, let's create a shared StockQuote service client for later use, see code below:
 
 {% codeblock StockQuoteServiceClient.h lang:objc https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/StockQuoteServiceClient.h source %}
 
@@ -96,7 +96,7 @@ static NSString *const stockQuoteServiceURLString = @"http://www.webservicex.net
 
 {% endcodeblock %}
 
-The code is quite self-explanatory, the `shareClient` static factory method just returns a StockQuoteServiceClient(which extends StockQuoteSoap_SOAPClient generated from wsdl, you can find StockQuoteSoap_SOAPClient in the `Proxy` group) instance with specified target service endpoint address, and there will be only one such client instance within the applicaiton.
+The code is quite self-explanatory, the `shareClient` static factory method just returns a StockQuoteServiceClient(which extends StockQuoteSoap_SOAPClient generated from wsdl, you can find StockQuoteSoap_SOAPClient in the `Proxy` group) instance with specified target service endpoint address, and there will be only one such client instance within the application.
 
 
 Now time to the UI part, for this simple Demo, we only need an UITextField for company symbol input, an UIButton to triget getQuote service call and an UITextView for result dislay, quite simple, see definition in header file [ViewController.h](https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/ViewController.h) and instantiation in implementation file [ViewController.m](https://github.com/bulldog2011/pico/blob/master/Examples/StockQuote/StockQuote/ViewController.m), in method `viewDidLoad`.
@@ -133,7 +133,7 @@ Now let's implement application logic by calling the getQuote service, with the 
 
 {% endcodeblock %}
 
-This is just a plain old interface generated from wsdl, unlike normal interface, this interface is asynchronous, when you call `getQuote` service, you need to provide a request of type `GetQuote` as first parameter, also you need to provide(or register) one `success` and one `failure` callbacks using Objective-C block, success callback will be called if the service invocation succeed, and you will get a response object of type `GetQuoteResponse`, usually, in success callback, you implement response handling logic and update UI according to the reasponse; failure callback will be called if the service invocation fail, or there is any HTTP or Pico parsing error, you may either get a `NSError`(indicationg HTTP or Pico parsing error), or get a `SOAPFault`(indicating service call fail), usually, you implement error handling logic in failure callback and update UI accordingly.
+This is just a plain old interface generated from wsdl, unlike normal interface, this interface is asynchronous, when you call `getQuote` service, you need to provide a request of type `GetQuote` as first parameter, also you need to provide(or register) one `success` and one `failure` callbacks using Objective-C block, success callback will be called if the service invocation succeed, and you will get a response object of type `GetQuoteResponse`, usually, in success callback, you implement response handling logic and update UI according to the response; failure callback will be called if the service invocation fail, or there is any HTTP or Pico parsing error, you may either get a `NSError`(indicationg HTTP or Pico parsing error), or get a `SOAPFault`(indicating service call fail), usually, you implement error handling logic in failure callback and update UI accordingly.
 
 By the way, although not necessary, I suggest you to review the proxy code generated by mwsc, this will help you better understand the inner working of Pico.
 
@@ -193,7 +193,7 @@ The call logic can't simpler, I've added comments in the service call code for y
 
 ##Final Step - Run the Demo
 
-Now it's time to run the demo, let's try it in the simulator(you may use a real device of cause ), I just want to see the stock quote of Apple(company symbol AAPL), belew is a screenshot of the simulator.
+Now it's time to run the demo, let's try it in the simulator(you may use a real device of course ), I just want to see the stock quote of Apple(company symbol AAPL), below is a screenshot of the simulator.
 
 {% img center /images/pico/tutorial01/screen_shot2.png 300 500 %}
 

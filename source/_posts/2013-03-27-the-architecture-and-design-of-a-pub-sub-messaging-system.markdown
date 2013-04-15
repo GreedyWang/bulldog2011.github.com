@@ -604,7 +604,7 @@ Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simp
 4. Luxun uses simple and random distribution mechanism for scalability, similar to [Kestrel](https://github.com/robey/kestrel), each server handles a set of reliable, ordered message queues. When you put a cluster of these server together, with no cross communication, and pick a server at random whenever you do a `produce` or `consume`, you end up with a reliable, loosely ordered message queue(in many situations, loose ordering is sufficient). On the other hand, Kafka relies on Zookeeper for distributed coordination, We believe Zookeeper is still too heavy-weight for small to medium sized companies(the main targets of Luxun), and the learning curve is still steep for average developers. Of cause, Luxun has extension point left for future possible Zookeeper integration.
 5. Luxun only supports server level partitioning - partition a topic on different servers, while Kafka supports partitioning within a topic. Our performance test show partitioning within a topic has no performance gain, at the same time, it makes design complex.
 
-The difference above is just difference, no one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.
+The difference above is just difference, it's not to say that one is better than the other, Luxun and Kafka have different architectural objectives,  different target user and applications.
 
 
 ##Contributions

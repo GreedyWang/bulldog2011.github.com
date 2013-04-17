@@ -105,7 +105,7 @@
   </header>
 
 
-<div class="entry-content"><p>This is the third tutorial of Pico tutorial series, in <a href="http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">first</a> and <a href="">second</a> tutorials, I showed you how to use Pico with simple web serivces like <a href="StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=9">StockQuote</a> and <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=10">CurrencyConverter</a>. These services are quite simple, only support one or two calls, and the request/response structures are fairly simple, supporting these simple services only can&#8217;t show the full power of Pico. So in this and later tutorials, I will show you how to use Pico with industrial grade services, let&#8217;s start with <a href="http://developer.ebay.com/DevZone/finding/CallRef/index.html">eBay Finding service</a>, please reivew its official site if you are not familar with this service, bastially, it let you search items on eBay. eBay Finding service supports SOAP12, so I will also show you how to configure Pico to support SOAP12 protocol, also I will show how to set service required HTTP headers on Pico client.</p>
+<div class="entry-content"><p>This is the third tutorial of Pico tutorial series, in <a href="http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">first</a> and <a href="http://bulldog2011.github.io/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">second</a> tutorials, I showed you how to use Pico with simple web serivces like <a href="StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=9">StockQuote</a> and <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=10">CurrencyConverter</a>. These services are quite simple, only support one or two calls, and the request/response structures are fairly simple, supporting these simple services only can&#8217;t show the full power of Pico, so in this and later tutorials, I will show you how to use Pico with industrial grade services, let&#8217;s start with <a href="http://developer.ebay.com/DevZone/finding/CallRef/index.html">eBay Finding service</a>, please reivew its official site if you are not familiar with this service, bastially, it lets you search items on eBay. eBay Finding service supports SOAP 1.2, so I will also show you how to configure Pico to support SOAP 1.2 protocol, also I will show how to set service required HTTP headers on Pico client.</p>
 
 <p>The source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/eBayFinding">here</a></p>
 
@@ -510,7 +510,7 @@
 <p>The shared client for eBay Finding service is a little more complex than the simple serivce client in tutorial 1 and 2, this is because that eBay Finding service needs a few HTTP headers set to work, let me give more comments:</p>
 
 <blockquote><ol>
-<li>eBay Finding service support SOAP12, so we set the client to use <code>SOAP12</code> protocol, this is not necessary since eBay Finding serivce also support SOAP11(which is Pico default), we use SOAP12 here just for demo and to show the capability of Pico.</li>
+<li>eBay Finding service support SOAP12, so we set the client to use <code>SOAP12</code> protocol, this is not necessary since eBay Finding service also supports SOAP11(which is Pico default), we use SOAP12 here just for demo and to show the capability of Pico.</li>
 <li>eBay Finding service needs to set a few HTTP headers to work, for a list of required headers, please refer to doc <a href="http://developer.ebay.com/DevZone/finding/Concepts/MakingACall.html">here</a>.</li>
 <li>One mandatory header for eBay Finding service is <code>eBayAppId</code>, you need to register on eBay developer site as an eBay developer then get this id, before your can run this demo, you must fill in your own eBayAppId in the shared client.</li>
 </ol>
@@ -774,7 +774,7 @@
 
 <h2>Final Step - Run the Demo</h2>
 
-<p>This time let&#8217;s run the demo on a real iPod Touch 4 device with iOS 4.3.3, see a sceen shot below:</p>
+<p>This time let&#8217;s run the demo on a real iPod Touch 4 device with iOS 4.3.3, see a screen shot below:</p>
 
 <p><img class="center" src="/images/pico/tutorial03/screen_shot1.png" width="300" height="500"></p>
 
@@ -885,7 +885,7 @@
 
 <p><img class="center" src="/images/pico/tutorial03/screen_shot3.png" width="300" height="500"></p>
 
-<p>Now it&#8217;s your turn to create iOS applications based on eBay Finding web serivce, see your next great serivce based app.</p>
+<p>Now it&#8217;s your turn to create iOS applications based on eBay Finding web service, see your next great service based app.</p>
 
 <h3>Update 1</h3>
 
@@ -962,7 +962,7 @@
 <li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
 <li class='category'><a href='/blog/categories/luxun/'>luxun (2)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
-<li class='category'><a href='/blog/categories/nano/'>nano (12)</a></li>
+<li class='category'><a href='/blog/categories/nano/'>nano (13)</a></li>
 <li class='category'><a href='/blog/categories/pico/'>pico (7)</a></li>
 
   </ul>
@@ -970,6 +970,10 @@
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/04/17/nano-tutorial-3-hello-ebay-finding/">Nano Tutorial 3 - Hello eBay Finding</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/04/17/nano-tutorial-2-a-barcode-sample/">Nano Tutorial 2 - a BarCode Generator sample</a>
@@ -985,10 +989,6 @@
     
       <li class="post">
         <a href="/blog/2013/04/03/luxun-quick-start/">luxun quick start</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/04/01/pico-and-ebay-trading-api-integration-how-to/">pico and ebay trading api integration how to</a>
       </li>
     
   </ul>

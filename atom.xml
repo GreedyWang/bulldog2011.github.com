@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-16T21:04:19+08:00</updated>
+  <updated>2013-04-17T11:48:52+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,537 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Nano Tutorial 2 - a BarCode Generator sample]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/04/17/nano-tutorial-2-a-barcode-sample/"/>
+    <updated>2013-04-17T10:31:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/04/17/nano-tutorial-2-a-barcode-sample</id>
+    <content type="html"><![CDATA[<p>This is the second tutorial of Nano Tutorial series, in the <a href="http://bulldog2011.github.io/blog/2013/04/15/nano-tutorial-1-a-number-conversion-sample/">first tutorial</a>, I showed how to use Nano with a service called <a href="http://www.dataaccess.com/webservicesserver/numberconversion.wso">Number Conversion</a> from data access worldwide. Number conversion is a simple service, its request/response structures are quite simple. Today I will show you how to use Pico with a more complex service called <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=8&amp;WSID=76">Barcode Generator</a> from webserviceX.NET, barcode generator service has a more complex request/response structures, it will return encoded binary image data in the response.</p>
+
+<!--more-->
+
+
+<p>By the way, since the wsdl driven development process in both tutorials are quite similar, I won&#8217;t repeat too much details in this tutorial, I suppose you have already read tutorial one and basically understand the wsdl driven development process supported by Nano.</p>
+
+<p>The whole source of this tutorial is <a href="https://github.com/bulldog2011/nano/tree/master/sample/webservice/BarCode">here</a>.</p>
+
+<p>Let&#8217;s cut to the point:</p>
+
+<h2>Step 1 - Generate Java Proxy from WSDL</h2>
+
+<p>Download <a href="https://github.com/bulldog2011/mwsc">mwsc</a> and run following command in terminal to generate the proxy:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin\mwsc.bat -nano -d generated http://www.webservicex.net/genericbarcode.asmx?WSDL</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A few comments to the code generation:</p>
+
+<blockquote><ul>
+<li>During the code generation, you will get a few warnings say some ports in the wsdl will be ignored, just ignore these warnings, We won&#8217;t use those ports in this tutorial, it&#8217;s ok as long as the standard SOAP port is generated correctly.</li>
+<li>By default, the proxy code will be generated in the sub-folder corresponding to the target namespace of the wsdl, you can use <code>-p</code> option to override the package name if needed.</li>
+<li>There is a generated sub-folder called <code>client</code>, the SOAP and XML proxy interface will be generated in this folder.</li>
+</ul>
+</blockquote>
+
+<h2>Step 2 - Create New Android Project, Add Nano Library and Generated Proxy into Your Project</h2>
+
+<p>Create a simple Android project in eclipse(or other IDE you prefer), then:</p>
+
+<blockquote><ol>
+<li>Download <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/nano/0.7.0/nano-0.7.0.jar">latest nano library jar</a> and add it to the <code>libs</code> folder of your Android project.</li>
+<li>Drag the above generated proxy into the <code>src</code> folder of your Android project.</li>
+<li>Add following user permissions in the <code>AndroidManifest.xml</code> file to enable network access.</li>
+</ol>
+</blockquote>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">&quot;android.permission.INTERNET&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">&quot;android.permission.ACCESS_NETWORK_STATE&quot;</span> <span class="nt">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now build the project to ensure it can build successfully.</p>
+
+<p>Below is an eclipse package explorer screenshot after finishing this step:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano/tutorial02/screen_shot1.png" width="400" height="600"></p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>First, create a shared service client as below:</p>
+
+<figure class='code'><figcaption><span>BarCodeServiceClient.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/BarCode/src/net/webservicex/service/BarCodeServiceClient.java'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">net</span><span class="o">.</span><span class="na">webservicex</span><span class="o">.</span><span class="na">service</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.client.BarCodeSoap_SOAPClient</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * http://www.webservicex.net/genericbarcode.asmx</span>
+</span><span class='line'><span class="cm"> * </span>
+</span><span class='line'><span class="cm"> * @author bulldog</span>
+</span><span class='line'><span class="cm"> *</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BarCodeServiceClient</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="c1">// target endpoint</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">barCodeServiceUrl</span> <span class="o">=</span> <span class="s">&quot;http://www.webservicex.net/genericbarcode.asmx&quot;</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">static</span> <span class="kd">volatile</span> <span class="n">BarCodeSoap_SOAPClient</span> <span class="n">client</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="c1">// get a shared client</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">BarCodeSoap_SOAPClient</span> <span class="nf">getSharedClient</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">(</span><span class="n">client</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="kd">synchronized</span><span class="o">(</span><span class="n">BarCodeServiceClient</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="k">if</span> <span class="o">(</span><span class="n">client</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                  <span class="n">client</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BarCodeSoap_SOAPClient</span><span class="o">();</span>
+</span><span class='line'>                  <span class="n">client</span><span class="o">.</span><span class="na">setEndpointUrl</span><span class="o">(</span><span class="n">barCodeServiceUrl</span><span class="o">);</span>
+</span><span class='line'>              <span class="o">}</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>      <span class="o">}</span>    
+</span><span class='line'>      <span class="k">return</span> <span class="n">client</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now open the main layout file and add three UI components:</p>
+
+<blockquote><ul>
+<li>A <code>EditText</code> for barcode number input,</li>
+<li>A <code>Button</code> for encoding trigger,</li>
+<li>A <code>ImageView</code> for encoded barcode display.</li>
+</ul>
+</blockquote>
+
+<figure class='code'><figcaption><span>activity_main.xml </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/BarCode/res/layout/activity_main.xml'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;RelativeLayout</span> <span class="na">xmlns:android=</span><span class="s">&quot;http://schemas.android.com/apk/res/android&quot;</span>
+</span><span class='line'>    <span class="na">xmlns:tools=</span><span class="s">&quot;http://schemas.android.com/tools&quot;</span>
+</span><span class='line'>    <span class="na">android:layout_width=</span><span class="s">&quot;match_parent&quot;</span>
+</span><span class='line'>    <span class="na">android:layout_height=</span><span class="s">&quot;match_parent&quot;</span>
+</span><span class='line'>    <span class="na">tools:context=</span><span class="s">&quot;.MainActivity&quot;</span> <span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;EditText</span>
+</span><span class='line'>        <span class="na">android:id=</span><span class="s">&quot;@+id/barCodeText&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_width=</span><span class="s">&quot;wrap_content&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_alignParentLeft=</span><span class="s">&quot;true&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_alignParentTop=</span><span class="s">&quot;true&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_marginLeft=</span><span class="s">&quot;20dp&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_marginTop=</span><span class="s">&quot;19dp&quot;</span>
+</span><span class='line'>        <span class="na">android:ems=</span><span class="s">&quot;10&quot;</span>
+</span><span class='line'>        <span class="na">android:singleLine=</span><span class="s">&quot;true&quot;</span>
+</span><span class='line'>        <span class="na">android:hint=</span><span class="s">&quot;Enter Barcode&quot;</span> <span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nt">&lt;requestFocus</span> <span class="nt">/&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/EditText&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;Button</span>
+</span><span class='line'>        <span class="na">android:id=</span><span class="s">&quot;@+id/encodeButton&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_width=</span><span class="s">&quot;wrap_content&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_alignBaseline=</span><span class="s">&quot;@+id/barCodeText&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_alignBottom=</span><span class="s">&quot;@+id/barCodeText&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_toRightOf=</span><span class="s">&quot;@+id/barCodeText&quot;</span>
+</span><span class='line'>        <span class="na">android:text=</span><span class="s">&quot;Encode&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;ImageView</span>
+</span><span class='line'>        <span class="na">android:id=</span><span class="s">&quot;@+id/barCodeImage&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_width=</span><span class="s">&quot;wrap_content&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_height=</span><span class="s">&quot;wrap_content&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_below=</span><span class="s">&quot;@+id/encodeButton&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_centerHorizontal=</span><span class="s">&quot;true&quot;</span>
+</span><span class='line'>        <span class="na">android:layout_marginTop=</span><span class="s">&quot;98dp&quot;</span>
+</span><span class='line'>        <span class="na">android:src=</span><span class="s">&quot;@drawable/ic_launcher&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;/RelativeLayout&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano/tutorial02/screen_shot2.png" width="300" height="500"></p>
+
+<p>Now implement application logic in <code>MainActivity</code> class as below:</p>
+
+<figure class='code'><figcaption><span>MainActivity.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/BarCode/src/com/leansoft/nano/sample/MainActivity.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.soap11.Fault</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.ws.SOAPServiceCallback</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.BarCodeData</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.BarcodeOption</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.BarcodeType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.CheckSumMethod</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.GenerateBarCode</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.GenerateBarCodeResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.ImageFormats</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.ShowTextPosition</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.client.BarCodeSoap_SOAPClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.webservicex.service.BarCodeServiceClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.os.Bundle</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.view.View</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.view.View.OnClickListener</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.Button</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.EditText</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.ImageView</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.Toast</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.app.Activity</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.graphics.Bitmap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.graphics.BitmapFactory</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MainActivity</span> <span class="kd">extends</span> <span class="n">Activity</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onCreate</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="kd">super</span><span class="o">.</span><span class="na">onCreate</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">setContentView</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">activity_main</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">Button</span> <span class="n">encodeButton</span> <span class="o">=</span> <span class="o">(</span><span class="n">Button</span><span class="o">)</span> <span class="k">this</span><span class="o">.</span><span class="na">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">encodeButton</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">encodeButton</span><span class="o">.</span><span class="na">setOnClickListener</span><span class="o">(</span><span class="k">new</span> <span class="n">OnClickListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nd">@Override</span>
+</span><span class='line'>          <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">arg0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="c1">// get shared client</span>
+</span><span class='line'>              <span class="n">BarCodeSoap_SOAPClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">BarCodeServiceClient</span><span class="o">.</span><span class="na">getSharedClient</span><span class="o">();</span>
+</span><span class='line'>              <span class="n">client</span><span class="o">.</span><span class="na">setDebug</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span> <span class="c1">// enable soap message logging</span>
+</span><span class='line'>              
+</span><span class='line'>              <span class="c1">// build request</span>
+</span><span class='line'>              <span class="n">BarCodeData</span> <span class="n">barCodeData</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BarCodeData</span><span class="o">();</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">height</span> <span class="o">=</span> <span class="mi">125</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">width</span> <span class="o">=</span> <span class="mi">225</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">angle</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">ratio</span> <span class="o">=</span> <span class="mi">5</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">module</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">left</span> <span class="o">=</span> <span class="mi">25</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">top</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">checkSum</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">fontName</span> <span class="o">=</span> <span class="s">&quot;Arial&quot;</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">barColor</span> <span class="o">=</span> <span class="s">&quot;Black&quot;</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">bgColor</span> <span class="o">=</span> <span class="s">&quot;White&quot;</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">fontSize</span> <span class="o">=</span> <span class="mf">10.0f</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">barcodeOption</span> <span class="o">=</span> <span class="n">BarcodeOption</span><span class="o">.</span><span class="na">BOTH</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">barcodeType</span> <span class="o">=</span> <span class="n">BarcodeType</span><span class="o">.</span><span class="na">CODE_2_5_INTERLEAVED</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">checkSumMethod</span> <span class="o">=</span> <span class="n">CheckSumMethod</span><span class="o">.</span><span class="na">NONE</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">showTextPosition</span> <span class="o">=</span> <span class="n">ShowTextPosition</span><span class="o">.</span><span class="na">BOTTOM_CENTER</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">barCodeData</span><span class="o">.</span><span class="na">barCodeImageFormat</span> <span class="o">=</span> <span class="n">ImageFormats</span><span class="o">.</span><span class="na">PNG</span><span class="o">;</span>
+</span><span class='line'>              
+</span><span class='line'>              <span class="n">GenerateBarCode</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">GenerateBarCode</span><span class="o">();</span>
+</span><span class='line'>              <span class="n">request</span><span class="o">.</span><span class="na">barCodeParam</span> <span class="o">=</span> <span class="n">barCodeData</span><span class="o">;</span>
+</span><span class='line'>              <span class="n">request</span><span class="o">.</span><span class="na">barCodeText</span> <span class="o">=</span> <span class="o">((</span><span class="n">EditText</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">barCodeText</span><span class="o">)).</span><span class="na">getText</span><span class="o">().</span><span class="na">toString</span><span class="o">();</span>
+</span><span class='line'>              
+</span><span class='line'>              <span class="c1">// make API call with registered callbacks</span>
+</span><span class='line'>              <span class="n">client</span><span class="o">.</span><span class="na">generateBarCode</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="k">new</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">GenerateBarCodeResponse</span><span class="o">&gt;()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>                  <span class="nd">@Override</span>
+</span><span class='line'>                  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="n">GenerateBarCodeResponse</span> <span class="n">responseObject</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// success</span>
+</span><span class='line'>                      <span class="n">ImageView</span> <span class="n">barCodeImage</span> <span class="o">=</span> <span class="o">(</span><span class="n">ImageView</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">barCodeImage</span><span class="o">);</span>
+</span><span class='line'>                      <span class="kt">byte</span><span class="o">[]</span> <span class="n">imageData</span> <span class="o">=</span> <span class="n">responseObject</span><span class="o">.</span><span class="na">generateBarCodeResult</span><span class="o">;</span>
+</span><span class='line'>                      <span class="n">Bitmap</span> <span class="n">bitmap</span> <span class="o">=</span> <span class="n">BitmapFactory</span><span class="o">.</span><span class="na">decodeByteArray</span><span class="o">(</span><span class="n">imageData</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">imageData</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+</span><span class='line'>                      <span class="n">barCodeImage</span><span class="o">.</span><span class="na">setImageBitmap</span><span class="o">(</span><span class="n">bitmap</span><span class="o">);</span>
+</span><span class='line'>                  <span class="o">}</span>
+</span><span class='line'>                  
+</span><span class='line'>                  <span class="nd">@Override</span>
+</span><span class='line'>                  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="n">Throwable</span> <span class="n">error</span><span class="o">,</span> <span class="n">String</span> <span class="n">errorMessage</span><span class="o">)</span> <span class="o">{</span><span class="c1">// http or parsing error</span>
+</span><span class='line'>                      <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">errorMessage</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                      
+</span><span class='line'>                  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>                  <span class="nd">@Override</span>
+</span><span class='line'>                  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSOAPFault</span><span class="o">(</span><span class="n">Object</span> <span class="n">soapFault</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// soap fault</span>
+</span><span class='line'>                      <span class="n">Fault</span> <span class="n">fault</span> <span class="o">=</span> <span class="o">(</span><span class="n">Fault</span><span class="o">)</span><span class="n">soapFault</span><span class="o">;</span>
+</span><span class='line'>                      <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">fault</span><span class="o">.</span><span class="na">faultstring</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                  <span class="o">}</span>
+</span><span class='line'>                  
+</span><span class='line'>              <span class="o">});</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>          
+</span><span class='line'>      <span class="o">});</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The service invocation logic is quite self explanatory, you get shared SOAP barcode proxy client first, then build encoding request, make API call with the request and registered callbacks, if API call is successful, you just display the barcode image on UI, otherwise, you display error message accordingly using Android <code>Toast</code> UI component.</p>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>See a screen shot below:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano/tutorial02/screen_shot3.png" width="600" height="800"></p>
+
+<p>And the debug output:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>04-17 03:35:21.116: D/NanoSOAPClient(283): Sending request to : http://www.webservicex.net/genericbarcode.asmx
+</span><span class='line'>04-17 03:35:21.116: D/NanoSOAPClient(283): Request HTTP headers : 
+</span><span class='line'>04-17 03:35:21.116: D/NanoSOAPClient(283): {
+</span><span class='line'>04-17 03:35:21.116: D/NanoSOAPClient(283):     Accept="text/xml"
+</span><span class='line'>04-17 03:35:21.116: D/NanoSOAPClient(283): }
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283): Request message : 
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283): &lt;?xml version='1.0' encoding='UTF-8' ?>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283): &lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.webservicex.net/">
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):   &lt;soapenv:Body>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):     &lt;GenerateBarCode>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):       &lt;BarCodeParam>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;Height>125&lt;/Height>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;Width>225&lt;/Width>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;Angle>0&lt;/Angle>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;Ratio>5&lt;/Ratio>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;Module>0&lt;/Module>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;Left>25&lt;/Left>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;Top>0&lt;/Top>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;CheckSum>false&lt;/CheckSum>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;FontName>Arial&lt;/FontName>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;BarColor>Black&lt;/BarColor>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;BGColor>White&lt;/BGColor>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;FontSize>10.0&lt;/FontSize>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;barcodeOption>Both&lt;/barcodeOption>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;barcodeType>Code_2_5_interleaved&lt;/barcodeType>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;checkSumMethod>None&lt;/checkSumMethod>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;showTextPosition>BottomCenter&lt;/showTextPosition>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):         &lt;BarCodeImageFormat>PNG&lt;/BarCodeImageFormat>=
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):       &lt;/BarCodeParam>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):       &lt;BarCodeText>123456789&lt;/BarCodeText>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):     &lt;/GenerateBarCode>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283):   &lt;/soapenv:Body>
+</span><span class='line'>04-17 03:35:21.126: D/NanoSOAPClient(283): &lt;/soapenv:Envelope>
+</span><span class='line'>04-17 03:35:21.176: D/dalvikvm(283): GC_FOR_MALLOC freed 12599 objects / 580360 bytes in 35ms
+</span><span class='line'>04-17 03:35:22.838: D/SOAPHttpResponseHandler(283): Response HTTP status : 200
+</span><span class='line'>04-17 03:35:22.838: D/SOAPHttpResponseHandler(283): Response HTTP headers : 
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283): {
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283):     X-AspNet-Version="4.0.30319"
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283):     Date="Wed, 17 Apr 2013 03:35:56 GMT"
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283):     Vary="Accept-Encoding"
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283):     Content-Length="1951"
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283):     Content-Encoding="gzip"
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283):     Content-Type="text/xml; charset=utf-8"
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283):     X-Powered-By="ASP.NET"
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283):     Server="Microsoft-IIS/7.0"
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283):     Cache-Control="private, max-age=0"
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283): }
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283): Response message : 
+</span><span class='line'>04-17 03:35:22.846: D/SOAPHttpResponseHandler(283): &lt;?xml version="1.0" encoding="utf-8"?>&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">&lt;soap:Body>&lt;GenerateBarCodeResponse xmlns="http://www.webservicex.net/">&lt;GenerateBarCodeResult>iVBORw0KGgoAAAANSUhEUgAAAOEAAAB9CAYAAABUFwRCAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAABkVJREFUeF7t2gmS2jAUhGFzOx/Ix+EuXGVu4uBF8CQvMBNv3fVTNTUJYPk9ub9Ihtza56Pa+XG73aruNPF3OmV8Pj336f3xfeU4vxl3bZw4LV09cdy1Osvj1vr+ax87Xy6GP3oGOoR7P5499aeIv7s/l8+nOj69P76vHOc3466NE+ckjZnqWquzPG6t77/2sff1YvxjZ2DQsfPjE6pvwh1x/TW8a+g/4V06f4kMhDuHyXB4EI4rNAgN0y3SEghBKBJV3zJBCELfdIt0BkIQikTVt0wQgtA33SKdgRCEIlH1LROEIPRNt0hnIAShSFR9ywQhCH3TLdIZCEEoElXfMkEIQt90i3QGQhCKRNW3TBCC0DfdIp2BEIQiUfUtE4Qg9E23SGcgBKFIVH3LBCEIfdMt0hkIQSgSVd8yQQhC33SLdAZCEIpE1bdMEILQN90inYEQhCJR9S0ThCD0TbdIZyAEoUhUfcsEIQh90y3SGQhBKBJV3zJBCELfdIt0BkIQikTVt0wQgtA33SKdgRCEIlH1LROEIPRNt0hnIAShSFR9ywQhCH3TLdIZCEEoElXfMkEIQt90i3QGQhCKRNW3TBCC0DfdIp2BEIQiUfUtE4Qg9E23SGcgBKFIVH3LBCEIfdMt0hkIQSgSVd8yQQhC33SLdAZCEIpE1bdMEILQN90inYEQhCJR9S0ThCD0TbdIZyAEoUhUfcsEIQh90y3SGQhBKBJV3zJBCELfdIt0BkIQikTVt0wQgtA33SKdgRCEIlH1LROEIPRNt0hnIAShSFR9ywQhCH3TLdIZCEEoElXfMkEIQt90i3QGQhCKRNW3TBCC0DfdIp2BEIQiUfUtE4Qg9E23SGcgBKFIVH3LBCEIfdMt0hkIQSgSVd8yQQhC33SLdAZCEIpE1bdMEILQN90inYEQhCJR9S0ThCD0TbdIZyAEoUhUfcsEIQh90y3SGQhBKBJV3zJBCELfdIt0BkIQikTVt0wQgtA33SKdgRCEIlH1LROEIPRNt0hnIAShSFR9ywQhCH3TLdIZCEEoElXfMkEIQt90i3QGQhCKRNW3TBCC0DfdIp2BEIQiUfUtE4Qg9E23SGcgBKFIVH3LBCEIfdMt0hkIQSgSVd8yQQhC33SLdAZCEIpE1bdMEILQN90inYEQhCJR9S0ThCD0TbdIZyAEoUhUfcsEIQh90y3SGQhBKBJV3zJBCELfdIt0BkIQikTVt0wQgtA33SKdgRCEIlH1LROEIPRNt0hnIAShSFR9ywQhCH3TLdIZCEEoElXfMk9B6Dud23VWVVXb/XSP9Hu70RnpSjMAwitdjVALCC96YXYoC4Q7TOoWQ4Jwi1nUGONCCB9tU9Xt/SdM3M+9rcdtWVW+9mj6bdrwUxyXhuiPz1/7udfhuO7Ypn28TvnT3us0ZtXWqZjsXO/Xq2Y8cq2W+Fp9b2N7axEBoQagLaq8CMIOYIlpeC7lvO3DPILpcQU88bUwK49mCrR77jVmMYP9+xOUGcBvqxF3XueAPNb5Pl//2pcQQbhFvDXGOB1hWpnqpslXrQ5WFtiZlfI1xzOv9cfXxUrYrXQLq+ZzPZysxLPXcFgt81UyrqZhnF/1kJ8MhBqAtqjyfISPx7BFW1t5+k6XkWSrz+u9TxiTMYcx6teWM4AsV9el2Z2sujMrYfrHYxbh8kocTwnCLeKtMcbpCOe3eNPJy7aK2T3fdMvZoexXqhJh8fcM7wjmEe4Zp9vWYhXMVuLxXjGu3uM9bb6lBqEGjeOqlEA4YFnaRnbWivuwb+7rXivmiGL8AOW1zZxbmWdX62ElXNyexg9mmnu/lV26J2UlPC74VzrT5RF+AjhM5nurmn3w8nGLO6xsPYrJNjO8lq7YZHuZttHlPeEStLV7Uu4JrwTjyFoujfA7gBFh+pQ1fI2QvsaYXX7CfebknnCKsN8Sl+N8cVy+5Y5gly8194RHMjj3XNdFuLaKFavW4kf/5RjFceV9Zvf35U89Z1bG/tqtfFpanH8W8cL1B+G5MI48+2URDt/xTX/SQpR/6b6wunz8sr48Lv+yPl/0iu8ts6sUV+CV/xzw5XeE3dAgPJLBuee6DsJz5+FyZwfh5S7JbgWBcLep/b+BQfh/86d0NAgverVAeNELs0NZ/wANCo7oOuyQVQAAAABJRU5ErkJggg==&lt;/GenerateBarCodeResult>&lt;/GenerateBarCodeResponse>&lt;/soap:Body>&lt;/soap:Envelope></span></code></pre></td></tr></table></div></figure>
+
+
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Nano Tutorial 1 - a Number Conversion Sample]]></title>
@@ -4063,7 +4594,7 @@ since we will use XML based interface in this tutorial, you may now review the g
 
 <p>The whole source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/CurrencyConverter">here</a>.</p>
 
-<p>Let&#8217;s cut to to the point:</p>
+<p>Let&#8217;s cut to the point:</p>
 
 <!--more-->
 
@@ -4080,8 +4611,8 @@ since we will use XML based interface in this tutorial, you may now review the g
 
 <blockquote><ul>
 <li>By default, the proxy code will be generated in the sub-folder corresponding to the target namespace of the wsdl.</li>
-<li>There is a geneated folder called <code>client</code>, the SOAP and XML proxy interface will be generated in this folder.</li>
-<li>There is a generted folder called <code>common</code>, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request or handle response needed by service call.</li>
+<li>There is a generated folder called <code>client</code>, the SOAP and XML proxy interface will be generated in this folder.</li>
+<li>There is a generated folder called <code>common</code>, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request or handle response needed by service call.</li>
 </ul>
 </blockquote>
 
@@ -4108,7 +4639,7 @@ since we will use XML based interface in this tutorial, you may now review the g
 
 <h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
 
-<p>First, create a shared serivice client as below:</p>
+<p>First, create a shared service client as below:</p>
 
 <figure class='code'><figcaption><span>CurrencyConverterSerivceClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/CurrencyConverterSerivceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -4287,7 +4818,7 @@ since we will use XML based interface in this tutorial, you may now review the g
 
 <h2>Final Step - Run the Demo</h2>
 
-<p>See a sceen shot below:</p>
+<p>See a screen shot below:</p>
 
 <p><img class="center" src="http://bulldog2011.github.com/images/pico/tutorial02/screen_shot2.png" width="300" height="500"></p>
 
@@ -4365,7 +4896,7 @@ since we will use XML based interface in this tutorial, you may now review the g
 </span><span class='line'>2013-03-28 21:45:28.495 CurrencyConverter[2153:5503] &lt;?xml version="1.0" encoding="utf-8"?>&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">&lt;soap:Body>&lt;ConversionRateResponse xmlns="http://www.webserviceX.NET/">&lt;ConversionRateResult>1.0167&lt;/ConversionRateResult>&lt;/ConversionRateResponse>&lt;/soap:Body>&lt;/soap:Envelope></span></code></pre></td></tr></table></div></figure>
 
 
-<p>There are other similar demos in the <a href="https://github.com/bulldog2011/pico/tree/master/Examples">Examples</a> folder of Pico source, like the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/BarCode">BarCode</a> demo which calls web service that will return base64 encoded barcode data and the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/Weather">Weather</a> demo which shows the weather given a zip code, see screen shots below, I won&#8217;t create tuturials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.</p>
+<p>There are other similar demos in the <a href="https://github.com/bulldog2011/pico/tree/master/Examples">Examples</a> folder of Pico source, like the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/BarCode">BarCode</a> demo which calls web service that will return base64 encoded barcode data and the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/Weather">Weather</a> demo which shows the weather given a zip code, see screen shots below, I won&#8217;t create tutorials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.</p>
 
 <p>The screen shot of barcode demo:
 <img class="center" src="http://bulldog2011.github.com/images/pico/tutorial02/screen_shot3.png" width="300" height="500"></p>
@@ -9152,377 +9683,6 @@ The Nano code is quite compact. A little technical details here, the xmlWriter i
 <h3>Summary</h3>
 
 <p>Both Nano and JAXB are quite easy to do simple binding stuff. If you need a mature binding framework for enterprise development, JAXB is the way to go; If you just need a light-weight alternative, or you need to do binding work on Android platform, Nano is definitely the way to go.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[nano list tutorial]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/02/05/nano-list-tutorial/"/>
-    <updated>2013-02-05T21:12:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/02/05/nano-list-tutorial</id>
-    <content type="html"><![CDATA[<p>In this tutorial, I will show you how to marshall and unmarshall list of objects using Nano binding framework.</p>
-
-<!--more-->
-
-
-<h3>1. Create Bean Class</h3>
-
-<p>Create a new Book class like below:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.RootElement</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nd">@RootElement</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;book&quot;</span><span class="o">)</span>
-</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Book</span> <span class="o">{</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nd">@Element</span>
-</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nd">@Element</span>
-</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">author</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nd">@Element</span>
-</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">publisher</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nd">@Element</span>
-</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">isbn</span><span class="o">;</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getName</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="n">name</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setName</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getAuthor</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="n">author</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setAuthor</span><span class="o">(</span><span class="n">String</span> <span class="n">author</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">author</span> <span class="o">=</span> <span class="n">author</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getPublisher</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="n">publisher</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setPublisher</span><span class="o">(</span><span class="n">String</span> <span class="n">publisher</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">publisher</span> <span class="o">=</span> <span class="n">publisher</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getIsbn</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="n">isbn</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setIsbn</span><span class="o">(</span><span class="n">String</span> <span class="n">isbn</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">isbn</span> <span class="o">=</span> <span class="n">isbn</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="nd">@Override</span>
-</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="s">&quot;Book [name=&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;, author=&quot;</span> <span class="o">+</span> <span class="n">author</span> <span class="o">+</span> <span class="s">&quot;, publisher=&quot;</span>
-</span><span class='line'>              <span class="o">+</span> <span class="n">publisher</span> <span class="o">+</span> <span class="s">&quot;, isbn=&quot;</span> <span class="o">+</span> <span class="n">isbn</span>  <span class="o">+</span> <span class="s">&quot;]&quot;</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This is simple bean class containing Nano annotations, indicating this is a Nano bindable class. When a top level class is annotated with @RootElement, then its instance maps to XML element, in our case &lt;book&gt; tag. At field level, all fields of Book are annotated with @Element, indicating these fileds map to XML elements.</p>
-
-<h3>2. Create Container Class to Hold List of Objects</h3>
-
-<p>Now we need to create a new Class &#8220;Books.java&#8221; as container to hold the list of Book objects by having an ArrayList instance in our class:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.annotation.Element</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Books</span> <span class="o">{</span>
-</span><span class='line'>  
-</span><span class='line'>    <span class="nd">@Element</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;book&quot;</span><span class="o">)</span>
-</span><span class='line'>    <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;</span> <span class="n">books</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="nf">Books</span><span class="o">()</span> <span class="o">{}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="nf">Books</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;</span> <span class="n">books</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">books</span> <span class="o">=</span> <span class="n">books</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;</span> <span class="nf">getBooks</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="n">books</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setBooks</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;</span> <span class="n">books</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">books</span> <span class="o">=</span> <span class="n">books</span><span class="o">;</span>
-</span><span class='line'>    <span class="o">}</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Just annotate the books field with @Element annotation, then Nano framework will handle list marshalling or unmarshalling automatically for us.</p>
-
-<h3>3. Create a Java Main Client</h3>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.FileInputStream</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.FileOutputStream</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.IReader</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.IWriter</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.NanoFactory</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/**</span>
-</span><span class='line'><span class="cm"> * A demo show Nano list handling</span>
-</span><span class='line'><span class="cm"> * </span>
-</span><span class='line'><span class="cm"> * @author bulldog</span>
-</span><span class='line'><span class="cm"> *</span>
-</span><span class='line'><span class="cm"> */</span>
-</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ListExample</span> <span class="o">{</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="n">Book</span> <span class="n">bookOne</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Book</span><span class="o">();</span>
-</span><span class='line'>      <span class="n">bookOne</span><span class="o">.</span><span class="na">setAuthor</span><span class="o">(</span><span class="s">&quot;Kathy Sierra&quot;</span><span class="o">);</span>
-</span><span class='line'>      <span class="n">bookOne</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">&quot;SCJP&quot;</span><span class="o">);</span>
-</span><span class='line'>      <span class="n">bookOne</span><span class="o">.</span><span class="na">setPublisher</span><span class="o">(</span><span class="s">&quot;Tata McGraw Hill&quot;</span><span class="o">);</span>
-</span><span class='line'>      <span class="n">bookOne</span><span class="o">.</span><span class="na">setIsbn</span><span class="o">(</span><span class="s">&quot;856-545456736&quot;</span><span class="o">);</span>
-</span><span class='line'>      
-</span><span class='line'>      <span class="n">Book</span> <span class="n">bookTwo</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Book</span><span class="o">();</span>
-</span><span class='line'>      <span class="n">bookTwo</span><span class="o">.</span><span class="na">setAuthor</span><span class="o">(</span><span class="s">&quot;Christian Bauer&quot;</span><span class="o">);</span>
-</span><span class='line'>      <span class="n">bookTwo</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">&quot;Java Persistence with Hibernate&quot;</span><span class="o">);</span>
-</span><span class='line'>      <span class="n">bookTwo</span><span class="o">.</span><span class="na">setPublisher</span><span class="o">(</span><span class="s">&quot;Manning&quot;</span><span class="o">);</span>
-</span><span class='line'>      <span class="n">bookTwo</span><span class="o">.</span><span class="na">setIsbn</span><span class="o">(</span><span class="s">&quot;978-3832180577&quot;</span><span class="o">);</span>
-</span><span class='line'>      
-</span><span class='line'>      <span class="n">List</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;</span> <span class="n">bookList</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Book</span><span class="o">&gt;();</span>
-</span><span class='line'>      <span class="n">bookList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">bookOne</span><span class="o">);</span>
-</span><span class='line'>      <span class="n">bookList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">bookTwo</span><span class="o">);</span>
-</span><span class='line'>      
-</span><span class='line'>      <span class="n">Books</span> <span class="n">books</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Books</span><span class="o">();</span>
-</span><span class='line'>      <span class="n">books</span><span class="o">.</span><span class="na">setBooks</span><span class="o">(</span><span class="n">bookList</span><span class="o">);</span>
-</span><span class='line'>      
-</span><span class='line'>      <span class="n">IWriter</span> <span class="n">xmlWriter</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLWriter</span><span class="o">();</span>
-</span><span class='line'>      <span class="k">try</span> <span class="o">{</span>
-</span><span class='line'>          <span class="n">xmlWriter</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">books</span><span class="o">,</span> <span class="k">new</span> <span class="n">FileOutputStream</span><span class="o">(</span><span class="s">&quot;books.xml&quot;</span><span class="o">));</span>
-</span><span class='line'>      <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>          <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
-</span><span class='line'>      <span class="o">}</span>
-</span><span class='line'>      
-</span><span class='line'>      <span class="n">IReader</span> <span class="n">xmlReader</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLReader</span><span class="o">();</span>
-</span><span class='line'>      <span class="k">try</span> <span class="o">{</span>
-</span><span class='line'>          <span class="n">books</span> <span class="o">=</span> <span class="n">xmlReader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">Books</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="s">&quot;books.xml&quot;</span><span class="o">));</span>
-</span><span class='line'>      <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>          <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
-</span><span class='line'>      <span class="o">}</span>
-</span><span class='line'>      
-</span><span class='line'>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">books</span><span class="o">.</span><span class="na">getBooks</span><span class="o">());</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><ol>
-<li>In the main method, we create two Book objects and store them in an ArrayList, then we create a Books container object and put the book list into it.</li>
-<li>We use a Nano xml writer instance to write the Books object to an xml file.</li>
-<li>We use a Nano xml reader instance to read the xml file back into Books object.</li>
-<li>Finally, we print the list of books(which will eventually call toString() on Book object).</li>
-</ol>
-</blockquote>
-
-<h3>4. Output</h3>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[Book [name=SCJP, author=Kathy Sierra, publisher=Tata McGraw Hill, isbn=856-545456736], Book [name=Java Persistence with Hibernate, author=Christian Bauer, publisher=Manning, isbn=978-3832180577]]</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Refesh your project in IDE(eclipse in my case) to see the generated XML file:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;?xml version='1.0' encoding='utf-8' ?>
-</span><span class='line'>&lt;books>
-</span><span class='line'>  &lt;book>
-</span><span class='line'>    &lt;author>Kathy Sierra&lt;/author>
-</span><span class='line'>    &lt;isbn>856-545456736&lt;/isbn>
-</span><span class='line'>    &lt;name>SCJP&lt;/name>
-</span><span class='line'>    &lt;publisher>Tata McGraw Hill&lt;/publisher>
-</span><span class='line'>  &lt;/book>
-</span><span class='line'>  &lt;book>
-</span><span class='line'>    &lt;author>Christian Bauer&lt;/author>
-</span><span class='line'>    &lt;isbn>978-3832180577&lt;/isbn>
-</span><span class='line'>    &lt;name>Java Persistence with Hibernate&lt;/name>
-</span><span class='line'>    &lt;publisher>Manning&lt;/publisher>
-</span><span class='line'>  &lt;/book>
-</span><span class='line'>&lt;/books></span></code></pre></td></tr></table></div></figure>
-
-
-<h3>5. Project Source</h3>
-
-<p>You can get the whole source of this project <a href="https://github.com/bulldog2011/nano/tree/master/sample/nanolist">here</a>.</p>
 ]]></content>
   </entry>
   

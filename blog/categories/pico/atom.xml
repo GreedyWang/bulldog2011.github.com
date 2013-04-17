@@ -4,7 +4,7 @@
   <title><![CDATA[Category: pico | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/pico/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-16T21:04:19+08:00</updated>
+  <updated>2013-04-17T11:48:52+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -3151,7 +3151,7 @@ since we will use XML based interface in this tutorial, you may now review the g
 
 <p>The whole source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/CurrencyConverter">here</a>.</p>
 
-<p>Let's cut to to the point:</p>
+<p>Let's cut to the point:</p>
 
 <!--more-->
 
@@ -3175,8 +3175,8 @@ since we will use XML based interface in this tutorial, you may now review the g
 
 <blockquote><ul>
 <li>By default, the proxy code will be generated in the sub-folder corresponding to the target namespace of the wsdl.</li>
-<li>There is a geneated folder called <code>client</code>, the SOAP and XML proxy interface will be generated in this folder.</li>
-<li>There is a generted folder called <code>common</code>, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request or handle response needed by service call.</li>
+<li>There is a generated folder called <code>client</code>, the SOAP and XML proxy interface will be generated in this folder.</li>
+<li>There is a generated folder called <code>common</code>, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request or handle response needed by service call.</li>
 </ul>
 </blockquote>
 
@@ -3203,7 +3203,7 @@ since we will use XML based interface in this tutorial, you may now review the g
 
 <h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
 
-<p>First, create a shared serivice client as below:</p>
+<p>First, create a shared service client as below:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>CurrencyConverterSerivceClient.h </span><a href='https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/CurrencyConverterSerivceClient.h'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -3441,7 +3441,7 @@ since we will use XML based interface in this tutorial, you may now review the g
 
 <h2>Final Step - Run the Demo</h2>
 
-<p>See a sceen shot below:</p>
+<p>See a screen shot below:</p>
 
 <p><img class="center" src="/images/pico/tutorial02/screen_shot2.png" width="300" height="500"></p>
 
@@ -3544,7 +3544,7 @@ since we will use XML based interface in this tutorial, you may now review the g
 </span><span class='line'>
 </span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
 
-<p>There are other similar demos in the <a href="https://github.com/bulldog2011/pico/tree/master/Examples">Examples</a> folder of Pico source, like the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/BarCode">BarCode</a> demo which calls web service that will return base64 encoded barcode data and the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/Weather">Weather</a> demo which shows the weather given a zip code, see screen shots below, I won't create tuturials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.</p>
+<p>There are other similar demos in the <a href="https://github.com/bulldog2011/pico/tree/master/Examples">Examples</a> folder of Pico source, like the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/BarCode">BarCode</a> demo which calls web service that will return base64 encoded barcode data and the <a href="https://github.com/bulldog2011/pico/tree/master/Examples/Weather">Weather</a> demo which shows the weather given a zip code, see screen shots below, I won't create tutorials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.</p>
 
 <p>The screen shot of barcode demo:
 <img class="center" src="/images/pico/tutorial02/screen_shot3.png" width="300" height="500"></p>

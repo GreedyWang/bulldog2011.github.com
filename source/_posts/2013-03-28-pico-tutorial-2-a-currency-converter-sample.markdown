@@ -12,7 +12,7 @@ This is the second tutorial of Pico Tutorial series, in the [first tutorial](htt
 
 The whole source of this tutorial is [here](https://github.com/bulldog2011/pico/tree/master/Examples/CurrencyConverter).
 
-Let's cut to to the point:
+Let's cut to the point:
 
 <!--more-->
 
@@ -30,8 +30,8 @@ A few comments to the generated code:
 
 
 >* By default, the proxy code will be generated in the sub-folder corresponding to the target namespace of the wsdl.
-* There is a geneated folder called `client`, the SOAP and XML proxy interface will be generated in this folder.
-* There is a generted folder called `common`, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request or handle response needed by service call.
+* There is a generated folder called `client`, the SOAP and XML proxy interface will be generated in this folder.
+* There is a generated folder called `common`, a common header file will be generated in this folder, the common header includes headers of all types generated from wsdl/schema, use this header file can free you from writing many import statements in your project when you build request or handle response needed by service call.
 
 ##Step 2 - Create New iOS Project, Add Pico Library and Generated Proxy into Your Project
 
@@ -54,7 +54,7 @@ The finished project should look like the screen shot below:
 
 ##Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.
 
-First, create a shared serivice client as below:
+First, create a shared service client as below:
 
 {% codeblock CurrencyConverterSerivceClient.h lang:objc https://github.com/bulldog2011/pico/blob/master/Examples/CurrencyConverter/CurrencyConverter/CurrencyConverterSerivceClient.h source %}
 
@@ -160,7 +160,7 @@ Please don't forget to include the shared CurrencyConverterSerivceClient.
 
 ##Final Step - Run the Demo
 
-See a sceen shot below:
+See a screen shot below:
 
 {% img center /images/pico/tutorial02/screen_shot2.png 300 500 %}
 
@@ -206,7 +206,7 @@ And the debug output:
 
 {% endcodeblock %}
 
-There are other similar demos in the [Examples](https://github.com/bulldog2011/pico/tree/master/Examples) folder of Pico source, like the [BarCode](https://github.com/bulldog2011/pico/tree/master/Examples/BarCode) demo which calls web service that will return base64 encoded barcode data and the [Weather](https://github.com/bulldog2011/pico/tree/master/Examples/Weather) demo which shows the weather given a zip code, see screen shots below, I won't create tuturials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.
+There are other similar demos in the [Examples](https://github.com/bulldog2011/pico/tree/master/Examples) folder of Pico source, like the [BarCode](https://github.com/bulldog2011/pico/tree/master/Examples/BarCode) demo which calls web service that will return base64 encoded barcode data and the [Weather](https://github.com/bulldog2011/pico/tree/master/Examples/Weather) demo which shows the weather given a zip code, see screen shots below, I won't create tutorials for all these simple demos, since they are quite similar. Next time, I plan to show you how to use Pico with industrial level web serivces, like Amazon and eBay web serivces, just stay tuned.
 
 The screen shot of barcode demo:
 {% img center /images/pico/tutorial02/screen_shot3.png 300 500 %}

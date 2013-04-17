@@ -8,7 +8,7 @@ keywords: ios, wsdl, soap, ebay finding api
 description: Pico Tutorial 3 - Hello eBay Finding
 ---
 
-This is the third tutorial of Pico tutorial series, in [first](http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/) and [second]() tutorials, I showed you how to use Pico with simple web serivces like [StockQuote](StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=9) and [CurrencyConverter](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=10). These services are quite simple, only support one or two calls, and the request/response structures are fairly simple, supporting these simple services only can't show the full power of Pico. So in this and later tutorials, I will show you how to use Pico with industrial grade services, let's start with [eBay Finding service](http://developer.ebay.com/DevZone/finding/CallRef/index.html), please reivew its official site if you are not familar with this service, bastially, it let you search items on eBay. eBay Finding service supports SOAP12, so I will also show you how to configure Pico to support SOAP12 protocol, also I will show how to set service required HTTP headers on Pico client.
+This is the third tutorial of Pico tutorial series, in [first](http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/) and [second](http://bulldog2011.github.io/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/) tutorials, I showed you how to use Pico with simple web serivces like [StockQuote](StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=9) and [CurrencyConverter](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&WSID=10). These services are quite simple, only support one or two calls, and the request/response structures are fairly simple, supporting these simple services only can't show the full power of Pico, so in this and later tutorials, I will show you how to use Pico with industrial grade services, let's start with [eBay Finding service](http://developer.ebay.com/DevZone/finding/CallRef/index.html), please reivew its official site if you are not familiar with this service, bastially, it lets you search items on eBay. eBay Finding service supports SOAP 1.2, so I will also show you how to configure Pico to support SOAP 1.2 protocol, also I will show how to set service required HTTP headers on Pico client.
 
 The source of this tutorial is [here](https://github.com/bulldog2011/pico/tree/master/Examples/eBayFinding)
 
@@ -246,7 +246,7 @@ static NSString *const eBayFindingServiceURLString = @"http://svcs.ebay.com/serv
 
 The shared client for eBay Finding service is a little more complex than the simple serivce client in tutorial 1 and 2, this is because that eBay Finding service needs a few HTTP headers set to work, let me give more comments:
 
->1. eBay Finding service support SOAP12, so we set the client to use `SOAP12` protocol, this is not necessary since eBay Finding serivce also support SOAP11(which is Pico default), we use SOAP12 here just for demo and to show the capability of Pico.
+>1. eBay Finding service support SOAP12, so we set the client to use `SOAP12` protocol, this is not necessary since eBay Finding service also supports SOAP11(which is Pico default), we use SOAP12 here just for demo and to show the capability of Pico.
 2. eBay Finding service needs to set a few HTTP headers to work, for a list of required headers, please refer to doc [here](http://developer.ebay.com/DevZone/finding/Concepts/MakingACall.html).
 3. One mandatory header for eBay Finding service is `eBayAppId`, you need to register on eBay developer site as an eBay developer then get this id, before your can run this demo, you must fill in your own eBayAppId in the shared client.
 
@@ -407,7 +407,7 @@ At last, please don't forget to include the shared client and SOAP12 related hea
 
 ##Final Step - Run the Demo
 
-This time let's run the demo on a real iPod Touch 4 device with iOS 4.3.3, see a sceen shot below:
+This time let's run the demo on a real iPod Touch 4 device with iOS 4.3.3, see a screen shot below:
 
 {% img center /images/pico/tutorial03/screen_shot1.png 300 500 %}
 
@@ -476,7 +476,7 @@ This is just a bare minimum eBay Finding service based application, for a demo w
 {% img center /images/pico/tutorial03/screen_shot3.png 300 500 %}
 
 
-Now it's your turn to create iOS applications based on eBay Finding web serivce, see your next great serivce based app.
+Now it's your turn to create iOS applications based on eBay Finding web service, see your next great service based app.
 
 
 ### Update 1

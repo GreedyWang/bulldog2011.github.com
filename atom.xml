@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-17T22:38:54+08:00</updated>
+  <updated>2013-04-18T10:49:17+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,833 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Nano Tutorial 4 - Hello eBay Shopping]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/04/18/nano-tutorial-4-hello-ebay-shopping/"/>
+    <updated>2013-04-18T09:52:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/04/18/nano-tutorial-4-hello-ebay-shopping</id>
+    <content type="html"><![CDATA[<p>This is the fourth tutorial of Nano tutorial series, in this tutorial, I will show you how to integrate <a href="https://github.com/bulldog2011/nano">Nano</a> with <a href="https://www.x.com/developers/ebay/products/shopping-api">eBay Shopping Web Service</a>, if you are not familiar with this service, just have a quick review on its official site, basically, eBay Shopping service allows you to search for eBay items, products and reviews, user info, and popular items and searches. In previous tutorials, I showed you how to integrate Nano with SOAP based services, while in this tutorial, I will show you how to interate Nano with XML based service, the eBay Shopping service just supports XML message format.</p>
+
+<p>The source of this tutorial is <a href="https://github.com/bulldog2011/nano/tree/master/sample/webservice/HelloeBayShopping">here</a>.</p>
+
+<!--more-->
+
+
+<h2>Step 0 - Prerequisite</h2>
+
+<p>I suppose you have already read previous Nano tutorials, at least 1 and 2, and basically you should know:</p>
+
+<blockquote><ul>
+<li>The wsdl driven development process supported by Nano.</li>
+<li>How to add the Nano library and the generated service proxy into your Android project.</li>
+</ul>
+</blockquote>
+
+<h2>Step 1 - Generate Java Proxy from WSDL</h2>
+
+<p>Download <a href="https://github.com/bulldog2011/mwsc">mwsc</a> and run following command in terminal to generate the proxy:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin\mwsc.bat -nano -d generated -ebayshopping http://developer.ebay.com/webservices/latest/ShoppingService.wsdl</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Depends on the network speed, you may need to wait a few moments to let the code generator download the wsdl and generate code, you may also download the wsdl and run the code generator with a local wsdl.</p>
+
+<p>A few comments about the codegen options:</p>
+
+<blockquote><ul>
+<li>The code generator will throw many warnings, say that the wsdl violates some schema rule, just ignore them, it&#8217;s ok as long as the final code is generated correctly.</li>
+<li>I have added a special <code>-ebayshopping</code> codegen option, this is because eBay Shopping service needs a per-call operation name HTTP header(eBay Finding service also needs a similar but different header), I added this special flag in the code generator to let it generate the header for me, since I don&#8217;t want to add this header everytime I call an eBay Shopping service, so this is just a special flag for eBay Shopping services and for demo only, or a hidden feature, not a generic codegen option.</li>
+<li>By default, the code generator will derive package name from target namespace in wsdl, if necessary, you can override package name with <code>-p</code> option.</li>
+<li>The generator will generate both SOAP and XML clients for us, in the <code>client</code> sub-folder.</li>
+</ul>
+</blockquote>
+
+<h2>Step 2 - Create New Android Project, Add Nano Library and Generated Proxy into Your Project</h2>
+
+<p>Create a simple Android project called <code>HelloeBayShopping</code> in eclipse(or other IDE you prefer), then:</p>
+
+<blockquote><ol>
+<li>Download <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/nano/0.7.0/nano-0.7.0.jar">latest nano library jar</a> and add it to the <code>libs</code> folder of your Android project.</li>
+<li>Drag the above generated proxy into the <code>src</code> folder of your Android project.</li>
+<li>Add following user permissions in the <code>AndroidManifest.xml</code> file to enable network access.</li>
+</ol>
+</blockquote>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">&quot;android.permission.INTERNET&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'><span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">&quot;android.permission.ACCESS_NETWORK_STATE&quot;</span> <span class="nt">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now build the project to ensure it can build successfully.</p>
+
+<p>The code generation will generate both SOAP and XML based interfaces from eBay Shopping wsdl for us,
+since we will use XML based interface in this tutorial, you may now review the generated eBay Shopping service XML interface to learn what kinds of functions are provided by eBay Shopping service, and what kinds of parameters are needed to call the service, the interface is posted below:</p>
+
+<figure class='code'><figcaption><span>ShoppingInterface_XMLClient.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/HelloeBayShopping/src/ebay/apis/eblbasecomponents/client/ShoppingInterface_XMLClient.java'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// Generated by wsdl compiler for android/java</span>
+</span><span class='line'><span class="c1">// DO NOT CHANGE!</span>
+</span><span class='line'><span class="kn">package</span> <span class="n">ebay</span><span class="o">.</span><span class="na">apis</span><span class="o">.</span><span class="na">eblbasecomponents</span><span class="o">.</span><span class="na">client</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.ws.XMLServiceCallback</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.ws.NanoXMLClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetSingleItemResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetShippingCostsResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetCategoryInfoResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GeteBayTimeRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetCategoryInfoRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetUserProfileRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetUserProfileResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetSingleItemRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindPopularSearchesRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindHalfProductsResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindPopularItemsRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindReviewsAndGuidesRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindPopularSearchesResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindProductsResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GeteBayTimeResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetMultipleItemsResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetShippingCostsRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetItemStatusResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindPopularItemsResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetMultipleItemsRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindProductsRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindReviewsAndGuidesResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindHalfProductsRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.GetItemStatusRequestType</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> This class is the XML client to the ShoppingInterface Web Service.</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ShoppingInterface_XMLClient</span> <span class="kd">extends</span> <span class="n">NanoXMLClient</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findHalfProducts</span><span class="o">(</span><span class="n">FindHalfProductsRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">FindHalfProductsResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;FindHalfProducts&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindHalfProductsResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findPopularItems</span><span class="o">(</span><span class="n">FindPopularItemsRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">FindPopularItemsResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;FindPopularItems&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindPopularItemsResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findPopularSearches</span><span class="o">(</span><span class="n">FindPopularSearchesRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">FindPopularSearchesResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;FindPopularSearches&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindPopularSearchesResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findProducts</span><span class="o">(</span><span class="n">FindProductsRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">FindProductsResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;FindProducts&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindProductsResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findReviewsAndGuides</span><span class="o">(</span><span class="n">FindReviewsAndGuidesRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">FindReviewsAndGuidesResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;FindReviewsAndGuides&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindReviewsAndGuidesResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getCategoryInfo</span><span class="o">(</span><span class="n">GetCategoryInfoRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">GetCategoryInfoResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;GetCategoryInfo&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GetCategoryInfoResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getItemStatus</span><span class="o">(</span><span class="n">GetItemStatusRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">GetItemStatusResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;GetItemStatus&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GetItemStatusResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getMultipleItems</span><span class="o">(</span><span class="n">GetMultipleItemsRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">GetMultipleItemsResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;GetMultipleItems&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GetMultipleItemsResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getShippingCosts</span><span class="o">(</span><span class="n">GetShippingCostsRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">GetShippingCostsResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;GetShippingCosts&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GetShippingCostsResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getSingleItem</span><span class="o">(</span><span class="n">GetSingleItemRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">GetSingleItemResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;GetSingleItem&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GetSingleItemResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getUserProfile</span><span class="o">(</span><span class="n">GetUserProfileRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">GetUserProfileResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;GetUserProfile&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GetUserProfileResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     public method</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">geteBayTime</span><span class="o">(</span><span class="n">GeteBayTimeRequestType</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">GeteBayTimeResponseType</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-CALL-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;GeteBayTime&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GeteBayTimeResponseType</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>All the methods in the interface follow same calling paradigm - you call the service with required request object and a callback object implementing interface <a href="https://github.com/bulldog2011/nano/blob/master/src/main/java/com/leansoft/nano/ws/XMLServiceCallback.java">XMLServiceCallback</a>.</p>
+
+<p>You may also compare the XML interface with the SOAP interface, they are almost similar, except that SOAP interface will give you an additional SOAPFault object in the failure callback(<a href="https://github.com/bulldog2011/nano/blob/master/src/main/java/com/leansoft/nano/ws/SOAPServiceCallback.java">in SOAPServiceCallback</a>), this is obvious, since XML based service has no concept of SOAPFault, usually, the response error is returned as response resident error(RRE) in the XML response message.</p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>First, create a shared service client as below:</p>
+
+<figure class='code'><figcaption><span>ShoppingServiceClient.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/HelloeBayShopping/src/com/ebay/service/shopping/ShoppingServiceClient.java'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">ebay</span><span class="o">.</span><span class="na">service</span><span class="o">.</span><span class="na">shopping</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.client.ShoppingInterface_XMLClient</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ShoppingServiceClient</span> <span class="o">{</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="c1">// production</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">eBayShoppingServiceURLString</span> <span class="o">=</span> <span class="s">&quot;http://open.api.ebay.com/shopping?&quot;</span><span class="o">;</span>
+</span><span class='line'>  <span class="c1">// sandbox</span>
+</span><span class='line'>  <span class="c1">//public static final String eBayShoppingServiceURLString = &quot;http://open.api.sandbox.ebay.com/shopping&quot;;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">eBayAppId</span> <span class="o">=</span> <span class="s">&quot;YOUR APPID HERE&quot;</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">targetAPIVersion</span> <span class="o">=</span> <span class="s">&quot;809&quot;</span><span class="o">;</span>
+</span><span class='line'>  <span class="cm">/**</span>
+</span><span class='line'><span class="cm"> for site id list, see http://developer.ebay.com/DevZone/shopping/docs/CallRef/types/SiteCodeType.html</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">targetSiteid</span> <span class="o">=</span> <span class="s">&quot;0&quot;</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">static</span> <span class="kd">volatile</span> <span class="n">ShoppingInterface_XMLClient</span> <span class="n">client</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">ShoppingInterface_XMLClient</span> <span class="nf">getSharedClient</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">(</span><span class="n">client</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="kd">synchronized</span><span class="o">(</span><span class="n">ShoppingServiceClient</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="k">if</span> <span class="o">(</span><span class="n">client</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                  <span class="n">client</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ShoppingInterface_XMLClient</span><span class="o">();</span>
+</span><span class='line'>                  <span class="n">client</span><span class="o">.</span><span class="na">setEndpointUrl</span><span class="o">(</span><span class="n">eBayShoppingServiceURLString</span><span class="o">);</span>
+</span><span class='line'>                  <span class="n">client</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-APP-ID&quot;</span><span class="o">,</span> <span class="n">eBayAppId</span><span class="o">);</span>
+</span><span class='line'>                  <span class="n">client</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-REQUEST-ENCODING&quot;</span><span class="o">,</span> <span class="s">&quot;XML&quot;</span><span class="o">);</span>
+</span><span class='line'>                  <span class="n">client</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-VERSION&quot;</span><span class="o">,</span> <span class="n">targetAPIVersion</span><span class="o">);</span>
+</span><span class='line'>                  <span class="n">client</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-API-SITE-ID&quot;</span><span class="o">,</span> <span class="n">targetSiteid</span><span class="o">);</span>
+</span><span class='line'>              <span class="o">}</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="k">return</span> <span class="n">client</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Like eBay Finding service, the eBay Shopping service needs a few HTTP headers set to work, let me give more comments:</p>
+
+<blockquote><ol>
+<li>eBay Shopping service needs to set a few HTTP headers to work, for a list of required headers, please refer to doc <a href="http://developer.ebay.com/DevZone/shopping/docs/Concepts/ShoppingAPI_FormatOverview.html">here</a>.</li>
+<li>One mandatory header for eBay Shopping service is <code>eBayAppId</code>, you need to register on eBay developer site as an eBay developer then get this id, before your can run this demo, you must fill in your own eBayAppId in the shared client.</li>
+<li>Another mandatory header for eBay Shopping service is <code>targetAPIVersion</code>, aka the API version you want to use, usually, you use the latest one, at the time of this writing, the latest version is <code>809</code>, you may update this according to your real needs.</li>
+<li>We also set <code>X-EBAY-API-REQUEST-ENCODING</code> to <code>XML</code>, indicating we want to call XML service supported by eBay Shopping service.</li>
+</ol>
+</blockquote>
+
+<p>Now the UI part and application logic, for this hello world like sample, we just need a <code>EditText</code> for keyword input and <code>Button</code> to trigger eBay search by invoking listening method <code>onClick</code> which will indirectly call eBay Shopping service through the proxy, fairly simple, see the full application logic in <code>MainActivity</code> class below:</p>
+
+<figure class='code'><figcaption><span>MainActivity.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/HelloeBayShopping/src/com/leansoft/nano/sample/MainActivity.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.ebay.service.shopping.ShoppingServiceClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.ws.XMLServiceCallback</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.AckCodeType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.ErrorType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindPopularItemsRequestType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.FindPopularItemsResponseType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.SimpleItemType</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">ebay.apis.eblbasecomponents.client.ShoppingInterface_XMLClient</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.os.Bundle</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.app.Activity</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.view.View</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.view.View.OnClickListener</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.Button</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.EditText</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.Toast</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MainActivity</span> <span class="kd">extends</span> <span class="n">Activity</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nd">@Override</span>
+</span><span class='line'>  <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onCreate</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="kd">super</span><span class="o">.</span><span class="na">onCreate</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">setContentView</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">activity_main</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">Button</span> <span class="n">searchButton</span> <span class="o">=</span> <span class="o">(</span><span class="n">Button</span><span class="o">)</span> <span class="k">this</span><span class="o">.</span><span class="na">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">search_button</span><span class="o">);</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="n">searchButton</span><span class="o">.</span><span class="na">setOnClickListener</span><span class="o">(</span><span class="k">new</span> <span class="n">OnClickListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="nd">@Override</span>
+</span><span class='line'>          <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">arg0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>              <span class="c1">// Get shared client</span>
+</span><span class='line'>              <span class="n">ShoppingInterface_XMLClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">ShoppingServiceClient</span><span class="o">.</span><span class="na">getSharedClient</span><span class="o">();</span>
+</span><span class='line'>              <span class="n">client</span><span class="o">.</span><span class="na">setDebug</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span> <span class="c1">// enable xml message logging</span>
+</span><span class='line'>          
+</span><span class='line'>              <span class="c1">// Build request object</span>
+</span><span class='line'>              <span class="n">FindPopularItemsRequestType</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FindPopularItemsRequestType</span><span class="o">();</span>
+</span><span class='line'>              <span class="n">String</span> <span class="n">keywords</span> <span class="o">=</span> <span class="o">((</span><span class="n">EditText</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">keyword_input</span><span class="o">)).</span><span class="na">getText</span><span class="o">().</span><span class="na">toString</span><span class="o">();</span>
+</span><span class='line'>              <span class="n">request</span><span class="o">.</span><span class="na">queryKeywords</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">;</span>
+</span><span class='line'>              <span class="c1">// only need one item for demo</span>
+</span><span class='line'>              <span class="n">request</span><span class="o">.</span><span class="na">maxEntries</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
+</span><span class='line'>              
+</span><span class='line'>                <span class="c1">// make API call with registered callbacks</span>
+</span><span class='line'>              <span class="n">client</span><span class="o">.</span><span class="na">findPopularItems</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="k">new</span> <span class="n">XMLServiceCallback</span><span class="o">&lt;</span><span class="n">FindPopularItemsResponseType</span><span class="o">&gt;()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>                  <span class="nd">@Override</span>
+</span><span class='line'>                  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span>
+</span><span class='line'>                          <span class="n">FindPopularItemsResponseType</span> <span class="n">responseObject</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>                      <span class="k">if</span> <span class="o">(</span><span class="n">AckCodeType</span><span class="o">.</span><span class="na">SUCCESS</span> <span class="o">==</span> <span class="n">responseObject</span><span class="o">.</span><span class="na">ack</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                          <span class="k">if</span> <span class="o">(</span><span class="n">responseObject</span><span class="o">.</span><span class="na">itemArray</span><span class="o">.</span><span class="na">item</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                              <span class="c1">// show the title of first found item</span>
+</span><span class='line'>                              <span class="n">SimpleItemType</span> <span class="n">item</span> <span class="o">=</span> <span class="n">responseObject</span><span class="o">.</span><span class="na">itemArray</span><span class="o">.</span><span class="na">item</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>                              <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">item</span><span class="o">.</span><span class="na">title</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                          <span class="o">}</span> <span class="k">else</span> <span class="o">{</span> <span class="c1">// no result</span>
+</span><span class='line'>                              <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="s">&quot;No result&quot;</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                          <span class="o">}</span>
+</span><span class='line'>                      <span class="o">}</span> <span class="k">else</span> <span class="o">{</span> <span class="c1">// response resident error</span>
+</span><span class='line'>                          <span class="n">ErrorType</span> <span class="n">error</span> <span class="o">=</span> <span class="n">responseObject</span><span class="o">.</span><span class="na">errors</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>                          <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">error</span><span class="o">.</span><span class="na">shortMessage</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                      <span class="o">}</span>
+</span><span class='line'>                  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>                  <span class="nd">@Override</span>
+</span><span class='line'>                  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="n">Throwable</span> <span class="n">error</span><span class="o">,</span> <span class="n">String</span> <span class="n">errorMessage</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// http or parsing error</span>
+</span><span class='line'>                      <span class="k">if</span> <span class="o">(</span><span class="n">errorMessage</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                          <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">errorMessage</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                      <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>                          <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">error</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(),</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                      <span class="o">}</span>
+</span><span class='line'>                  <span class="o">}</span>
+</span><span class='line'>                  
+</span><span class='line'>              <span class="o">});</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>          
+</span><span class='line'>      <span class="o">});</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>More comments to the serivce call code:</p>
+
+<blockquote><ol>
+<li>I&#8217;ve added comments in the code so the whole service call flow should be easy to understand.</li>
+<li>We used the eBay Shopping <code>findPopularItems</code> call, which takes a keyword as input, and will return a list of matched popular items on eBay, for demo, we just need one item to display, so we set <code>maxEntries</code> to 1.</li>
+<li>In the success handling logic, we show the title of the returned item..</li>
+<li>eBay Shopping service supports response resident error(RRE), so even we get a success response, we still need to check the response for resident error and handle it accordingly.</li>
+</ol>
+</blockquote>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>Let&#8217;s run the demo on simulator, see a screen shot below:</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano/tutorial04/screen_shot1.png" width="400" height="600"></p>
+
+<p>and the debug output:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279): Sending request to : http://open.api.ebay.com/shopping?
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279): Request HTTP headers : 
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279): {
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279):     X-EBAY-API-APP-ID="********"
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279):     X-EBAY-API-SITE-ID="0"
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279):     X-EBAY-API-CALL-NAME="FindPopularItems"
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279):     X-EBAY-API-REQUEST-ENCODING="XML"
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279):     Accept="text/xml"
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279):     X-EBAY-API-VERSION="809"
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279): }
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279): Request message : 
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279): &lt;?xml version='1.0' encoding='UTF-8' ?>
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279): &lt;FindPopularItemsRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279):   &lt;QueryKeywords>android&lt;/QueryKeywords>
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279):   &lt;MaxEntries>1&lt;/MaxEntries>
+</span><span class='line'>04-18 02:29:54.646: D/NanoXMLClient(279): &lt;/FindPopularItemsRequest>
+</span><span class='line'>04-18 02:29:55.926: D/dalvikvm(279): GC_FOR_MALLOC freed 6860 objects / 348416 bytes in 50ms
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279): Response HTTP status : 200
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279): Response HTTP headers : 
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279): {
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     X-EBAY-ESB-GUID="urn:uuid:3CD859772BC3C3F65827459259312600922-1430899813"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Expires="Sat, 25 Dec 1999 00:00:00 GMT"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Last-Modified="Thu, 18 Apr 2013 02:30:21 GMT"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Connection="Keep-Alive"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Server="Apache-Coyote/1.1"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Pragma="no-cache"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Cache-Control="no-cache"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     X-EBAY-API-BUILD-TAG="E819_CORE_APILW2_15990919_R1"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Transfer-Encoding="chunked"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Date="Thu, 18 Apr 2013 02:30:21 GMT"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     X-EBAY-API-POOL-NAME="___cDRidW9rdDdlaHFg"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     X-EBAY-API-SERVER-NAME="___dm97MmQ3MWYrYWU1PigyNSg/NSs3NTUrNDMyPz43OzU="
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Content-Encoding="gzip"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     Content-Type="text/xml;charset=utf-8"
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279): }
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279): Response message : 
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279): &lt;?xml version="1.0" encoding="UTF-8"?>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):   &lt;FindPopularItemsResponse xmlns="urn:ebay:apis:eBLBaseComponents">
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):    &lt;Timestamp>2013-04-18T02:30:21.938Z&lt;/Timestamp>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):    &lt;Ack>Success&lt;/Ack>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):    &lt;Build>E819_CORE_APILW2_15990919_R1&lt;/Build>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):    &lt;Version>819&lt;/Version>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):    &lt;ItemArray>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     &lt;Item>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;ItemID>170848931666&lt;/ItemID>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;EndTime>2013-04-20T17:07:32.000Z&lt;/EndTime>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;ViewItemURLForNaturalSearch>http://www.ebay.com/itm/HTC-Droid-Incredible-Verizon-Wireless-Wifi-8-0-MP-Camera-8GB-Android-Cell-Phone-/170848931666&lt;/ViewItemURLForNaturalSearch>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;ListingType>FixedPriceItem&lt;/ListingType>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;GalleryURL>http://thumbs3.ebaystatic.com/pict/1708489316668080_52.jpg&lt;/GalleryURL>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;PrimaryCategoryID>9355&lt;/PrimaryCategoryID>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;PrimaryCategoryName>Cell Phones &amp; Accessories:Cell Phones &amp; Smartphones&lt;/PrimaryCategoryName>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;BidCount>18835&lt;/BidCount>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;ConvertedCurrentPrice currencyID="USD">64.95&lt;/ConvertedCurrentPrice>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;ListingStatus>Active&lt;/ListingStatus>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;TimeLeft>P2DT14H37M11S&lt;/TimeLeft>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;Title>HTC Droid Incredible Verizon Wireless Wifi 8.0 MP Camera 8GB Android Cell Phone&lt;/Title>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;ShippingCostSummary>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):       &lt;ShippingServiceCost currencyID="USD">0.0&lt;/ShippingServiceCost>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):       &lt;ShippingType>Flat&lt;/ShippingType>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):       &lt;ListedShippingServiceCost currencyID="USD">0.0&lt;/ListedShippingServiceCost>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;/ShippingCostSummary>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;WatchCount>10901&lt;/WatchCount>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;DiscountPriceInfo>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):       &lt;OriginalRetailPrice currencyID="USD">500.0&lt;/OriginalRetailPrice>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):       &lt;PricingTreatment>STP&lt;/PricingTreatment>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):       &lt;SoldOneBay>false&lt;/SoldOneBay>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):       &lt;SoldOffeBay>false&lt;/SoldOffeBay>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):      &lt;/DiscountPriceInfo>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):     &lt;/Item>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):    &lt;/ItemArray>
+</span><span class='line'>04-18 02:29:55.936: D/XMLHttpResponseHandler(279):   &lt;/FindPopularItemsResponse></span></code></pre></td></tr></table></div></figure>
+
+
+<p>let&#8217;s also try a soap fault case, for example, if you forget to fill in your <code>eBayAppId</code> in the shared client, then you will get:
+<img class="center" src="http://bulldog2011.github.com/images/nano/tutorial04/screen_shot2.png" width="400" height="600"></p>
+
+<p>This is just a bare minimum eBay Shopping service based application, for a demo with more functions, please see the <a href="https://github.com/bulldog2011/nano/tree/master/sample/webservice/eBayDemoApp">eBayDemoApp</a> sample in the <code>sample\webservice</code> folder of Nano source, eBayDemoApp is a composite app which calls two eBay services behind, this app searches eBay by calling eBay Finding service, shows a list of matched items on UI, when an item is clicked, it will show item details by calling eBay Shopping service, see a screen shot below.</p>
+
+<p><img class="center" src="http://bulldog2011.github.com/images/nano/tutorial04/screen_shot3.png" width="400" height="600"></p>
+
+<p>Now it&#8217;s your turn to create Android applications based on eBay Shopping and eBay Finding web services, see your next great service based app.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Nano Tutorial 3 - Hello eBay Finding]]></title>
@@ -73,7 +900,7 @@
 
 <p>Now build the project to ensure it can build successfully.</p>
 
-<p>You may now review the eBay Finding service SOAP interface generated from wsdl, to learn what kinds of functions are provided by eBay Finding service, and what kinds of parameters are needed to call the serivce, the interface is posted below:</p>
+<p>You may now review the eBay Finding service SOAP interface generated from wsdl, to learn what kinds of functions are provided by eBay Finding service, and what kinds of parameters are needed to call the service, the interface is posted below:</p>
 
 <figure class='code'><figcaption><span>FindingServicePortType_SOAPClient.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/HelloeBayFinding/src/com/ebay/marketplace/search/v1/services/client/FindingServicePortType_SOAPClient.java'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -213,6 +1040,17 @@
 <span class='line-number'>136</span>
 <span class='line-number'>137</span>
 <span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// Generated by wsdl compiler for android/java</span>
 </span><span class='line'><span class="c1">// DO NOT CHANGE!</span>
 </span><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">ebay</span><span class="o">.</span><span class="na">api</span><span class="o">.</span><span class="na">finding</span><span class="o">.</span><span class="na">client</span><span class="o">;</span>
@@ -255,6 +1093,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getSearchKeywordsRecommendation</span><span class="o">(</span><span class="n">GetSearchKeywordsRecommendationRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">GetSearchKeywordsRecommendationResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;getSearchKeywordsRecommendation&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GetSearchKeywordsRecommendationResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -264,6 +1103,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findItemsByKeywords</span><span class="o">(</span><span class="n">FindItemsByKeywordsRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">FindItemsByKeywordsResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;findItemsByKeywords&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindItemsByKeywordsResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -273,6 +1113,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findItemsByCategory</span><span class="o">(</span><span class="n">FindItemsByCategoryRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">FindItemsByCategoryResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;findItemsByCategory&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindItemsByCategoryResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -282,6 +1123,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findItemsAdvanced</span><span class="o">(</span><span class="n">FindItemsAdvancedRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">FindItemsAdvancedResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;findItemsAdvanced&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindItemsAdvancedResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -291,6 +1133,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findItemsByProduct</span><span class="o">(</span><span class="n">FindItemsByProductRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">FindItemsByProductResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;findItemsByProduct&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindItemsByProductResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -300,6 +1143,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findItemsIneBayStores</span><span class="o">(</span><span class="n">FindItemsIneBayStoresRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">FindItemsIneBayStoresResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;findItemsIneBayStores&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindItemsIneBayStoresResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -309,6 +1153,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findItemsByImage</span><span class="o">(</span><span class="n">FindItemsByImageRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">FindItemsByImageResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;findItemsByImage&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindItemsByImageResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -318,6 +1163,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getHistograms</span><span class="o">(</span><span class="n">GetHistogramsRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">GetHistogramsResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;getHistograms&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GetHistogramsResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -327,6 +1173,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findCompletedItems</span><span class="o">(</span><span class="n">FindCompletedItemsRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">FindCompletedItemsResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;findCompletedItems&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindCompletedItemsResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -336,6 +1183,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getVersion</span><span class="o">(</span><span class="n">GetVersionRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">GetVersionResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;getVersion&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">GetVersionResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -345,6 +1193,7 @@
 </span><span class='line'><span class="cm">    */</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">findItemsForFavoriteSearch</span><span class="o">(</span><span class="n">FindItemsForFavoriteSearchRequest</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&lt;</span><span class="n">FindItemsForFavoriteSearchResponse</span><span class="o">&gt;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">getAsyncHttpClient</span><span class="o">().</span><span class="na">addHeader</span><span class="o">(</span><span class="s">&quot;X-EBAY-SOA-OPERATION-NAME&quot;</span><span class="o">,</span> <span class="s">&quot;findItemsForFavoriteSearch&quot;</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">FindItemsForFavoriteSearchResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
 </span><span class='line'>    <span class="o">}</span>
@@ -4500,15 +5349,15 @@ since we will use XML based interface in this tutorial, you may now review the g
 <p>let&#8217;s also try a error case, for example, if you forget to fill in your <code>eBayAppId</code> in the shared client, then you will get:
 <img class="center" src="http://bulldog2011.github.com/images/pico/tutorial04/screen_shot2.png" width="300" height="500"></p>
 
-<p>This is just a bare minimum eBay Shopping service based application, for a demo with more functions, please see the eBayDemoApp sample in the <code>Examples</code> folder of Pico source, eBayDemoApp is a composite app which calls two eBay serivces behind, this app searches eBay by calling eBay Fining service, showes a list of matched items on UI, when an item is clicked, it will show item details by calling eBay Shopping service, see a screen shot below.</p>
+<p>This is just a bare minimum eBay Shopping service based application, for a demo with more functions, please see the eBayDemoApp sample in the <code>Examples</code> folder of Pico source, eBayDemoApp is a composite app which calls two eBay services behind, this app searches eBay by calling eBay Finding service, shows a list of matched items on UI, when an item is clicked, it will show item details by calling eBay Shopping service, see a screen shot below.</p>
 
 <p><img class="center" src="http://bulldog2011.github.com/images/pico/tutorial04/screen_shot3.png" width="300" height="500"></p>
 
-<p>Now it&#8217;s your turn to create iOS applications based on eBay Shopping and eBay Finding web serivces, see your next great serivce based app.</p>
+<p>Now it&#8217;s your turn to create iOS applications based on eBay Shopping and eBay Finding web services, see your next great service based app.</p>
 
 <h3>Update 1</h3>
 
-<p>The eBay Shopping Service Proxy has been extracted as a standalone project, hosted <a href="https://github.com/bulldog2011/PicoEBayShoppingClient">here</a>, and the corresponding appledoc is hosted <a href="http://bulldog2011.github.com/PicoEBayShoppingClient/">here</a>, the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.</p>
+<p>The eBay Shopping Service Proxy has been extracted as a standalone project, hosted <a href="https://github.com/bulldog2011/PicoEBayShoppingClient">here</a>, and the corresponding appledoc is hosted <a href="http://bulldog2011.github.com/PicoEBayShoppingClient/">here</a>, the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generated into the proxy code, but into the appledoc, assisting your development.</p>
 ]]></content>
   </entry>
   
@@ -8810,381 +9659,6 @@ get keywords input and build a FindItemByKeywordsRequest object, get a FindItemB
 
 <p>If your mobile application is performance critical, Nano JSON or RAW SAX is the way to go, I perfer Nano JSON since its automatic binding feature will have better maintainability and can impove development effciency a lot.<br/>
 In other cases, Nano XML is also a good choice since it&#8217;s a good balance among maintainability, development effciency, readability and performance. This is especially the case when you have a complex business domain, in such case, parsing a large amount of domain class will be a big development headache, never to say later maintenance, instead, the automatic code generation and binding features of Nano binding framework will be a big help in such case.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[schema driven nano binding]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/02/07/schema-driven-nano-binding/"/>
-    <updated>2013-02-07T20:32:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/02/07/schema-driven-nano-binding</id>
-    <content type="html"><![CDATA[<p><a href="https://github.com/bulldog2011/nano">Nano</a> is a light weight xml/json binding framework targeting Android platform, in this post, I will show you how to use Nano and the accompanying compiler tool <a href="https://github.com/bulldog2011/mxjc">mxjc</a> together to do schema driven xml or json data binding - similar to the development process using JAXB and XJC.</p>
-
-<!--more-->
-
-
-<h3>The Big Picture</h3>
-
-<p><img class="center" src="http://bulldog2011.github.com/images/nano/nano-binding.png" width="400" height="400"></p>
-
-<p>A picture is worth a thousand words, a typical schema driven xml data binding development includes two main phases:</p>
-
-<blockquote><ol>
-<li><strong><em>Build Time</em></strong> - in this phase, we authorize xml scheam or xsd first, the schema specifies the metadata of our business domain, this is the single source of truth, later code generation all depends on the scheam, only if the scheam changes, then we need to regenerate source code. With schema specified, we use the mxjc schema binding compiler to compile the scheam into Nano bindable classes, mxjc is based on JAXB xjc, so its usage is similar to xjc. Classes generated by mxjc will be annotated with Nano annotations, these annotations specify the mapping between pojo and xml, they will later be scanned by Nano binding framework to guide the real marshalling or unmarshalling at runtime.</li>
-<li><strong><em>Runtime time</em></strong> - in this phase, we have Nano bindable domain class in hand, what&#8217;s left is to do marshalling or unmarshalling according to real needs, by leveraging Nano binding framework. Nano is a middle man between XML/JSON document and java object, when objects or pojos are fed into the Nano binding framework, it can marshall them or serialize them into either XML or JSON content, and when XML or JSON content is fed into the Nano binding framework, it can unmarshall or deserialize them into objects or pojos.</li>
-</ol>
-</blockquote>
-
-<p>By the way, scheam driven development is good for some scenario with complex business domain, without formal schema and automated code generation, the manual written code base will be very hard to maintain. However, when your use case is simple, it&#8217;s not necessary to begin with scheam, just write your domian class then annotate with Nano annations is also workable.</p>
-
-<h3>A Zoo Sample</h3>
-
-<p>I&#8217;ve create an ant project to demo the scheam driven developmeng with Nano and mxjc, you can find the project <a href="https://github.com/bulldog2011/nano/tree/master/sample/schema-driven">here</a>, you can download the whole project and run it with Ant(suppose you have Ant installed).</p>
-
-<p>Belew is the Ant build file which includes all scheam driven development stets mentioned above:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&quot;1.0&quot; standalone=&quot;yes&quot;?&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">&lt;project</span> <span class="na">basedir=</span><span class="s">&quot;.&quot;</span> <span class="na">default=</span><span class="s">&quot;run&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;sample.home&quot;</span> <span class="na">value=</span><span class="s">&quot;.&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;path</span> <span class="na">id=</span><span class="s">&quot;classpath&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;pathelement</span> <span class="na">path=</span><span class="s">&quot;classes&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;fileset</span> <span class="na">dir=</span><span class="s">&quot;${sample.home}&quot;</span> <span class="na">includes=</span><span class="s">&quot;lib/mxjc/*.jar&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;fileset</span> <span class="na">dir=</span><span class="s">&quot;${sample.home}&quot;</span> <span class="na">includes=</span><span class="s">&quot;lib/nano/*.jar&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/path&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;taskdef</span> <span class="na">name=</span><span class="s">&quot;mxjc&quot;</span> <span class="na">classname=</span><span class="s">&quot;com.leansoft.mxjc.MXJCTask&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;classpath</span> <span class="na">refid=</span><span class="s">&quot;classpath&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/taskdef&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c">&lt;!--compile Java source files--&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;target</span> <span class="na">name=</span><span class="s">&quot;compile&quot;</span> <span class="na">description=</span><span class="s">&quot;Compile all Java source files&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;echo</span> <span class="na">message=</span><span class="s">&quot;Compiling the schema...&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;mkdir</span> <span class="na">dir=</span><span class="s">&quot;gen-src&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;mxjc</span> <span class="na">schema=</span><span class="s">&quot;schema/zoo.xsd&quot;</span> <span class="na">package=</span><span class="s">&quot;com.leansoft.nano.zoo&quot;</span> <span class="na">destdir=</span><span class="s">&quot;gen-src&quot;</span> <span class="na">removeOldOutput=</span><span class="s">&quot;yes&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;produces</span> <span class="na">dir=</span><span class="s">&quot;gen-src/com/leansoft/nano/zoo&quot;</span> <span class="na">includes=</span><span class="s">&quot;**/*.java&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/mxjc&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;echo</span> <span class="na">message=</span><span class="s">&quot;Compiling the java source files...&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;mkdir</span> <span class="na">dir=</span><span class="s">&quot;classes&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;javac</span> <span class="na">destdir=</span><span class="s">&quot;classes&quot;</span> <span class="na">debug=</span><span class="s">&quot;on&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;src</span> <span class="na">path=</span><span class="s">&quot;src&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;src</span> <span class="na">path=</span><span class="s">&quot;gen-src&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;classpath</span> <span class="na">refid=</span><span class="s">&quot;classpath&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/javac&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/target&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nt">&lt;target</span> <span class="na">name=</span><span class="s">&quot;run&quot;</span> <span class="na">depends=</span><span class="s">&quot;compile&quot;</span> <span class="na">description=</span><span class="s">&quot;Run the sample app&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;echo</span> <span class="na">message=</span><span class="s">&quot;Running the sample application...&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;java</span> <span class="na">classname=</span><span class="s">&quot;com.leansoft.nano.sample.ZooExample&quot;</span> <span class="na">fork=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;classpath</span> <span class="na">refid=</span><span class="s">&quot;classpath&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/java&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/target&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nt">&lt;target</span> <span class="na">name=</span><span class="s">&quot;clean&quot;</span> <span class="na">description=</span><span class="s">&quot;Deletes all the generated artifacts.&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;delete</span> <span class="na">dir=</span><span class="s">&quot;gen-src&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;delete</span> <span class="na">dir=</span><span class="s">&quot;classes&quot;</span> <span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/target&gt;</span>
-</span><span class='line'><span class="nt">&lt;/project&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>mxjc provides an Ant task called MXJCTask, similar to xjc ant task, mxjc ant task can also auto-generate source from scheam driven by Ant.</p>
-
-<p>Following the xml scheam(xsd):</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="nt">&lt;xsd:schema</span> <span class="na">xmlns:xsd=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;xsd:element</span> <span class="na">name=</span><span class="s">&quot;zoo&quot;</span> <span class="na">type=</span><span class="s">&quot;zooInfo&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;xsd:element</span> <span class="na">name=</span><span class="s">&quot;comment&quot;</span> <span class="na">type=</span><span class="s">&quot;xsd:string&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;xsd:complexType</span> <span class="na">name=</span><span class="s">&quot;zooInfo&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;xsd:sequence&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;xsd:element</span> <span class="na">name=</span><span class="s">&quot;zooName&quot;</span> <span class="na">type=</span><span class="s">&quot;xsd:string&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;xsd:element</span> <span class="na">name=</span><span class="s">&quot;zooId&quot;</span> <span class="na">type=</span><span class="s">&quot;xsd:int&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;xsd:element</span> <span class="na">name=</span><span class="s">&quot;animals&quot;</span> <span class="na">type=</span><span class="s">&quot;Animals&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/xsd:sequence&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/xsd:complexType&gt;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nt">&lt;xsd:complexType</span> <span class="na">name=</span><span class="s">&quot;Animals&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;xsd:sequence&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;xsd:element</span> <span class="na">name=</span><span class="s">&quot;animal&quot;</span> <span class="na">minOccurs=</span><span class="s">&quot;1&quot;</span> <span class="na">maxOccurs=</span><span class="s">&quot;unbounded&quot;</span><span class="nt">&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;xsd:complexType&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;xsd:sequence&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;xsd:element</span> <span class="na">name=</span><span class="s">&quot;animalName&quot;</span> <span class="na">type=</span><span class="s">&quot;xsd:string&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>            <span class="nt">&lt;xsd:element</span> <span class="na">name=</span><span class="s">&quot;animalType&quot;</span> <span class="na">type=</span><span class="s">&quot;xsd:string&quot;</span><span class="nt">/&gt;</span>
-</span><span class='line'>          <span class="nt">&lt;/xsd:sequence&gt;</span>
-</span><span class='line'>        <span class="nt">&lt;/xsd:complexType&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;/xsd:element&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/xsd:sequence&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/xsd:complexType&gt;</span>
-</span><span class='line'><span class="nt">&lt;/xsd:schema&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The XML document which we are going to read and print in console:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
-</span><span class='line'><span class="nt">&lt;zoo&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;zooName&gt;</span>Vandalur Zoo<span class="nt">&lt;/zooName&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;zooId&gt;</span>12321<span class="nt">&lt;/zooId&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;animals&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;animal&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;animalName&gt;</span>Lion<span class="nt">&lt;/animalName&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;animalType&gt;</span>Wild<span class="nt">&lt;/animalType&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/animal&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;animal&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;animalName&gt;</span>Dog<span class="nt">&lt;/animalName&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;animalType&gt;</span>Domestic<span class="nt">&lt;/animalType&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/animal&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;animal&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;animalName&gt;</span>White Tiger<span class="nt">&lt;/animalName&gt;</span>
-</span><span class='line'>      <span class="nt">&lt;animalType&gt;</span>Wild<span class="nt">&lt;/animalType&gt;</span>
-</span><span class='line'>    <span class="nt">&lt;/animal&gt;</span>
-</span><span class='line'>  <span class="nt">&lt;/animals&gt;</span>
-</span><span class='line'><span class="nt">&lt;/zoo&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Following is the main java code to read the xml file, output some content, and then write the whole objects into json output.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.FileInputStream</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.IReader</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.IWriter</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.NanoFactory</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.zoo.Animals</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.zoo.ZooInfo</span><span class="o">;</span>
-</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.zoo.animals.Animal</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ZooExample</span> <span class="o">{</span>
-</span><span class='line'>  
-</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">try</span> <span class="o">{</span>
-</span><span class='line'>          
-</span><span class='line'>          <span class="n">IReader</span> <span class="n">xmlReader</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getXMLReader</span><span class="o">();</span>
-</span><span class='line'>          
-</span><span class='line'>          <span class="n">ZooInfo</span> <span class="n">zooInfo</span> <span class="o">=</span> <span class="n">xmlReader</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">ZooInfo</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="s">&quot;xml/zoo.xml&quot;</span><span class="o">));</span>
-</span><span class='line'>          
-</span><span class='line'>          <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;Output after xml read - &quot;</span><span class="o">);</span>
-</span><span class='line'>          <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;Zoo Name: &quot;</span> <span class="o">+</span> <span class="n">zooInfo</span><span class="o">.</span><span class="na">getZooName</span><span class="o">());</span>
-</span><span class='line'>          <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;Zoo Id: &quot;</span> <span class="o">+</span> <span class="n">zooInfo</span><span class="o">.</span><span class="na">getZooId</span><span class="o">());</span>
-</span><span class='line'>      
-</span><span class='line'>          <span class="n">Animals</span> <span class="n">animals</span> <span class="o">=</span> <span class="n">zooInfo</span><span class="o">.</span><span class="na">getAnimals</span><span class="o">();</span>
-</span><span class='line'>          <span class="n">List</span><span class="o">&lt;</span><span class="n">Animal</span><span class="o">&gt;</span> <span class="n">animalsList</span> <span class="o">=</span> <span class="n">animals</span><span class="o">.</span><span class="na">getAnimal</span><span class="o">();</span>
-</span><span class='line'>      
-</span><span class='line'>          <span class="k">for</span> <span class="o">(</span><span class="n">Animal</span> <span class="n">animal</span> <span class="o">:</span> <span class="n">animalsList</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>              <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\t&quot;</span> <span class="o">+</span> <span class="n">animal</span><span class="o">.</span><span class="na">getAnimalName</span><span class="o">());</span>
-</span><span class='line'>              <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\t\t&quot;</span> <span class="o">+</span> <span class="n">animal</span><span class="o">.</span><span class="na">getAnimalType</span><span class="o">());</span>
-</span><span class='line'>          <span class="o">}</span>
-</span><span class='line'>          
-</span><span class='line'>          <span class="n">IWriter</span> <span class="n">xmlWriter</span> <span class="o">=</span> <span class="n">NanoFactory</span><span class="o">.</span><span class="na">getJSONWriter</span><span class="o">();</span>
-</span><span class='line'>      
-</span><span class='line'>          <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;Output after json write - &quot;</span><span class="o">);</span>
-</span><span class='line'>          <span class="n">xmlWriter</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">zooInfo</span><span class="o">,</span> <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">);</span>
-</span><span class='line'>      
-</span><span class='line'>          
-</span><span class='line'>      <span class="o">}</span> <span class="k">catch</span><span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>          <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
-</span><span class='line'>      <span class="o">}</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Output</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">Output</span> <span class="n">after</span> <span class="n">xml</span> <span class="n">read</span> <span class="o">-</span>
-</span><span class='line'><span class="n">Zoo</span> <span class="nl">Name:</span> <span class="n">Vandalur</span> <span class="n">Zoo</span>
-</span><span class='line'><span class="n">Zoo</span> <span class="nl">Id:</span> <span class="mi">12321</span>
-</span><span class='line'>  <span class="n">Lion</span>
-</span><span class='line'>      <span class="n">Wild</span>
-</span><span class='line'>  <span class="n">Dog</span>
-</span><span class='line'>      <span class="n">Domestic</span>
-</span><span class='line'>  <span class="n">White</span> <span class="n">Tiger</span>
-</span><span class='line'>      <span class="n">Wild</span>
-</span><span class='line'><span class="n">Output</span> <span class="n">after</span> <span class="n">json</span> <span class="n">write</span> <span class="o">-</span>
-</span><span class='line'><span class="o">{</span><span class="s">&quot;zoo&quot;</span><span class="o">:</span> <span class="o">{</span>
-</span><span class='line'>    <span class="s">&quot;animals&quot;</span><span class="o">:</span> <span class="o">{</span><span class="s">&quot;animal&quot;</span><span class="o">:</span> <span class="o">[</span>
-</span><span class='line'>        <span class="o">{</span>
-</span><span class='line'>            <span class="s">&quot;animalName&quot;</span><span class="o">:</span> <span class="s">&quot;Lion&quot;</span><span class="o">,</span>
-</span><span class='line'>            <span class="s">&quot;animalType&quot;</span><span class="o">:</span> <span class="s">&quot;Wild&quot;</span>
-</span><span class='line'>        <span class="o">},</span>
-</span><span class='line'>        <span class="o">{</span>
-</span><span class='line'>            <span class="s">&quot;animalName&quot;</span><span class="o">:</span> <span class="s">&quot;Dog&quot;</span><span class="o">,</span>
-</span><span class='line'>            <span class="s">&quot;animalType&quot;</span><span class="o">:</span> <span class="s">&quot;Domestic&quot;</span>
-</span><span class='line'>        <span class="o">},</span>
-</span><span class='line'>        <span class="o">{</span>
-</span><span class='line'>            <span class="s">&quot;animalName&quot;</span><span class="o">:</span> <span class="s">&quot;White Tiger&quot;</span><span class="o">,</span>
-</span><span class='line'>            <span class="s">&quot;animalType&quot;</span><span class="o">:</span> <span class="s">&quot;Wild&quot;</span>
-</span><span class='line'>        <span class="o">}</span>
-</span><span class='line'>    <span class="o">]},</span>
-</span><span class='line'>    <span class="s">&quot;zooId&quot;</span><span class="o">:</span> <span class="mi">12321</span><span class="o">,</span>
-</span><span class='line'>    <span class="s">&quot;zooName&quot;</span><span class="o">:</span> <span class="s">&quot;Vandalur Zoo&quot;</span>
-</span><span class='line'><span class="o">}}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Conclusion</h3>
-
-<p>When used properly, scheam driven development can greatly improve agaility in development, and just as I have showed in the post, Nano with mxjc supports scheam driven development smoothly, you may tell me that you would rather choose JAXB to do scheam driven development, I admit that JAXB is more mature and feature-rich than Nano, but one cool thing of Nano is it supports Android platform while JAXB does not, Nano is just tailored for Android platform, in later posts, I will show you how to practice scham driven data binding on Android platform, it&#8217;s facinating, stay tuned.</p>
 ]]></content>
   </entry>
   

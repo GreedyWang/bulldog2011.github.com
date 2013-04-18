@@ -4,7 +4,7 @@
   <title><![CDATA[Category: nano | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/nano/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-18T21:18:53+08:00</updated>
+  <updated>2013-04-18T21:32:32+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -1024,7 +1024,7 @@ since we will use SOAP based interface in this tutorial, you may now review the 
 
 <p><img class="center" src="/images/nano/tutorial05/screen_shot2.png" width="400" height="600"></p>
 
-<p>This is just a bare minimum Amazon Product Advertising service based application, for a demo with more functions, please see the AmazonBookFinder sample in the <code>sample\webservice</code> folder of Nano source, AmazonBookFinder calls following APIs in one app:</p>
+<p>This is just a bare minimum Amazon Product Advertising service based application, for a demo with more functions, please see the <a href="https://github.com/bulldog2011/nano/tree/master/sample/webservice/AmazonBookFinder">AmazonBookFinder</a> sample in the <code>sample\webservice</code> folder of Nano source, AmazonBookFinder calls following APIs in one app:</p>
 
 <blockquote><ol>
 <li><strong><em>itemSearch</em></strong> for book search</li>

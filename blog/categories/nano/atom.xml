@@ -4,7 +4,7 @@
   <title><![CDATA[Category: nano | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/nano/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-18T10:49:17+08:00</updated>
+  <updated>2013-04-18T21:18:53+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,1040 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Nano Tutorial 5 - Hello Amazon Product Advertising API]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/04/18/nano-tutorial-5-hello-amazon-product-advertising-api/"/>
+    <updated>2013-04-18T19:18:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/04/18/nano-tutorial-5-hello-amazon-product-advertising-api</id>
+    <content type="html"><![CDATA[<p>This is the fifth tutorial of Nano tutorial series, in this tutorial, I will show you how to integrate <a href="https://github.com/bulldog2011/nano">Nano</a> with <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising API</a>, if you are not familiar with this API, just have a quick review on its official site, basically, the Product Advertising API provides programmatic access to Amazon's product selection and discovery functionality so that developers like you can advertise Amazon products to monetize your website. In this tutorial, I will show you how to add custom SOAP header which is required by the authentication of Amazon Product Advertising API.</p>
+
+<!--more-->
+
+
+<p><strong><em>NOTE</em></strong></p>
+
+<p>Per Amazon:</p>
+
+<p><blockquote><p>You will not, without our express prior written approval, use any Product Advertising Content on or in connection with any site or application designed or intended for use with a mobile phone or other handheld device.</p></blockquote></p>
+
+<p>So please consult Amazon for permission before you can use its Product Advertising Content on any Android devices.</p>
+
+<p>The source of this tutorial is <a href="https://github.com/bulldog2011/nano/tree/master/sample/webservice/HelloAmazonProductAdvertising">here</a>.</p>
+
+<h2>Step 0 - Prerequisite</h2>
+
+<p>I suppose you have already read previous Nano tutorials, at least 1 and 2, and basically you should know:</p>
+
+<blockquote><ul>
+<li>The wsdl driven development process supported by Nano.</li>
+<li>How to add the Nano library and the generated service proxy into your Android project.</li>
+</ul>
+</blockquote>
+
+<h2>Step 1 - Generate Java Proxy from WSDL</h2>
+
+<p>Download <a href="https://github.com/bulldog2011/mwsc">mwsc</a> and run following command in terminal to generate the proxy:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>bin\mwsc.bat -nano -d generated http://webservices.amazon.com/AWSECommerceService/AWSECommerceService.wsdl&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Depends on the network speed, you may need to wait a few moments to let the code generator download the wsdl and generate code, you may also download the wsdl and run the code generator with a local wsdl.</p>
+
+<h2>Step 2 - Create New Android Project, Add Nano Library and Generated Proxy into Your Project</h2>
+
+<p>Create a simple Android project called <code>HelloAmazonProductAdvertising</code> in eclipse(or other IDE you prefer), then:</p>
+
+<blockquote><ol>
+<li>Download <a href="https://github.com/bulldog2011/bulldog-repo/blob/master/repo/releases/com/leansoft/nano/0.7.0/nano-0.7.0.jar">latest nano library jar</a> and add it to the <code>libs</code> folder of your Android project.</li>
+<li>Drag the above generated proxy into the <code>src</code> folder of your Android project.</li>
+<li>Add following user permissions in the <code>AndroidManifest.xml</code> file to enable network access. <br/>
+<code>xml
+ &lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+ &lt;uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /&gt;
+</code></li>
+</ol>
+</blockquote>
+
+<p>Now build the project to ensure it can build successfully.</p>
+
+<p>The code generation will generate both SOAP and XML based interfaces from Amazon Product Advertising wsdl for us,
+since we will use SOAP based interface in this tutorial, you may now review the generated Amazon Product Advertising SOAP interface(in the generated <code>client</code> sub-folder) to learn what kind of functions are provided by Amazon Product Advertising service, and what kind of parameters are needed to call the service, the interface is posted below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>AWSECommerceServicePortType_SOAPClient.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/HelloAmazonProductAdvertising/src/com/amazon/webservices/awsecommerceservice/_2011_08_01/client/AWSECommerceServicePortType_SOAPClient.java'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="c1">// Generated by wsdl compiler for android/java</span>
+</span><span class='line'><span class="c1">// DO NOT CHANGE!</span>
+</span><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">amazon</span><span class="o">.</span><span class="na">webservices</span><span class="o">.</span><span class="na">awsecommerceservice</span><span class="o">.</span><span class="na">_2011_08_01</span><span class="o">.</span><span class="na">client</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.leansoft.nano.ws.SOAPServiceCallback</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.ws.NanoSOAPClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartClear</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartModify</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">SimilarityLookup</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">SimilarityLookupResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">ItemSearch</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">ItemSearchResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartClearResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartGet</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">ItemLookup</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">BrowseNodeLookup</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">ItemLookupResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartAdd</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartAddResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartGetResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartCreate</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">BrowseNodeLookupResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartCreateResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">CartModifyResponse</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="n">This</span> <span class="kd">class</span> <span class="nc">is</span> <span class="n">the</span> <span class="n">SOAP</span> <span class="n">client</span> <span class="n">to</span> <span class="n">the</span> <span class="n">AWSECommerceServicePortType</span> <span class="n">Web</span> <span class="n">Service</span><span class="o">.</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">AWSECommerceServicePortType_SOAPClient</span> <span class="kd">extends</span> <span class="n">NanoSOAPClient</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">itemSearch</span><span class="o">(</span><span class="n">ItemSearch</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">ItemSearchResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">ItemSearchResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">itemLookup</span><span class="o">(</span><span class="n">ItemLookup</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">ItemLookupResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">ItemLookupResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">browseNodeLookup</span><span class="o">(</span><span class="n">BrowseNodeLookup</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">BrowseNodeLookupResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">BrowseNodeLookupResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">similarityLookup</span><span class="o">(</span><span class="n">SimilarityLookup</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">SimilarityLookupResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">SimilarityLookupResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">cartGet</span><span class="o">(</span><span class="n">CartGet</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">CartGetResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">CartGetResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">cartCreate</span><span class="o">(</span><span class="n">CartCreate</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">CartCreateResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">CartCreateResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">cartAdd</span><span class="o">(</span><span class="n">CartAdd</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">CartAddResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">CartAddResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">cartModify</span><span class="o">(</span><span class="n">CartModify</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">CartModifyResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">CartModifyResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> public method</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">cartClear</span><span class="o">(</span><span class="n">CartClear</span> <span class="n">requestObject</span><span class="o">,</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">CartClearResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">serviceCallback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">requestObject</span><span class="o">,</span> <span class="n">serviceCallback</span><span class="o">,</span> <span class="n">CartClearResponse</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>All the methods in the interface follow same calling paradigm - you call the service with required request object and a callback object implementing interface <a href="https://github.com/bulldog2011/nano/blob/master/src/main/java/com/leansoft/nano/ws/SOAPServiceCallback.java">SOAPServiceCallback</a>.</p>
+
+<h2>Step 3 - Implement Appliction Logic and UI, Call Proxy to Invoke Web Service as Needed.</h2>
+
+<p>First, create a shared service client as below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>AWSECommerceClient.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/HelloAmazonProductAdvertising/src/com/amazon/service/ecommerce/AWSECommerceClient.java'>source </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">amazon</span><span class="o">.</span><span class="na">service</span><span class="o">.</span><span class="na">ecommerce</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">java.io.UnsupportedEncodingException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.security.InvalidKeyException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.security.NoSuchAlgorithmException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.text.SimpleDateFormat</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Calendar</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.TimeZone</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">javax.crypto.Mac</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.crypto.spec.SecretKeySpec</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.xml.parsers.DocumentBuilder</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.xml.parsers.DocumentBuilderFactory</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.xml.parsers.ParserConfigurationException</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">org.w3c.dom.Document</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.w3c.dom.Element</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice._2011_08_01.client.AWSECommerceServicePortType_SOAPClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.util.Base64</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">AWSECommerceClient</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="cm">/**</span>
+</span><span class='line'><span class="cm">    Update url according to your local location, see a list of supported location at the end of the wsdl:</span>
+</span><span class='line'><span class="cm">    http://webservices.amazon.com/AWSECommerceService/AWSECommerceService.wsdl</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">AWSCEServiceURLString</span> <span class="o">=</span> <span class="s">&quot;https://webservices.amazon.com/onca/soap?Service=AWSECommerceService&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/** Use this to specify the AWS Access Key ID */</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">AWSAccessKeyId</span> <span class="o">=</span> <span class="s">&quot;YOUR ACCESS KEY HERE&quot;</span><span class="o">;</span>
+</span><span class='line'><span class="cm">/** Use this to specify the AWS Secret Key */</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="n">String</span> <span class="n">AWSSecureKeyId</span> <span class="o">=</span> <span class="s">&quot;YOUR SECURE KEY HERE&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/** Namespace for all AWS Security elements */</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">AuthHeaderNS</span> <span class="o">=</span> <span class="s">&quot;http://security.amazonaws.com/doc/2007-01-01/&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">private</span> <span class="kd">static</span> <span class="n">AWSECommerceServicePortType_SOAPClient</span> <span class="n">client</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/** Algorithm used to calculate string hashes */</span>
+</span><span class='line'><span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">SIGNATURE_ALGORITHM</span> <span class="o">=</span> <span class="s">&quot;HmacSHA256&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">private</span> <span class="kd">static</span> <span class="n">Mac</span> <span class="n">mac</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="n">AWSECommerceServicePortType_SOAPClient</span> <span class="nf">getSharedClient</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">client</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">synchronized</span><span class="o">(</span><span class="n">AWSECommerceClient</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">if</span> <span class="o">(</span><span class="n">client</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">client</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AWSECommerceServicePortType_SOAPClient</span><span class="o">();</span>
+</span><span class='line'>                <span class="n">client</span><span class="o">.</span><span class="na">setEndpointUrl</span><span class="o">(</span><span class="n">AWSCEServiceURLString</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="c1">// init security</span>
+</span><span class='line'>                <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>                    <span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span> <span class="o">=</span> <span class="n">AWSSecureKeyId</span><span class="o">.</span><span class="na">getBytes</span><span class="o">(</span><span class="s">&quot;UTF-8&quot;</span><span class="o">);</span>
+</span><span class='line'>                    <span class="n">SecretKeySpec</span> <span class="n">keySpec</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SecretKeySpec</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">SIGNATURE_ALGORITHM</span><span class="o">);</span>
+</span><span class='line'>                    <span class="n">mac</span> <span class="o">=</span> <span class="n">Mac</span><span class="o">.</span><span class="na">getInstance</span><span class="o">(</span><span class="n">SIGNATURE_ALGORITHM</span><span class="o">);</span>
+</span><span class='line'>                    <span class="n">mac</span><span class="o">.</span><span class="na">init</span><span class="o">(</span><span class="n">keySpec</span><span class="o">);</span>
+</span><span class='line'>                <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">UnsupportedEncodingException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                    <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+</span><span class='line'>                <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">NoSuchAlgorithmException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                    <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+</span><span class='line'>                <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">InvalidKeyException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                    <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+</span><span class='line'>                <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">client</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">Authentication of SOAP request</span>
+</span><span class='line'><span class="cm">see details here: http://docs.aws.amazon.com/AWSECommerceService/latest/DG/NotUsingWSSecurity.html</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">authenticateRequest</span><span class="o">(</span><span class="n">String</span> <span class="n">action</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">String</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="n">getTimestamp</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">String</span> <span class="n">signature</span> <span class="o">=</span> <span class="n">calculateSignature</span><span class="o">(</span><span class="n">action</span><span class="o">,</span> <span class="n">timestamp</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">Object</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">securityHeaders</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">Object</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;();</span>
+</span><span class='line'>    <span class="n">Document</span> <span class="n">document</span> <span class="o">=</span> <span class="n">getDocument</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">Element</span> <span class="n">accessKeyElement</span> <span class="o">=</span> <span class="n">document</span><span class="o">.</span><span class="na">createElementNS</span><span class="o">(</span><span class="n">AuthHeaderNS</span><span class="o">,</span> <span class="s">&quot;AWSAccessKeyId&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">accessKeyElement</span><span class="o">.</span><span class="na">appendChild</span><span class="o">(</span><span class="n">document</span><span class="o">.</span><span class="na">createTextNode</span><span class="o">(</span><span class="n">AWSAccessKeyId</span><span class="o">));</span>
+</span><span class='line'>    <span class="n">securityHeaders</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">accessKeyElement</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Element</span> <span class="n">timestampElement</span> <span class="o">=</span> <span class="n">document</span><span class="o">.</span><span class="na">createElementNS</span><span class="o">(</span><span class="n">AuthHeaderNS</span><span class="o">,</span> <span class="s">&quot;Timestamp&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">timestampElement</span><span class="o">.</span><span class="na">appendChild</span><span class="o">(</span><span class="n">document</span><span class="o">.</span><span class="na">createTextNode</span><span class="o">(</span><span class="n">timestamp</span><span class="o">));</span>
+</span><span class='line'>    <span class="n">securityHeaders</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">timestampElement</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Element</span> <span class="n">signatureElement</span> <span class="o">=</span> <span class="n">document</span><span class="o">.</span><span class="na">createElementNS</span><span class="o">(</span><span class="n">AuthHeaderNS</span><span class="o">,</span> <span class="s">&quot;Signature&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">signatureElement</span><span class="o">.</span><span class="na">appendChild</span><span class="o">(</span><span class="n">document</span><span class="o">.</span><span class="na">createTextNode</span><span class="o">(</span><span class="n">signature</span><span class="o">));</span>
+</span><span class='line'>    <span class="n">securityHeaders</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">signatureElement</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">client</span><span class="o">.</span><span class="na">setCustomSOAPHeaders</span><span class="o">(</span><span class="n">securityHeaders</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Calculates a time stamp from &quot;now&quot; in UTC and returns it in ISO8601 string</span>
+</span><span class='line'><span class="cm"> * format. The soap message expires 15 minutes after this time stamp.</span>
+</span><span class='line'><span class="cm"> * AWS only supports UTC and it&#39;s canonical representation as &#39;Z&#39; in an</span>
+</span><span class='line'><span class="cm"> * ISO8601 time string. E.g.  2008-02-10T23:59:59Z</span>
+</span><span class='line'><span class="cm"> * </span>
+</span><span class='line'><span class="cm"> * See http://www.w3.org/TR/xmlschema-2/#dateTime for more details.</span>
+</span><span class='line'><span class="cm"> * </span>
+</span><span class='line'><span class="cm"> * @return ISO8601 time stamp string for &quot;now&quot; in UTC.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="kd">private</span> <span class="kd">static</span> <span class="n">String</span> <span class="nf">getTimestamp</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">Calendar</span>         <span class="n">calendar</span>  <span class="o">=</span> <span class="n">Calendar</span><span class="o">.</span><span class="na">getInstance</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">SimpleDateFormat</span> <span class="n">is08601</span>   <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleDateFormat</span><span class="o">(</span><span class="s">&quot;yyyy-MM-dd&#39;T&#39;HH:mm:ss&#39;Z&#39;&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">is08601</span><span class="o">.</span><span class="na">setTimeZone</span><span class="o">(</span><span class="n">TimeZone</span><span class="o">.</span><span class="na">getTimeZone</span><span class="o">(</span><span class="s">&quot;UTC&quot;</span><span class="o">));</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">is08601</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="n">calendar</span><span class="o">.</span><span class="na">getTime</span><span class="o">());</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Method borrowed from AWS example code at http://developer.amazonwebservices.com/</span>
+</span><span class='line'><span class="cm"> * @param  action The single SOAP body element that is the action the</span>
+</span><span class='line'><span class="cm"> *                      request is taking.</span>
+</span><span class='line'><span class="cm"> * @param  timestamp  The time stamp string as provided in the &amp;amp;lt;aws:Timestamp&amp;amp;gt;</span>
+</span><span class='line'><span class="cm"> *                      header element.</span>
+</span><span class='line'><span class="cm"> * @return A hash calculated according to AWS security rules to be provided in the</span>
+</span><span class='line'><span class="cm"> *         &amp;amp;lt;aws:signature&amp;amp;gt; header element.</span>
+</span><span class='line'><span class="cm"> * @throws Exception If there were errors or missing, required classes when</span>
+</span><span class='line'><span class="cm"> *                   trying to calculate the hash.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="kd">private</span> <span class="kd">static</span> <span class="n">String</span> <span class="nf">calculateSignature</span><span class="o">(</span><span class="n">String</span> <span class="n">action</span><span class="o">,</span> <span class="n">String</span> <span class="n">timestamp</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">String</span> <span class="n">toSign</span> <span class="o">=</span> <span class="o">(</span><span class="n">action</span> <span class="o">+</span> <span class="n">timestamp</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">byte</span><span class="o">[]</span> <span class="n">sigBytes</span> <span class="o">=</span> <span class="n">mac</span><span class="o">.</span><span class="na">doFinal</span><span class="o">(</span><span class="n">toSign</span><span class="o">.</span><span class="na">getBytes</span><span class="o">());</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">new</span> <span class="nf">String</span><span class="o">(</span><span class="n">Base64</span><span class="o">.</span><span class="na">encode</span><span class="o">(</span><span class="n">sigBytes</span><span class="o">));</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Get a W3C XML Document</span>
+</span><span class='line'><span class="cm"> * </span>
+</span><span class='line'><span class="cm"> * @return a document</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="kd">private</span> <span class="kd">static</span> <span class="n">Document</span> <span class="nf">getDocument</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">DocumentBuilderFactory</span> <span class="n">dbf</span> <span class="o">=</span> <span class="n">DocumentBuilderFactory</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">dbf</span><span class="o">.</span><span class="na">setNamespaceAware</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">DocumentBuilder</span> <span class="n">db</span> <span class="o">=</span> <span class="n">dbf</span><span class="o">.</span><span class="na">newDocumentBuilder</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">db</span><span class="o">.</span><span class="na">newDocument</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ParserConfigurationException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span>
+</span><span class='line'>                <span class="s">&quot;Failed to create DocumentBuilder!&quot;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The logic to build shared client is a little complex, let me give more comments:</p>
+
+<blockquote><ol>
+<li>Amazon Product Advertising API requires per-call request authentication, see details <a href="http://docs.aws.amazon.com/AWSECommerceService/latest/DG/NotUsingWSSecurity.html">here</a>, the authentication logic is implemented in the <code>public static void authenticateRequest(String action)</code> method.</li>
+<li>To make the authentication work, you need to fill in your <code>AWSAccessKeyId</code> and <code>AWSSecureKeyId</code> in the shared client, if you are a registered Amazon Product Advertising API developer, you can get these keys from your account on Amazon developer site.</li>
+<li>The authentication info is added in the SOAP request as SOAP header, to add SOAP header, we use <code>Document</code>(W3C DOM built in Android) to build header elements, populate the elements with authentication information, then add the header element list on the client, at runtime, Nano will add these elements to the SOAP request message header.</li>
+<li>The authentication needs to be done on per-call basis, means everytime you call an Amazon Product Advertising service, you need to authenticate the request before the service call, see sample later.</li>
+</ol>
+</blockquote>
+
+<p>Now the UI part and application logic, for this hello world like sample, we just need an <code>EditText</code> for book keyword input and a <code>Button</code> to trigger Amazon book search by invoking listening method <code>onClick</code> which will indirectly call Amazon Product Advertising <code>itemSearch</code> API through the proxy, fairly simple, see the full application logic in <code>MainActivity</code> class below:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>MainActivity.java </span><a href='https://github.com/bulldog2011/nano/blob/master/sample/webservice/HelloAmazonProductAdvertising/src/com/leansoft/nano/sample/MainActivity.java'>source  </a></figcaption> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">sample</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">com.amazon.service.ecommerce.AWSECommerceClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">Errors</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">Item</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">ItemSearch</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">ItemSearchRequest</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">ItemSearchResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice.</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="mi">2011</span><span class="n">_08_01</span><span class="o">.</span><span class="na">Items</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.amazon.webservices.awsecommerceservice._2011_08_01.client.AWSECommerceServicePortType_SOAPClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">com.leansoft.nano.ws.SOAPServiceCallback</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">android.os.Bundle</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.app.Activity</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.view.View</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.view.View.OnClickListener</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.Button</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.EditText</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">android.widget.Toast</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MainActivity</span> <span class="kd">extends</span> <span class="n">Activity</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="nd">@Override</span>
+</span><span class='line'><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onCreate</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">super</span><span class="o">.</span><span class="na">onCreate</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">setContentView</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">activity_main</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Button</span> <span class="n">searchButton</span> <span class="o">=</span> <span class="o">(</span><span class="n">Button</span><span class="o">)</span> <span class="k">this</span><span class="o">.</span><span class="na">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">search_button</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">searchButton</span><span class="o">.</span><span class="na">setOnClickListener</span><span class="o">(</span><span class="k">new</span> <span class="n">OnClickListener</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nd">@Override</span>
+</span><span class='line'>        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="n">View</span> <span class="n">arg0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// Get shared client</span>
+</span><span class='line'>            <span class="n">AWSECommerceServicePortType_SOAPClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">AWSECommerceClient</span><span class="o">.</span><span class="na">getSharedClient</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">client</span><span class="o">.</span><span class="na">setDebug</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// Build request</span>
+</span><span class='line'>            <span class="n">ItemSearch</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ItemSearch</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">request</span><span class="o">.</span><span class="na">associateTag</span> <span class="o">=</span> <span class="s">&quot;teg&quot;</span><span class="o">;</span> <span class="c1">// seems any tag is ok</span>
+</span><span class='line'>            <span class="n">request</span><span class="o">.</span><span class="na">shared</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ItemSearchRequest</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">request</span><span class="o">.</span><span class="na">shared</span><span class="o">.</span><span class="na">searchIndex</span> <span class="o">=</span> <span class="s">&quot;Books&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">request</span><span class="o">.</span><span class="na">shared</span><span class="o">.</span><span class="na">responseGroup</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">String</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;();</span>
+</span><span class='line'>            <span class="n">request</span><span class="o">.</span><span class="na">shared</span><span class="o">.</span><span class="na">responseGroup</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">&quot;Images&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">request</span><span class="o">.</span><span class="na">shared</span><span class="o">.</span><span class="na">responseGroup</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">&quot;Small&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">ItemSearchRequest</span> <span class="n">itemSearchRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ItemSearchRequest</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">itemSearchRequest</span><span class="o">.</span><span class="na">title</span> <span class="o">=</span> <span class="o">((</span><span class="n">EditText</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">keyword_input</span><span class="o">)).</span><span class="na">getText</span><span class="o">().</span><span class="na">toString</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">request</span><span class="o">.</span><span class="na">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">ItemSearchRequest</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;();</span>
+</span><span class='line'>            <span class="n">request</span><span class="o">.</span><span class="na">request</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">itemSearchRequest</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// authenticate the request</span>
+</span><span class='line'>            <span class="c1">// http://docs.aws.amazon.com/AWSECommerceService/latest/DG/NotUsingWSSecurity.html</span>
+</span><span class='line'>            <span class="n">AWSECommerceClient</span><span class="o">.</span><span class="na">authenticateRequest</span><span class="o">(</span><span class="s">&quot;ItemSearch&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="c1">// Make API call and register callbacks</span>
+</span><span class='line'>            <span class="n">client</span><span class="o">.</span><span class="na">itemSearch</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="k">new</span> <span class="n">SOAPServiceCallback</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">ItemSearchResponse</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="nd">@Override</span>
+</span><span class='line'>                <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="n">ItemSearchResponse</span> <span class="n">responseObject</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                    <span class="c1">// success handling logic</span>
+</span><span class='line'>                    <span class="k">if</span> <span class="o">(</span><span class="n">responseObject</span><span class="o">.</span><span class="na">items</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> <span class="n">responseObject</span><span class="o">.</span><span class="na">items</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                        <span class="n">Items</span> <span class="n">items</span> <span class="o">=</span> <span class="n">responseObject</span><span class="o">.</span><span class="na">items</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>                        <span class="k">if</span> <span class="o">(</span><span class="n">items</span><span class="o">.</span><span class="na">item</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> <span class="n">items</span><span class="o">.</span><span class="na">item</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                            <span class="n">Item</span> <span class="n">item</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="na">item</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>                            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">item</span><span class="o">.</span><span class="na">itemAttributes</span><span class="o">.</span><span class="na">title</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>                            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="s">&quot;No result&quot;</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                        <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>                    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>                        <span class="k">if</span> <span class="o">(</span><span class="n">responseObject</span><span class="o">.</span><span class="na">operationRequest</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> <span class="n">responseObject</span><span class="o">.</span><span class="na">operationRequest</span><span class="o">.</span><span class="na">errors</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                            <span class="n">Errors</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">responseObject</span><span class="o">.</span><span class="na">operationRequest</span><span class="o">.</span><span class="na">errors</span><span class="o">;</span>
+</span><span class='line'>                            <span class="k">if</span> <span class="o">(</span><span class="n">errors</span><span class="o">.</span><span class="na">error</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> <span class="n">errors</span><span class="o">.</span><span class="na">error</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                                <span class="n">com</span><span class="o">.</span><span class="na">amazon</span><span class="o">.</span><span class="na">webservices</span><span class="o">.</span><span class="na">awsecommerceservice</span><span class="o">.</span><span class="na">_2011_08_01</span><span class="o">.</span><span class="na">errors</span><span class="o">.</span><span class="na">Error</span> <span class="n">error</span> <span class="o">=</span> <span class="n">errors</span><span class="o">.</span><span class="na">error</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>                                <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">error</span><span class="o">.</span><span class="na">message</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>                                <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="s">&quot;No result&quot;</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                            <span class="o">}</span>
+</span><span class='line'>                        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>                            <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="s">&quot;No result&quot;</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                        <span class="o">}</span>
+</span><span class='line'>                    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="nd">@Override</span>
+</span><span class='line'>                <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="n">Throwable</span> <span class="n">error</span><span class="o">,</span> <span class="n">String</span> <span class="n">errorMessage</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// http or parsing error</span>
+</span><span class='line'>                    <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">errorMessage</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="nd">@Override</span>
+</span><span class='line'>                <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSOAPFault</span><span class="o">(</span><span class="n">Object</span> <span class="n">soapFault</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// soap fault</span>
+</span><span class='line'>                    <span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">soap11</span><span class="o">.</span><span class="na">Fault</span> <span class="n">fault</span> <span class="o">=</span> <span class="o">(</span><span class="n">com</span><span class="o">.</span><span class="na">leansoft</span><span class="o">.</span><span class="na">nano</span><span class="o">.</span><span class="na">soap11</span><span class="o">.</span><span class="na">Fault</span><span class="o">)</span><span class="n">soapFault</span><span class="o">;</span>
+</span><span class='line'>                    <span class="n">Toast</span><span class="o">.</span><span class="na">makeText</span><span class="o">(</span><span class="n">MainActivity</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">fault</span><span class="o">.</span><span class="na">faultstring</span><span class="o">,</span> <span class="n">Toast</span><span class="o">.</span><span class="na">LENGTH_LONG</span><span class="o">).</span><span class="na">show</span><span class="o">();</span>
+</span><span class='line'>                <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="o">});</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="o">});</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>More comments to the serivce call code:</p>
+
+<blockquote><ol>
+<li>I've added comments in the code so the whole service call flow should be easy to understand.</li>
+<li>Before service call, the request must be authenticated by calling the <code>authenticateRequest</code> method, such as <code>AWSECommerceClient.authenticateRequest("ItemSearch")</code>, <code>ItemSearch</code> is the target action or API name.</li>
+<li>In the success handling logic, we just show the title of the first result item.</li>
+<li>In <code>onSOAPFault</code> failure handling logic, since we are using SOAP 1.1, we need to cast the soapFault object to type of <code>com.leansoft.nano.soap11.Fault</code> and handle it accordingly.</li>
+<li>Amazon Product Advertising service supports response resident error(RRE), so even we get success response, we still need to check response for resident error and handle it accordingly.</li>
+</ol>
+</blockquote>
+
+<h2>Final Step - Run the Demo</h2>
+
+<p>Let's run the demo in Android simulator, see a screen shot below:</p>
+
+<p><img class="center" src="/images/nano/tutorial05/screen_shot1.png" width="400" height="600"></p>
+
+<p>and the debug output:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p>04-18 12:52:49.706: D/NanoSOAPClient(279): Sending request to : https://webservices.amazon.com/onca/soap?Service=AWSECommerceService
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279): Request HTTP headers :
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279): {
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):     Accept="text/xml"
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279): }
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279): Request message :
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279): &lt;?xml version='1.0' encoding='UTF-8' ?>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279): &lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://webservices.amazon.com/AWSECommerceService/2011-08-01">
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):   &lt;soapenv:Header>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):     &lt;n0:AWSAccessKeyId xmlns:n0="http://security.amazonaws.com/doc/2007-01-01/">********&lt;/n0:AWSAccessKeyId>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):     &lt;n1:Timestamp xmlns:n1="http://security.amazonaws.com/doc/2007-01-01/">2013-04-18T12:52:49Z&lt;/n1:Timestamp>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):     &lt;n2:Signature xmlns:n2="http://security.amazonaws.com/doc/2007-01-01/">XRvrzbtkXiwvn3whk7+v1KY2o516hDaup1WfUea0f6Q=&lt;/n2:Signature>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):   &lt;/soapenv:Header>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):   &lt;soapenv:Body>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):     &lt;ItemSearch>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):       &lt;AssociateTag>teg&lt;/AssociateTag>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):       &lt;Shared>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):         &lt;ResponseGroup>Images&lt;/ResponseGroup>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):         &lt;ResponseGroup>Small&lt;/ResponseGroup>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):         &lt;SearchIndex>Books&lt;/SearchIndex>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):       &lt;/Shared>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):       &lt;Request>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):         &lt;Title>android programming&lt;/Title>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):       &lt;/Request>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):     &lt;/ItemSearch>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279):   &lt;/soapenv:Body>
+</span><span class='line'>04-18 12:52:49.706: D/NanoSOAPClient(279): &lt;/soapenv:Envelope>
+</span><span class='line'>04-18 12:52:51.106: D/dalvikvm(279): GC_FOR_MALLOC freed 6267 objects / 346808 bytes in 35ms
+</span><span class='line'>04-18 12:52:51.786: D/dalvikvm(279): GC_FOR_MALLOC freed 509 objects / 54216 bytes in 30ms
+</span><span class='line'>04-18 12:52:51.816: D/dalvikvm(279): GC_FOR_MALLOC freed 43 objects / 105384 bytes in 29ms
+</span><span class='line'>04-18 12:52:51.856: D/dalvikvm(279): GC_FOR_MALLOC freed 46 objects / 2424 bytes in 28ms
+</span><span class='line'>04-18 12:52:51.856: I/dalvikvm-heap(279): Grow heap (frag case) to 3.005MB for 84132-byte allocation
+</span><span class='line'>04-18 12:52:51.966: D/dalvikvm(279): GC_FOR_MALLOC freed 0 objects / 0 bytes in 114ms
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279): Response HTTP status : 200
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279): Response HTTP headers :
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279): {
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279):     Content-Encoding="gzip"
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279):     Transfer-Encoding="chunked"
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279):     nnCoection="close"
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279):     Vary="Accept-Encoding,User-Agent"
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279):     Content-Type="text/xml;charset=UTF-8"
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279):     Date="Thu, 18 Apr 2013 12:53:17 GMT"
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279):     Server="Server"
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279): }
+</span><span class='line'>04-18 12:52:51.966: D/SOAPHttpResponseHandler(279): Response message :
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): &lt;?xml version="1.0" ?>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">&lt;soapenv:Body>&lt;ItemSearchResponse xmlns="http://webservices.amazon.com/AWSECommerceService/2011-08-01">&lt;OperationRequest>&lt;HTTPHeaders>&lt;Header Name="UserAgent" Value="android-async-http/1.4.3 (http://loopj.com/android-async-http)">&lt;/Header>&lt;/HTTPHeaders>&lt;RequestId>897bda30-928a-41f9-b48a-965d79800864&lt;/RequestId>&lt;Arguments>&lt;Argument Name="Service" Value="AWSECommerceService">&lt;/Argument>&lt;/Arguments>&lt;RequestProcessingTime>0.0608990000000000&lt;/RequestProcessingTime>&lt;/OperationRequest>&lt;Items>&lt;Request>&lt;IsValid>True&lt;/IsValid>&lt;ItemSearchRequest>&lt;ResponseGroup>Images&lt;/ResponseGroup>&lt;ResponseGroup>Small&lt;/ResponseGroup>&lt;SearchIndex>Books&lt;/SearchIndex>&lt;Title>android programming&lt;/Title>&lt;/ItemSearchRequest>&lt;/Request>&lt;TotalResults>131&lt;/TotalResults>&lt;TotalPages>14&lt;/TotalPages>&lt;MoreSearchResultsUrl>http://www.amazon.com/gp/redirect.html?camp=2025&amp;creative=386001&amp;location=http%3A%2F%2Fwww.amazon.com%2Fgp%2Fsearch%3Fkeywords%3Dandroid%2Bprogramming%26url%3Dsearch-alias%253Dstripbooks&amp;linkCode=sp1&amp;tag=teg&amp;SubscriptionId=AKIAIEKQPISXI6IPHDFQ&lt;/MoreSearchResultsUrl>&lt;Item>&lt;ASIN>1449316646&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Programming-Android-Generation-Mobile-Devices/dp/1449316646%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1449316646&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Programming-Android-Generation-Mobile-Devices/dp/tech-data/1449316646%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449316646&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1449316646%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449316646&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1449316646%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449316646&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1449316646%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449316646&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1449316646%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449316646&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1449316646%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449316646&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1449316646%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1449316646&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/5150hKq826L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/5150hKq826L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/5150hKq826L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/5150hKq826L.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Wid
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): e>&lt;URL>http://ecx.images-amazon.com/images/I/5150hKq826L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/5150hKq826L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/5150hKq826L.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">84&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/5150hKq826L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/5150hKq826L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">381&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Zigurd Mednieks&lt;/Author>&lt;Author>Laird Dornin&lt;/Author>&lt;Author>G. Blake Meike&lt;/Author>&lt;Author>Masumi Nakamura&lt;/Author>&lt;Manufacturer>O'Reilly Media&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Programming Android: Java Programming for the New Generation of Mobile Devices&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>0321804333&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Android-Programming-Ranch-Guide-Guides/dp/0321804333%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0321804333&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Android-Programming-Ranch-Guide-Guides/dp/tech-data/0321804333%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321804333&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D0321804333%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321804333&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D0321804333%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321804333&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D0321804333%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321804333&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/0321804333%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321804333&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/0321804333%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321804333&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/0321804333%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0321804333&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41RZANo4I3L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">52&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41RZANo4I3L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">112&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41RZANo4I3L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">350&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/41RZANo4I3L.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">21&lt;/Width>&lt;/SwatchImage>&lt;SmallIm
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): amazon.com/images/I/41RZANo4I3L._SL75_.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">52&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/41RZANo4I3L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">52&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/41RZANo4I3L.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">77&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41RZANo4I3L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">112&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41RZANo4I3L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">350&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Bill Phillips&lt;/Author>&lt;Author>Brian Hardy&lt;/Author>&lt;Manufacturer>Big Nerd Ranch Guides&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Android Programming: The Big Nerd Ranch Guide (Big Nerd Ranch Guides)&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1118183487&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Professional-Android-Sensor-Programming-Milette/dp/1118183487%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1118183487&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Professional-Android-Sensor-Programming-Milette/dp/tech-data/1118183487%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118183487&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1118183487%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118183487&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1118183487%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118183487&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1118183487%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118183487&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1118183487%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118183487&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1118183487%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118183487&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1118183487%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118183487&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51q7NaXDNQL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">60&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51q7NaXDNQL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">128&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51q7NaXDNQL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">399&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51q7NaXDNQL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">24&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51q7NaXDNQL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): Height>&lt;Width Units="pixels">60&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51q7NaXDNQL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">60&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51q7NaXDNQL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">88&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51q7NaXDNQL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">128&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51q7NaXDNQL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">399&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Greg Milette&lt;/Author>&lt;Author>Adam Stroud&lt;/Author>&lt;Manufacturer>Wrox&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Professional Android Sensor Programming&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1934356905&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Programming-Your-Home-Pragmatic-Programmers/dp/1934356905%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1934356905&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Programming-Your-Home-Pragmatic-Programmers/dp/tech-data/1934356905%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1934356905&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1934356905%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1934356905&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1934356905%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1934356905&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1934356905%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1934356905&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1934356905%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1934356905&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1934356905%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1934356905&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1934356905%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1934356905&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41C3BFfs-xL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">63&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41C3BFfs-xL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">133&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41C3BFfs-xL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">417&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/41C3BFfs-xL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">25&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41C3BFfs-xL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">63&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/im
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): pg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">63&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/41C3BFfs-xL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">92&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41C3BFfs-xL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">133&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41C3BFfs-xL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">417&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;ImageSet Category="variant">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/41PqQ5uDLIL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">25&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41PqQ5uDLIL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">63&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/41PqQ5uDLIL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">63&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/41PqQ5uDLIL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">92&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41PqQ5uDLIL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">134&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41PqQ5uDLIL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">418&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Mike Riley&lt;/Author>&lt;Manufacturer>Pragmatic Bookshelf&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Programming Your Home: Automate with Arduino, Android, and Your Computer (Pragmatic Programmers)&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1118026438&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Professional-Android-Programming-Mono-NET/dp/1118026438%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1118026438&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Professional-Android-Programming-Mono-NET/dp/tech-data/1118026438%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118026438&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1118026438%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118026438&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1118026438%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118026438&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1118026438%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118026438&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1118026438%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118026438&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1118026438%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118026438&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1118026438%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118026438&lt;/UR
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): mallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51LeQyvL9VL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">59&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51LeQyvL9VL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">126&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51LeQyvL9VL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">394&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51LeQyvL9VL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">24&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51LeQyvL9VL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">59&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51LeQyvL9VL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">59&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51LeQyvL9VL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">87&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51LeQyvL9VL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">126&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51LeQyvL9VL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">394&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Wallace B. McClure&lt;/Author>&lt;Author>Nathan Blevins&lt;/Author>&lt;Author>John J. Croft IV&lt;/Author>&lt;Author>Jonathan Dick&lt;/Author>&lt;Author>Chris Hardy&lt;/Author>&lt;Manufacturer>Wrox&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Professional Android Programming with Mono for Android and .NET/C#&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1118027744&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Android-Game-Programming-For-Dummies/dp/1118027744%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1118027744&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Android-Game-Programming-For-Dummies/dp/tech-data/1118027744%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118027744&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1118027744%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118027744&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1118027744%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118027744&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1118027744%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118027744&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1118027744%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118027744&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1118027744%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118027744&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1118027744%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118027744&lt;/URL>&lt;/ItemLink>&lt;/Ite
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): p://ecx.images-amazon.com/images/I/51B9ofyDxBL._SL75_.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">59&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51B9ofyDxBL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">126&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51B9ofyDxBL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">394&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51B9ofyDxBL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">24&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51B9ofyDxBL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">59&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51B9ofyDxBL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">59&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51B9ofyDxBL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">87&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51B9ofyDxBL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">126&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51B9ofyDxBL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">394&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Derek James&lt;/Author>&lt;Manufacturer>For Dummies&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Android Game Programming For Dummies&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1907920153&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Android-Apps-programming-step-step/dp/1907920153%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1907920153&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Android-Apps-programming-step-step/dp/tech-data/1907920153%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1907920153&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1907920153%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1907920153&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1907920153%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1907920153&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1907920153%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1907920153&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1907920153%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1907920153&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1907920153%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1907920153&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1907920153%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1907920153&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51%2BE6YAmL1L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">54&lt;/Width>&lt;/SmallImage>&lt;Me
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): mages-amazon.com/images/I/51%2BE6YAmL1L._SL160_.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">116&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51%2BE6YAmL1L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">362&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51%2BE6YAmL1L.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">22&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51%2BE6YAmL1L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">54&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51%2BE6YAmL1L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">54&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51%2BE6YAmL1L.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">80&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51%2BE6YAmL1L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">116&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51%2BE6YAmL1L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">362&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Stefan Schwark&lt;/Author>&lt;Manufacturer>Elektor Publishing&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Android Apps: programming step-by-step&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>0672336286&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Android-Programming-Unleashed-B-M-Harwani/dp/0672336286%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0672336286&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Android-Programming-Unleashed-B-M-Harwani/dp/tech-data/0672336286%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336286&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D0672336286%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336286&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D0672336286%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336286&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D0672336286%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336286&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/0672336286%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336286&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/0672336286%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336286&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/0672336286%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336286&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41keFzzOx6L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41keFzzOx6L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="p
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): mage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41keFzzOx6L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">383&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/41keFzzOx6L.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41keFzzOx6L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/41keFzzOx6L.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/41keFzzOx6L.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">84&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41keFzzOx6L.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">123&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41keFzzOx6L.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">383&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>B.M. Harwani&lt;/Author>&lt;Manufacturer>Sams Publishing&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Android Programming Unleashed&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>1118454766&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Professional-Android-Accessory-Programming-Programmer/dp/1118454766%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D1118454766&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Professional-Android-Accessory-Programming-Programmer/dp/tech-data/1118454766%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118454766&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D1118454766%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118454766&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D1118454766%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118454766&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D1118454766%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118454766&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/1118454766%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118454766&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/1118454766%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118454766&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/1118454766%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D1118454766&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51FpeMpR0wL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">60&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51FpeMpR0wL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">128&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51FpeMpR0wL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/He
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): 399&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;ImageSet Category="primary">&lt;SwatchImage>&lt;URL>http://ecx.images-amazon.com/images/I/51FpeMpR0wL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">24&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/51FpeMpR0wL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">60&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/51FpeMpR0wL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">60&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/51FpeMpR0wL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">88&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/51FpeMpR0wL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">128&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/51FpeMpR0wL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">399&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Andreas Goransson&lt;/Author>&lt;Author>David Cuartielles Ruiz&lt;/Author>&lt;Manufacturer>Wrox&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Professional Android Open Accessory Programming with Arduino (Wrox Programmer to Programmer)&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;Item>&lt;ASIN>0672336049&lt;/ASIN>&lt;DetailPageURL>http://www.amazon.com/Teach-Yourself-Android-Programming-Hours/dp/0672336049%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0672336049&lt;/DetailPageURL>&lt;ItemLinks>&lt;ItemLink>&lt;Description>Technical Details&lt;/Description>&lt;URL>http://www.amazon.com/Teach-Yourself-Android-Programming-Hours/dp/tech-data/0672336049%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336049&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Baby Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/baby/add-item.html%3Fasin.0%3D0672336049%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336049&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wedding Registry&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wedding/add-item.html%3Fasin.0%3D0672336049%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336049&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Add To Wishlist&lt;/Description>&lt;URL>http://www.amazon.com/gp/registry/wishlist/add-item.html%3Fasin.0%3D0672336049%26SubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336049&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>Tell A Friend&lt;/Description>&lt;URL>http://www.amazon.com/gp/pdp/taf/0672336049%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336049&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Customer Reviews&lt;/Description>&lt;URL>http://www.amazon.com/review/product/0672336049%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336049&lt;/URL>&lt;/ItemLink>&lt;ItemLink>&lt;Description>All Offers&lt;/Description>&lt;URL>http://www.amazon.com/gp/offer-listing/0672336049%3FSubscriptionId%3DAKIAIEKQPISXI6IPHDFQ%26tag%3Dteg%26linkCode%3Dsp1%26camp%3D2025%26creative%3D386001%26creativeASIN%3D0672336049&lt;/URL>&lt;/ItemLink>&lt;/ItemLinks>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41vTpLHUytL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41vTpLHUytL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41vTpLHUytL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">382&lt;/Width>&lt;/LargeImage>&lt;ImageSets>&lt;Image
+</span><span class='line'>04-18 12:52:51.976: D/SOAPHttpResponseHandler(279): tchImage>&lt;URL>http://ecx.images-amazon.com/images/I/41vTpLHUytL.&lt;em>SL30&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">30&lt;/Height>&lt;Width Units="pixels">23&lt;/Width>&lt;/SwatchImage>&lt;SmallImage>&lt;URL>http://ecx.images-amazon.com/images/I/41vTpLHUytL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/SmallImage>&lt;ThumbnailImage>&lt;URL>http://ecx.images-amazon.com/images/I/41vTpLHUytL.&lt;em>SL75&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">75&lt;/Height>&lt;Width Units="pixels">57&lt;/Width>&lt;/ThumbnailImage>&lt;TinyImage>&lt;URL>http://ecx.images-amazon.com/images/I/41vTpLHUytL.&lt;em>SL110&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">110&lt;/Height>&lt;Width Units="pixels">84&lt;/Width>&lt;/TinyImage>&lt;MediumImage>&lt;URL>http://ecx.images-amazon.com/images/I/41vTpLHUytL.&lt;em>SL160&lt;/em>.jpg&lt;/URL>&lt;Height Units="pixels">160&lt;/Height>&lt;Width Units="pixels">122&lt;/Width>&lt;/MediumImage>&lt;LargeImage>&lt;URL>http://ecx.images-amazon.com/images/I/41vTpLHUytL.jpg&lt;/URL>&lt;Height Units="pixels">500&lt;/Height>&lt;Width Units="pixels">382&lt;/Width>&lt;/LargeImage>&lt;/ImageSet>&lt;/ImageSets>&lt;ItemAttributes>&lt;Author>Jonathan S. Harbour&lt;/Author>&lt;Manufacturer>Sams Publishing&lt;/Manufacturer>&lt;ProductGroup>Book&lt;/ProductGroup>&lt;Title>Sams Teach Yourself Android Game Programming in 24 Hours&lt;/Title>&lt;/ItemAttributes>&lt;/Item>&lt;/Items>&lt;/ItemSearchResponse>&lt;/soapenv:Body>&lt;/soapenv:Envelope>&lt;/p>
+</span><span class='line'>
+</span><span class='line'>&lt;p></span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>If you forget to fill in your AWS Access Key and Secure Key in the shared client, then you will get error like below:</p>
+
+<p><img class="center" src="/images/nano/tutorial05/screen_shot2.png" width="400" height="600"></p>
+
+<p>This is just a bare minimum Amazon Product Advertising service based application, for a demo with more functions, please see the AmazonBookFinder sample in the <code>sample\webservice</code> folder of Nano source, AmazonBookFinder calls following APIs in one app:</p>
+
+<blockquote><ol>
+<li><strong><em>itemSearch</em></strong> for book search</li>
+<li><strong><em>cartCreate</em></strong> to add chosen book into shopping cart</li>
+</ol>
+</blockquote>
+
+<p>Below is a few screen shots:</p>
+
+<p>Search:
+<img class="center" src="/images/nano/tutorial05/screen_shot3.png" width="400" height="600"></p>
+
+<p>Details:
+<img class="center" src="/images/nano/tutorial05/screen_shot4.png" width="400" height="600"></p>
+
+<p>Add To Cart:
+<img class="center" src="/images/nano/tutorial05/screen_shot5.png" width="400" height="600"></p>
+
+<p>Now it's your turn to create Android applications based on Amazon Product Advertising web service, see your next great service based app.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Nano Tutorial 4 - Hello eBay Shopping]]></title>
@@ -2703,74 +3737,6 @@ the application logic is implemented in the <code>MainActivity</code> class, a r
 <p>NumberConversion is just a bare minimum demo, there are other more featured demos(like Amazon, eBay search demo) in the sample folder of Nano project, please try them to better understand how Nano works, then you can begin to develop your own service based applications, using wsdl driven methodology supported by Nano.</p>
 
 <p>See your next great Android application!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[WSDL Driven Development on Android - the Big Picture]]></title>
-    <link href="http://bulldog2011.github.com/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture/"/>
-    <updated>2013-04-15T10:14:00+08:00</updated>
-    <id>http://bulldog2011.github.com/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture</id>
-    <content type="html"><![CDATA[<p>WSDL driven development is a popular and mature development methodology on platforms like Java and .Net, tools like Axis, CXF, JAX-WS, WCF are leveraged by many developers for rapid web service development. With WSDL as interface contract, both server side and client side proxies can be automatically generated from WSDL, developer can work with plain old interfaces/objects directly, no need to worry about low level SOAP/XML serialization/deserialization and service invocation details(which are very tedious and error-prone), this kind of model driven development(or meta-data driven development) can not only dramatically reduce initial development cost, but reduce long term maintenance cost.</p>
-
-<!--more-->
-
-
-<p>Although nowadays there is a trend toward RESTful service(which has no formal interface definition like WSDL), many industries(such as ecommerce industry) have a complex business domain, it's very hard to expose complex business logic as RESTful service(a typical maintenance nightmare), so we will keep seeing that many enterprises will keep exposing their services as traditional SOAP or XML based web services, some examples are <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising Web Service</a>, eBay <a href="https://www.x.com/developers/ebay/products/finding-api">Finding</a>, <a href="https://www.x.com/developers/ebay/products/shopping-api">Shopping</a> and <a href="https://www.x.com/developers/ebay/products/trading-api">Trading</a> Web Services, etc.</p>
-
-<p>Can WSDL driven development be put into practice on Android platform? Yes, now with <a href="https://github.com/bulldog2011/nano">Nano Web Service Client Framework</a> and <a href="https://github.com/bulldog2011/mwsc">WSDL compiler for Android</a>, you can also leverage WSDL driven development technology on iOS platform, dramatically improving your application development speed.</p>
-
-<p>Let's see the big picture:</p>
-
-<p><img class="center" src="/images/nano/big_picture.png" width="600" height="800"></p>
-
-<p>The picture above is the blueprint of WSDL driven development on Android. The left part of the blueprint is a build-time phase view, in this phase, we will leverage <a href="https://github.com/bulldog2011/mwsc">mwsc</a> wsdl compiler to automatically generate service proxy from wsdl, the service proxy alone can't be used directly, it must be integrated with the generic <a href="https://github.com/bulldog2011/nano">Nano Web Service client framework</a> to take effect; The right part of the blueprint is a runtime view, a typical flow starts from your Android app, your app issues request on service proxy, the proxy passes the request to the Nano runtime framework which will delegate the object to XML/SOAP marshalling work to Nano binding framework then send serialized XML/SOAP request to external service through <a href="https://github.com/loopj/android-async-http">loopj async HTTP client</a> component, when an XML/SOAP response is received by the HTTP client component, the Nano runtime framework will also delegate the XML/SOAP to object unmarshalling work to Nano binding framework and passes the deserialized response object to the proxy which will eventually return the response object back to the calling app.</p>
-
-<p>We used the synchronous flow in the picture just for simple demonstration, the real call flow in the runtime is asynchronous, by leveraging Java <code>Thread</code> and <code>ThreadPoolExecutor</code>, in order not to block main UI thread.</p>
-
-<p>The Nano binding framework is the core of the Nano runtime, the real object<->xml binding magic happens here, below is the architecture of the binding runtime:</p>
-
-<p><img class="center" src="/images/pico/binding.png" width="500" height="600"></p>
-
-<p>There are four main components:</p>
-
-<blockquote><ol>
-<li><strong><em>Marshaller</em></strong> - responsible for object to xml marshalling</li>
-<li><strong><em>Unmarshaller</em></strong> - responsible for xml to object unmarshalling</li>
-<li><strong><em>BindingSchema</em></strong> - store object<->xml mapping information, used by both Marshaller and Unmarshaller to guide the marshalling/unmarshalling process at runtime, schema is extracted from class annotations and is cached for better performance.</li>
-<li><strong><em>Converter</em></strong> - type converter for primitive types or frequently used types.</li>
-</ol>
-</blockquote>
-
-<p>The marshalling/unmarshalling algorithm is recursive in nature:</p>
-
-<blockquote><ol>
-<li>for field of primitive or frequently used type, use corresponding converter to convert the field directly.</li>
-<li>for field of object type, convert the fields of the object one by one and recursively.</li>
-</ol>
-</blockquote>
-
-<p>The code generator component is based on <a href="http://docs.oracle.com/javase/6/docs/technotes/tools/share/wsimport.html">JAX-WS Wsimport</a> and <a href="http://freemarker.org/">Freemarker</a> template engine, see the whole architecture below:</p>
-
-<p><img class="center" src="/images/pico/codegen-arch.png" width="600" height="750"></p>
-
-<p>The whole architecture can be summarized as <strong><em>Model + Template = Code</em></strong>, code generation flow as following:</p>
-
-<blockquote><ol>
-<li>WSDL doc is first fed into Wsimport and a JAXB/JAX-WS model is generated.</li>
-<li>The JAXB/JAX-WS model is then transformed into a language independent intermediate codegen model.</li>
-<li>The codegen model and corresponding target language templates(Objective-C or Android) are then fed into the Freemarker template engine.</li>
-<li>The Freemarker template engine will eventually transform the in-memory model into target code, guided by the templates.</li>
-</ol>
-</blockquote>
-
-<p>As I know, there is no existing WSDL code generation tool tailored for Android platform, the mwsc code generator just filled this gap, it is backed by JAX-WS Wsimport, which is mature and stable, and can recognize most standard WSDL/Schema components, by delegating the most tricky and complex wsdl model transformation task to Wsimport, the mwsc code generator solved the WSDL to Android Java(or Objective-C) problem in a simple while elegant way.</p>
-
-<p>The mwsc code generator not only generates simple bean classes from WSDL/Schema, but also generates the XML<->object mapping information(schema) and records these information in the class as Java annotations, the meta-data will later be leveraged by Nano binding framework to guide the XML<->Object transformation at runtime.</p>
-
-<p>With a generic code generation tool and a generic web service client runtime, web service based app development on Android platform becomes easy, there is no low level xml parsing and http handling(which are tedious, error-prone and hard to maintain) any more, developers only need to work with a plain old service interface for service invocation, now they can put their real effort on application logic and UI, leading to agile Android app development.</p>
-
-<p>In later posts, I will show how to put WSDL driven Android app development into practice in a series of tutorials, just stay tuned.</p>
 ]]></content>
   </entry>
   

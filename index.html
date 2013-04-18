@@ -9,7 +9,7 @@
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="This is the fourth tutorial of Nano tutorial series, in this tutorial, I will show you how to integrate Nano with eBay Shopping Web Service, if you &hellip;">
+  <meta name="description" content="This is the fifth tutorial of Nano tutorial series, in this tutorial, I will show you how to integrate Nano with Amazon Product Advertising API, if &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -75,6 +75,51 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
+        <h1 class="entry-title"><a href="/blog/2013/04/18/nano-tutorial-5-hello-amazon-product-advertising-api/">Nano Tutorial 5 - Hello Amazon Product Advertising API</a></h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-18T19:18:00+08:00" pubdate data-updated="true">Apr 18<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/04/18/nano-tutorial-5-hello-amazon-product-advertising-api/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This is the fifth tutorial of Nano tutorial series, in this tutorial, I will show you how to integrate <a href="https://github.com/bulldog2011/nano">Nano</a> with <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising API</a>, if you are not familiar with this API, just have a quick review on its official site, basically, the Product Advertising API provides programmatic access to Amazon&#8217;s product selection and discovery functionality so that developers like you can advertise Amazon products to monetize your website. In this tutorial, I will show you how to add custom SOAP header which is required by the authentication of Amazon Product Advertising API.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2013/04/18/nano-tutorial-5-hello-amazon-product-advertising-api/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -442,7 +487,7 @@
   </header>
 
 
-  <div class="entry-content"><p>This is the fifth tutorial of Pico tutorial series, in this tutorial, I will show you how to integrate <a href="https://github.com/bulldog2011/pico">Pico</a> with <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising API</a>, if you are not familiar with this API, just have a quick review on its official site, basically, the Product Advertising API provides programmatic access to Amazon&#8217;s product selection and discovery functionality so that developers like you can advertise Amazon products to monetize your website. In this tutorial, I will show you how to customize binding for <a href="https://github.com/bulldog2011/mwsc">mwsc</a> code generation in case the wsdl does not follow convention, for example, the Amazon Product Advertising wsdl uses many anonymous inner types in its schema, without customized binding, the generated code will have many types with same names, leading to compile-time conflict. Also in this tutorial, I will show you show how to add custom SOAP header which is required by the authentication of Amazon Product Advertising API.</p>
+  <div class="entry-content"><p>This is the fifth tutorial of Pico tutorial series, in this tutorial, I will show you how to integrate <a href="https://github.com/bulldog2011/pico">Pico</a> with <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising API</a>, if you are not familiar with this API, just have a quick review on its official site, basically, the Product Advertising API provides programmatic access to Amazon&#8217;s product selection and discovery functionality so that developers like you can advertise Amazon products to monetize your website. In this tutorial, I will show you how to customize binding for <a href="https://github.com/bulldog2011/mwsc">mwsc</a> code generation in case the wsdl does not follow convention, for example, the Amazon Product Advertising wsdl uses many anonymous inner types in its schema, without customized binding, the generated code will have many types with same names, leading to compile-time conflict. Also in this tutorial, I will show you how to add custom SOAP header which is required by the authentication of Amazon Product Advertising API.</p>
 
 </div>
   
@@ -502,53 +547,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">Pico Tutorial 3 - Hello eBay Finding</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-03-29T10:25:00+08:00" pubdate data-updated="true">Mar 29<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This is the third tutorial of Pico tutorial series, in <a href="http://bulldog2011.github.com/blog/2013/03/27/pico-tutorial-a-stockquote-sample/">first</a> and <a href="http://bulldog2011.github.io/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">second</a> tutorials, I showed you how to use Pico with simple web serivces like <a href="StockQuote](http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=9">StockQuote</a> and <a href="http://www.webservicex.net/ws/WSDetails.aspx?CATID=2&amp;WSID=10">CurrencyConverter</a>. These services are quite simple, only support one or two calls, and the request/response structures are fairly simple, supporting these simple services only can&#8217;t show the full power of Pico, so in this and later tutorials, I will show you how to use Pico with industrial grade services, let&#8217;s start with <a href="http://developer.ebay.com/DevZone/finding/CallRef/index.html">eBay Finding service</a>, please reivew its official site if you are not familiar with this service, bastially, it lets you search items on eBay. eBay Finding service supports SOAP 1.2, so I will also show you how to configure Pico to support SOAP 1.2 protocol, also I will show how to set service required HTTP headers on Pico client.</p>
-
-<p>The source of this tutorial is <a href="https://github.com/bulldog2011/pico/tree/master/Examples/eBayFinding">here</a></p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/03/29/pico-tutorial-3-hello-ebay-finding/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -567,7 +565,7 @@
 <li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
 <li class='category'><a href='/blog/categories/luxun/'>luxun (2)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
-<li class='category'><a href='/blog/categories/nano/'>nano (14)</a></li>
+<li class='category'><a href='/blog/categories/nano/'>nano (15)</a></li>
 <li class='category'><a href='/blog/categories/pico/'>pico (7)</a></li>
 
   </ul>
@@ -575,6 +573,10 @@
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/04/18/nano-tutorial-5-hello-amazon-product-advertising-api/">Nano Tutorial 5 - Hello Amazon Product Advertising API</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/04/18/nano-tutorial-4-hello-ebay-shopping/">Nano Tutorial 4 - Hello eBay Shopping</a>
@@ -590,10 +592,6 @@
     
       <li class="post">
         <a href="/blog/2013/04/15/nano-tutorial-1-a-number-conversion-sample/">Nano Tutorial 1 - a Number Conversion Sample</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/04/15/wsdl-driven-development-on-android-the-big-picture/">WSDL Driven Development on Android - the Big Picture</a>
       </li>
     
   </ul>

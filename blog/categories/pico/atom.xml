@@ -4,7 +4,7 @@
   <title><![CDATA[Category: pico | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/pico/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-18T10:49:17+08:00</updated>
+  <updated>2013-04-18T21:18:53+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -112,7 +112,7 @@ This is because the numbe of members in some enum types in wsdl exceeds the maxi
     <link href="http://bulldog2011.github.com/blog/2013/03/31/pico-tutoiral-5-hello-amazon-product-advertising-api/"/>
     <updated>2013-03-31T10:09:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/03/31/pico-tutoiral-5-hello-amazon-product-advertising-api</id>
-    <content type="html"><![CDATA[<p>This is the fifth tutorial of Pico tutorial series, in this tutorial, I will show you how to integrate <a href="https://github.com/bulldog2011/pico">Pico</a> with <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising API</a>, if you are not familiar with this API, just have a quick review on its official site, basically, the Product Advertising API provides programmatic access to Amazon's product selection and discovery functionality so that developers like you can advertise Amazon products to monetize your website. In this tutorial, I will show you how to customize binding for <a href="https://github.com/bulldog2011/mwsc">mwsc</a> code generation in case the wsdl does not follow convention, for example, the Amazon Product Advertising wsdl uses many anonymous inner types in its schema, without customized binding, the generated code will have many types with same names, leading to compile-time conflict. Also in this tutorial, I will show you show how to add custom SOAP header which is required by the authentication of Amazon Product Advertising API.</p>
+    <content type="html"><![CDATA[<p>This is the fifth tutorial of Pico tutorial series, in this tutorial, I will show you how to integrate <a href="https://github.com/bulldog2011/pico">Pico</a> with <a href="https://affiliate-program.amazon.com/gp/advertising/api/detail/main.html">Amazon Product Advertising API</a>, if you are not familiar with this API, just have a quick review on its official site, basically, the Product Advertising API provides programmatic access to Amazon's product selection and discovery functionality so that developers like you can advertise Amazon products to monetize your website. In this tutorial, I will show you how to customize binding for <a href="https://github.com/bulldog2011/mwsc">mwsc</a> code generation in case the wsdl does not follow convention, for example, the Amazon Product Advertising wsdl uses many anonymous inner types in its schema, without customized binding, the generated code will have many types with same names, leading to compile-time conflict. Also in this tutorial, I will show you how to add custom SOAP header which is required by the authentication of Amazon Product Advertising API.</p>
 
 <!--more-->
 
@@ -744,8 +744,8 @@ since we will use SOAP based interface in this tutorial, you may now review the 
 
 <blockquote><ol>
 <li>Amazon Product Advertising API requires per-call request authentication, see details <a href="http://docs.aws.amazon.com/AWSECommerceService/latest/DG/NotUsingWSSecurity.html">here</a>, the authentication logic is implemented in the <code>(void)authenticateRequest:(NSString *)action</code> method.</li>
-<li>To make the authentication work, you need to fill in your <code>AWSAccessKeyId</code> and <code>AWSSecureKeyId</code> in the shared client, if you are a registed Amazon Product Advertising API developer, you can get these keys from your account on Amazon developer site.</li>
-<li>The authentication info is added in the SOAP request as SOAP header, to add SOAP header, we use <code>PicoXMLElement</code>(XML helper class provided in Pico) to build header element, then add the header element one by one into the <code>customSoapHeader</code> property(which is of type <code>NSMuatableArray</code>) of the client, for example: <code>[self.customSoapHeaders addObject:signatureElement]</code>, at runtime, Pico will add these elements into the SOAP request header.</li>
+<li>To make the authentication work, you need to fill in your <code>AWSAccessKeyId</code> and <code>AWSSecureKeyId</code> in the shared client, if you are a registered Amazon Product Advertising API developer, you can get these keys from your account on Amazon developer site.</li>
+<li>The authentication info is added in the SOAP request as SOAP header, to add SOAP header, we use <code>PicoXMLElement</code>(XML helper class provided in Pico) to build header element, then add the header element one by one into the <code>customSoapHeader</code> property(which is of type <code>NSMuatableArray</code>) of the client, for example: <code>[self.customSoapHeaders addObject:signatureElement]</code>, at runtime, Pico will add these elements to the SOAP request header.</li>
 <li>The authentication needs to be done on per-call basis, means everytime you call an Amazon ECommerce service, you need to authenticate the request before the service call, see sample later.</li>
 <li>The authentication relies on an utility class called <code>AmazonAuthUtils</code>, copy them from <a href="https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/AmazonAuthUtils.h">here</a> and <a href="https://github.com/bulldog2011/pico/blob/master/Examples/AWSECommerce/AWSECommerce/AmazonAuthUtils.m">here</a>.</li>
 </ol>
@@ -941,7 +941,7 @@ since we will use SOAP based interface in this tutorial, you may now review the 
 
 <blockquote><ol>
 <li>I've added comments in the code so the whole service call flow should be easy to understand.</li>
-<li>Before service call, the request must be authenticated by the calling <code>authenticateRequest</code> method, such as <code>[client authenticateRequest:@"ItemSearch"];</code>, <code>ItemSearch</code> is the target action or API name.</li>
+<li>Before service call, the request must be authenticated by calling the <code>authenticateRequest</code> method, such as <code>[client authenticateRequest:@"ItemSearch"];</code>, <code>ItemSearch</code> is the target action or API name.</li>
 <li>In the success handling logic, we show the title and the image of the returned item, for demo, the image is downloaded synchronously, but in practice, you should download image asynchronously in order not to block main UI.</li>
 <li>In failure handling logic, we need to check both a <code>NSError</code>(indicating http or parsing error) and a <code>SOAPFault</code>(indicating server side returned error), then handle them accordingly.</li>
 <li>Amazon ECommerce service supports response resident error(RRE), so even we get success response, we still need to check response for resident error, in the demo code above, I omitted response resident error checking for abbreviation, but in practice, you should check response resident error to make your app robust.</li>
@@ -975,7 +975,7 @@ since we will use SOAP based interface in this tutorial, you may now review the 
 
 <h2>Final Step - Run the Demo</h2>
 
-<p>Let's run the demo in iPhone simulator, see a sceen shot below:</p>
+<p>Let's run the demo in iPhone simulator, see a screen shot below:</p>
 
 <p><img class="center" src="/images/pico/tutorial05/screen_shot1.png" width="300" height="500"></p>
 
@@ -1121,7 +1121,7 @@ since we will use SOAP based interface in this tutorial, you may now review the 
 <p>Add To Cart:
 <img class="center" src="/images/pico/tutorial05/screen_shot5.png" width="300" height="500"></p>
 
-<p>Now it's your turn to create iOS applications based on Amazon ECommerce web serivces, see your next great serivce based app.</p>
+<p>Now it's your turn to create iOS applications based on Amazon ECommerce web service, see your next great service based app.</p>
 
 <h3>Update 1</h3>
 

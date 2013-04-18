@@ -49,7 +49,7 @@ Create a simple Android project called `HelloeBayFinding` in eclipse(or other ID
 
 Now build the project to ensure it can build successfully.
 
-You may now review the eBay Finding service SOAP interface generated from wsdl, to learn what kinds of functions are provided by eBay Finding service, and what kinds of parameters are needed to call the serivce, the interface is posted below:
+You may now review the eBay Finding service SOAP interface generated from wsdl, to learn what kinds of functions are provided by eBay Finding service, and what kinds of parameters are needed to call the service, the interface is posted below:
 
 {% codeblock FindingServicePortType_SOAPClient.java lang:java https://github.com/bulldog2011/nano/blob/master/sample/webservice/HelloeBayFinding/src/com/ebay/marketplace/search/v1/services/client/FindingServicePortType_SOAPClient.java source %}
 
@@ -95,6 +95,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void getSearchKeywordsRecommendation(GetSearchKeywordsRecommendationRequest requestObject, SOAPServiceCallback<GetSearchKeywordsRecommendationResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "getSearchKeywordsRecommendation");       
         
         super.invoke(requestObject, serviceCallback, GetSearchKeywordsRecommendationResponse.class);
     }
@@ -104,6 +105,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void findItemsByKeywords(FindItemsByKeywordsRequest requestObject, SOAPServiceCallback<FindItemsByKeywordsResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "findItemsByKeywords");       
         
         super.invoke(requestObject, serviceCallback, FindItemsByKeywordsResponse.class);
     }
@@ -113,6 +115,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void findItemsByCategory(FindItemsByCategoryRequest requestObject, SOAPServiceCallback<FindItemsByCategoryResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "findItemsByCategory");       
         
         super.invoke(requestObject, serviceCallback, FindItemsByCategoryResponse.class);
     }
@@ -122,6 +125,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void findItemsAdvanced(FindItemsAdvancedRequest requestObject, SOAPServiceCallback<FindItemsAdvancedResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "findItemsAdvanced");       
         
         super.invoke(requestObject, serviceCallback, FindItemsAdvancedResponse.class);
     }
@@ -131,6 +135,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void findItemsByProduct(FindItemsByProductRequest requestObject, SOAPServiceCallback<FindItemsByProductResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "findItemsByProduct");       
         
         super.invoke(requestObject, serviceCallback, FindItemsByProductResponse.class);
     }
@@ -140,6 +145,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void findItemsIneBayStores(FindItemsIneBayStoresRequest requestObject, SOAPServiceCallback<FindItemsIneBayStoresResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "findItemsIneBayStores");       
         
         super.invoke(requestObject, serviceCallback, FindItemsIneBayStoresResponse.class);
     }
@@ -149,6 +155,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void findItemsByImage(FindItemsByImageRequest requestObject, SOAPServiceCallback<FindItemsByImageResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "findItemsByImage");       
         
         super.invoke(requestObject, serviceCallback, FindItemsByImageResponse.class);
     }
@@ -158,6 +165,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void getHistograms(GetHistogramsRequest requestObject, SOAPServiceCallback<GetHistogramsResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "getHistograms");       
         
         super.invoke(requestObject, serviceCallback, GetHistogramsResponse.class);
     }
@@ -167,6 +175,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void findCompletedItems(FindCompletedItemsRequest requestObject, SOAPServiceCallback<FindCompletedItemsResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "findCompletedItems");       
         
         super.invoke(requestObject, serviceCallback, FindCompletedItemsResponse.class);
     }
@@ -176,6 +185,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void getVersion(GetVersionRequest requestObject, SOAPServiceCallback<GetVersionResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "getVersion");       
         
         super.invoke(requestObject, serviceCallback, GetVersionResponse.class);
     }
@@ -185,6 +195,7 @@ public class FindingServicePortType_SOAPClient extends NanoSOAPClient {
     */
     public void findItemsForFavoriteSearch(FindItemsForFavoriteSearchRequest requestObject, SOAPServiceCallback<FindItemsForFavoriteSearchResponse> serviceCallback) {
        
+        super.getAsyncHttpClient().addHeader("X-EBAY-SOA-OPERATION-NAME", "findItemsForFavoriteSearch");       
         
         super.invoke(requestObject, serviceCallback, FindItemsForFavoriteSearchResponse.class);
     }

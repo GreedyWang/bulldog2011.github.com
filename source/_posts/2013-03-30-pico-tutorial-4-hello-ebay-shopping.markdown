@@ -480,16 +480,16 @@ let's also try a error case, for example, if you forget to fill in your `eBayApp
 {% img center /images/pico/tutorial04/screen_shot2.png 300 500 %}
 
 
-This is just a bare minimum eBay Shopping service based application, for a demo with more functions, please see the eBayDemoApp sample in the `Examples` folder of Pico source, eBayDemoApp is a composite app which calls two eBay serivces behind, this app searches eBay by calling eBay Fining service, showes a list of matched items on UI, when an item is clicked, it will show item details by calling eBay Shopping service, see a screen shot below.
+This is just a bare minimum eBay Shopping service based application, for a demo with more functions, please see the eBayDemoApp sample in the `Examples` folder of Pico source, eBayDemoApp is a composite app which calls two eBay services behind, this app searches eBay by calling eBay Finding service, shows a list of matched items on UI, when an item is clicked, it will show item details by calling eBay Shopping service, see a screen shot below.
 
 {% img center /images/pico/tutorial04/screen_shot3.png 300 500 %}
 
 
-Now it's your turn to create iOS applications based on eBay Shopping and eBay Finding web serivces, see your next great serivce based app.
+Now it's your turn to create iOS applications based on eBay Shopping and eBay Finding web services, see your next great service based app.
 
 
 ### Update 1
-The eBay Shopping Service Proxy has been extracted as a standalone project, hosted [here](https://github.com/bulldog2011/PicoEBayShoppingClient), and the corresponding appledoc is hosted [here](http://bulldog2011.github.com/PicoEBayShoppingClient/), the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generted into the proxy code, but into the appledoc, assisting your development.
+The eBay Shopping Service Proxy has been extracted as a standalone project, hosted [here](https://github.com/bulldog2011/PicoEBayShoppingClient), and the corresponding appledoc is hosted [here](http://bulldog2011.github.com/PicoEBayShoppingClient/), the appledoc is a useful programming reference. By the way, the doc annotations in wsdl are not only generated into the proxy code, but into the appledoc, assisting your development.
 
 
 

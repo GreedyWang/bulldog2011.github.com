@@ -552,7 +552,7 @@ If you forget to fill in your AWS Access Key and Secure Key in the shared client
 {% img center /images/nano/tutorial05/screen_shot2.png 400 600 %}
 
 
-This is just a bare minimum Amazon Product Advertising service based application, for a demo with more functions, please see the AmazonBookFinder sample in the `sample\webservice` folder of Nano source, AmazonBookFinder calls following APIs in one app:
+This is just a bare minimum Amazon Product Advertising service based application, for a demo with more functions, please see the [AmazonBookFinder](https://github.com/bulldog2011/nano/tree/master/sample/webservice/AmazonBookFinder) sample in the `sample\webservice` folder of Nano source, AmazonBookFinder calls following APIs in one app:
 >1. ***itemSearch*** for book search
 2. ***cartCreate*** to add chosen book into shopping cart
 

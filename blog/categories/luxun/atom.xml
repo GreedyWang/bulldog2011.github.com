@@ -4,7 +4,7 @@
   <title><![CDATA[Category: luxun | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/luxun/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-19T19:17:36+08:00</updated>
+  <updated>2013-04-19T19:24:01+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -23,40 +23,21 @@
 <!--more-->
 
 
-<h3>Producing Performance Comparison:</h3>
+<p>```</p>
 
-<table>
-<tr><th>Test Mode</th><th>Throughput Comparison</th></tr>
-<tr>
-    <td>Async, Flush Disabled</td>
-    <td>Luxun >> Kafka</td>
-</tr>
-<tr>
-    <td>Async, Flush Enabled</td>
-    <td>Luxun >> Kafka</td>
-</tr>
-<tr>
-    <td>Sync, Flush Disabled</td>
-    <td>Luxun >> Kafka</td>
-</tr>
-<tr>
-    <td>Sync, Flush Enabled</td>
-    <td>Luxun < Kafka</td>
-</tr>
-</table>
+<pre><code>Producing Performance Comparison:
 
+  Async, Flush Disabled:    Luxun &gt;&gt; Kafka
+  Async, Flush Enabled:     Luxun &gt;&gt; Kafka
+  Sync, Flush Disabled:     Luxun &gt;&gt; Kafka
+  Sync, Flush Enabled:      Luxun &lt; Kafak
 
-<h3>Consuming Performance Comparison:</h3>
+Consuming Performance Comparison:
 
-<table>
-<th>Throughput Comparison</th></tr>
-<tr>
-    <td>Luxun > Kafka</td>
-</tr>
-</table>
+  Luxun &gt; Kafka
+</code></pre>
 
-
-<p></p>
+<p>```</p>
 
 <h2>Analysis &amp; Conclusion</h2>
 

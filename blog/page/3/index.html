@@ -9,7 +9,7 @@
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="Since I have built a light-weight XML/JSON binding framework tailored for Android platform, I want to test its performance on Android when compared &hellip;">
+  <meta name="description" content="This is my first post showing how to use Nano on Android, in this post, I will show you how to use Nano to export and import a set of domain object &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -75,6 +75,51 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
+        <h1 class="entry-title"><a href="/blog/2013/02/10/nano-on-android-tutorial-1/">Nano on Android Tutorial 1</a></h1>
+      
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-10T16:09:00+08:00" pubdate data-updated="true">Feb 10<span>th</span>, 2013</time>
+        
+         | <a href="/blog/2013/02/10/nano-on-android-tutorial-1/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This is my first post showing how to use Nano on Android, in this post, I will show you how to use Nano to export and import a set of domain object as XML to/from the SD card on Android. Nano is tailored for Android platform, you will see in this post how Nano can greatly simplify tedious and boring object and xml binding task in Android application development.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2013/02/10/nano-on-android-tutorial-1/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -512,64 +557,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <!-- Now we're back to normal posts. Note the links used under href in both headers.-->
-        <h1 class="entry-title"><a href="/blog/2013/01/24/big-queue-tutorial/">Big Queue Tutorial</a></h1>
-      
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-01-24T20:17:00+08:00" pubdate data-updated="true">Jan 24<span>th</span>, 2013</time>
-        
-         | <a href="/blog/2013/01/24/big-queue-tutorial/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>This is a tutorial to show the basic API usage of big queue, the source of this tutorial is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/test/java/com/leansoft/bigqueue/tutorial/BigQueueTutorial.java">here</a>.</p>
-
-<p>The interface of big queue is <a href="https://github.com/bulldog2011/bigqueue/blob/master/src/main/java/com/leansoft/bigqueue/IBigQueue.java">here</a>, basically, it&#8217;s as simple as the queue interface we learned in data structure course in college, if you want to refresh the concept of queue ADT, <a href="http://en.wikipedia.org/wiki/Queue_%28abstract_data_type%29">here is the wikipeida link</a>.</p>
-
-<p>You can create(initialize) a new big queue in just one statement:</p>
-
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="c1">// create a new big queue</span>
-</span><span class='line'><span class="n">IBigQueue</span> <span class="n">bigQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BigQueueImpl</span><span class="o">(</span><span class="s">&quot;d:/bigqueue/tutorial&quot;</span><span class="o">,</span> <span class="s">&quot;demo&quot;</span><span class="o">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>the first parameter is a directory you want to store the queue data file, the second parameter is the queue name. Now you have a reference to an empty queue.</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2013/01/24/big-queue-tutorial/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/4/">&larr; Older</a>
@@ -588,7 +575,7 @@
     <li class='category'><a href='/blog/categories/big-queue/'>big queue (7)</a></li>
 <li class='category'><a href='/blog/categories/design/'>design (4)</a></li>
 <li class='category'><a href='/blog/categories/ebay-api/'>ebay api (2)</a></li>
-<li class='category'><a href='/blog/categories/luxun/'>luxun (2)</a></li>
+<li class='category'><a href='/blog/categories/luxun/'>luxun (3)</a></li>
 <li class='category'><a href='/blog/categories/misc/'>misc (1)</a></li>
 <li class='category'><a href='/blog/categories/nano/'>nano (15)</a></li>
 <li class='category'><a href='/blog/categories/pico/'>pico (7)</a></li>
@@ -598,6 +585,10 @@
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/">Performance Benchmark - Luxun vs Apache Kafka</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2013/04/18/nano-tutorial-5-hello-amazon-product-advertising-api/">Nano Tutorial 5 - Hello Amazon Product Advertising API</a>
@@ -613,10 +604,6 @@
     
       <li class="post">
         <a href="/blog/2013/04/17/nano-tutorial-2-a-barcode-sample/">Nano Tutorial 2 - a BarCode Generator sample</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2013/04/15/nano-tutorial-1-a-number-conversion-sample/">Nano Tutorial 1 - a Number Conversion Sample</a>
       </li>
     
   </ul>

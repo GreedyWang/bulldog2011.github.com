@@ -5,13 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>hello world - Abstraction Builder</title>
+  <title>Performance Benchmark - Luxun vs Apache Kafka - Abstraction Builder</title>
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="This is just to log the beginning of my blogging era.
-">
-  
+  <meta name="description" content="Performance Benchmark - Luxun vs Apache Kafka">
+  <meta name="keywords" content="log collector, Apache Kafka, messaging, persistent queue">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -19,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/01/23/hello-world/">
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -80,7 +79,7 @@
   <header>
     
       
-        <h1 class="entry-title">Hello World</h1>
+        <h1 class="entry-title">Performance Benchmark - Luxun vs Apache Kafka</h1>
       
     
     
@@ -97,7 +96,7 @@
   
 
 
-<time datetime="2013-01-23T12:05:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
+<time datetime="2013-04-19T18:11:00+08:00" pubdate data-updated="true">Apr 19<span>th</span>, 2013</time>
         
          | <a href="#disqus_thread">Comments</a>
         
@@ -106,7 +105,79 @@
   </header>
 
 
-<div class="entry-content"><p>This is just to log the beginning of my blogging era.</p>
+<div class="entry-content"><p><a href="https://github.com/bulldog2011/luxun">Luxun</a> is a high-throughput, distributed, pub-sub messaging system tailored for big data collecting and analytics. Luxun is inspired by <a href="http://kafka.apache.org/">Apache Kafka</a>, both have a similar architecture. In order to compare the performance of Luxun and Kafka, I did a round of performance testing, below are the testing results:</p>
+
+<!--more-->
+
+
+<h3>Producing Performance Comparison:</h3>
+
+<table>
+<tr><th>Test Mode</th><th>Throughput Comparison</th></tr>
+<tr>
+    <td>Async, Flush Disabled</td>
+    <td>Luxun >> Kafka</td>
+</tr>
+<tr>
+    <td>Async, Flush Enabled</td>
+    <td>Luxun >> Kafka</td>
+</tr>
+<tr>
+    <td>Sync, Flush Disabled</td>
+    <td>Luxun >> Kafka</td>
+</tr>
+<tr>
+    <td>Sync, Flush Enabled</td>
+    <td>Luxun < Kafka</td>
+</tr>
+</table>
+
+
+<h3>Consuming Performance Comparison:</h3>
+
+<table>
+<th>Throughput Comparison</th></tr>
+<tr>
+    <td>Luxun > Kafka</td>
+</tr>
+</table>
+
+
+<p></p>
+
+<h2>Analysis &amp; Conclusion</h2>
+
+<p>The overall performance of Luxun is <strong><em>much better</em></strong> than Kafka:</p>
+
+<blockquote><ol>
+<li>In async producing mode, no matter whether flush is enabled or not, the throughput of Luxun is <strong><em>at least twice</em></strong> the throughput of Kafka.</li>
+<li>In sync producing mode, if flush is disabled, Luxun performs <strong><em>much better</em></strong> than Kafka.</li>
+<li>In sync producing mode, if flush is enabled, Luxun performs <strong><em>worse</em></strong> than Kafka.</li>
+<li>In all consuming tests, Luxun performs <strong><em>much better</em></strong> than Kafka.</li>
+</ol>
+</blockquote>
+
+<p>The only lose case of Luxun is in sync producing mode when flush is enabled, Luxun uses <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped File</a> internally, we are still not sure the cause of poor performance to explicitly flush memory mapped buffer in Java, this will be a future optimization of Luxun. However, following unique feature of memory mapped file makes explicit flush unnecessary(or not recommended) on Luxun system:</p>
+
+<blockquote><ul>
+<li>OS will ensure the message persistence even the process crashes and there is no explicit flush before the crash.</li>
+<li>Message appended by producer thread will be immediately visible to consumer threads, even producer thread hasn’t flushed the message explicitly.</li>
+</ul>
+</blockquote>
+
+<p>Also, the inner paging and swapping mechanism of Luxun will automatically flush a cached page when it is replaced out, making explicit flush unnecessary on Luxun system.</p>
+
+<p>Regrading inner implementation, Luxun and Kafka have two main differences:</p>
+
+<blockquote><ul>
+<li>Luxun queue is based on <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped File</a> while Kafka queue is based on filesystem and OS page cache.</li>
+<li>Luxun leveraged <a href="http://thrift.apache.org/">Thrift RPC</a> as communication layer while Kafka built its custom NIO communication layer.</li>
+</ul>
+</blockquote>
+
+<p>We believe the performance difference between Luxun and Kafak is mainly caused by memory mapped file, while Thrift RPC or custom NIO communication layer does not make much difference here.</p>
+
+<p>Detailed performance test results can be found <a href="https://github.com/bulldog2011/luxun/wiki/Performance---Luxun-vs.-Apache-Kafka">here</a></p>
 </div>
 
 
@@ -129,12 +200,12 @@
   
 
 
-<time datetime="2013-01-23T12:05:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
+<time datetime="2013-04-19T18:11:00+08:00" pubdate data-updated="true">Apr 19<span>th</span>, 2013</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/misc/'>misc</a>
+    <a class='category' href='/blog/categories/luxun/'>luxun</a>
   
 </span>
 
@@ -143,7 +214,7 @@
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/01/23/hello-world/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/01/23/hello-world/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/" >Tweet</a>
   
   
   
@@ -152,8 +223,8 @@
     
     <p class="meta">
       
+        <a class="basic-alignment left articlenav" href="/blog/2013/04/18/nano-tutorial-5-hello-amazon-product-advertising-api/" title="Previous Post: Nano Tutorial 5 - Hello Amazon Product Advertising API">&laquo; Nano Tutorial 5 - Hello Amazon Product Advertising API</a>
       
-        <a class="basic-alignment right articlenav" href="/blog/2013/01/23/big-queue-design/" title="Next Post: The Design of A Big, Fast, and Persistent Queue">The Design of A Big, Fast, and Persistent Queue &raquo;</a>
       
     </p>
   </footer>
@@ -233,8 +304,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/01/23/hello-world/';
-        var disqus_url = 'http://bulldog2011.github.com/blog/2013/01/23/hello-world/';
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/';
         var disqus_script = 'embed.js';
       
     (function () {

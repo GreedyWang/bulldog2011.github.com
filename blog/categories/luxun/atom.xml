@@ -4,7 +4,7 @@
   <title><![CDATA[Category: luxun | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/luxun/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-18T21:32:32+08:00</updated>
+  <updated>2013-04-19T19:17:36+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -12,6 +12,87 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Performance Benchmark - Luxun vs Apache Kafka]]></title>
+    <link href="http://bulldog2011.github.com/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/"/>
+    <updated>2013-04-19T18:11:00+08:00</updated>
+    <id>http://bulldog2011.github.com/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka</id>
+    <content type="html"><![CDATA[<p><a href="https://github.com/bulldog2011/luxun">Luxun</a> is a high-throughput, distributed, pub-sub messaging system tailored for big data collecting and analytics. Luxun is inspired by <a href="http://kafka.apache.org/">Apache Kafka</a>, both have a similar architecture. In order to compare the performance of Luxun and Kafka, I did a round of performance testing, below are the testing results:</p>
+
+<!--more-->
+
+
+<h3>Producing Performance Comparison:</h3>
+
+<table>
+<tr><th>Test Mode</th><th>Throughput Comparison</th></tr>
+<tr>
+    <td>Async, Flush Disabled</td>
+    <td>Luxun >> Kafka</td>
+</tr>
+<tr>
+    <td>Async, Flush Enabled</td>
+    <td>Luxun >> Kafka</td>
+</tr>
+<tr>
+    <td>Sync, Flush Disabled</td>
+    <td>Luxun >> Kafka</td>
+</tr>
+<tr>
+    <td>Sync, Flush Enabled</td>
+    <td>Luxun < Kafka</td>
+</tr>
+</table>
+
+
+<h3>Consuming Performance Comparison:</h3>
+
+<table>
+<th>Throughput Comparison</th></tr>
+<tr>
+    <td>Luxun > Kafka</td>
+</tr>
+</table>
+
+
+<p></p>
+
+<h2>Analysis &amp; Conclusion</h2>
+
+<p>The overall performance of Luxun is <strong><em>much better</em></strong> than Kafka:</p>
+
+<blockquote><ol>
+<li>In async producing mode, no matter whether flush is enabled or not, the throughput of Luxun is <strong><em>at least twice</em></strong> the throughput of Kafka.</li>
+<li>In sync producing mode, if flush is disabled, Luxun performs <strong><em>much better</em></strong> than Kafka.</li>
+<li>In sync producing mode, if flush is enabled, Luxun performs <strong><em>worse</em></strong> than Kafka.</li>
+<li>In all consuming tests, Luxun performs <strong><em>much better</em></strong> than Kafka.</li>
+</ol>
+</blockquote>
+
+<p>The only lose case of Luxun is in sync producing mode when flush is enabled, Luxun uses <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped File</a> internally, we are still not sure the cause of poor performance to explicitly flush memory mapped buffer in Java, this will be a future optimization of Luxun. However, following unique feature of memory mapped file makes explicit flush unnecessary(or not recommended) on Luxun system:</p>
+
+<blockquote><ul>
+<li>OS will ensure the message persistence even the process crashes and there is no explicit flush before the crash.</li>
+<li>Message appended by producer thread will be immediately visible to consumer threads, even producer thread hasn’t flushed the message explicitly.</li>
+</ul>
+</blockquote>
+
+<p>Also, the inner paging and swapping mechanism of Luxun will automatically flush a cached page when it is replaced out, making explicit flush unnecessary on Luxun system.</p>
+
+<p>Regrading inner implementation, Luxun and Kafka have two main differences:</p>
+
+<blockquote><ul>
+<li>Luxun queue is based on <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped File</a> while Kafka queue is based on filesystem and OS page cache.</li>
+<li>Luxun leveraged <a href="http://thrift.apache.org/">Thrift RPC</a> as communication layer while Kafka built its custom NIO communication layer.</li>
+</ul>
+</blockquote>
+
+<p>We believe the performance difference between Luxun and Kafak is mainly caused by memory mapped file, while Thrift RPC or custom NIO communication layer does not make much difference here.</p>
+
+<p>Detailed performance test results can be found <a href="https://github.com/bulldog2011/luxun/wiki/Performance---Luxun-vs.-Apache-Kafka">here</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[luxun quick start]]></title>

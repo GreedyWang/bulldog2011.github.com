@@ -5,13 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>hello world - Abstraction Builder</title>
+  <title>Luxun Performance Test - Abstraction Builder</title>
   <meta name="author" content="Bulldog">
 
   
-  <meta name="description" content="This is just to log the beginning of my blogging era.
-">
-  
+  <meta name="description" content="Luxun Performance Test Result Analysis & Conclusion">
+  <meta name="keywords" content="log collector, Apache Kafka, messaging, persistent queue">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -19,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/01/23/hello-world/">
+  <link rel="canonical" href="http://bulldog2011.github.com/blog/2013/04/20/luxun-performance-test/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -80,7 +79,7 @@
   <header>
     
       
-        <h1 class="entry-title">Hello World</h1>
+        <h1 class="entry-title">Luxun Performance Test</h1>
       
     
     
@@ -97,7 +96,7 @@
   
 
 
-<time datetime="2013-01-23T12:05:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
+<time datetime="2013-04-20T14:41:00+08:00" pubdate data-updated="true">Apr 20<span>th</span>, 2013</time>
         
          | <a href="#disqus_thread">Comments</a>
         
@@ -106,7 +105,28 @@
   </header>
 
 
-<div class="entry-content"><p>This is just to log the beginning of my blogging era.</p>
+<div class="entry-content"><p><a href="https://github.com/bulldog2011/luxun">Luxun</a> is a high-throughput, persistent, distributed, publish-subscribe messaging system tailored for big data collecting and analytics. I did an intensive performance test to Luxun these days, detailed reports can be found <a href="https://github.com/bulldog2011/luxun/wiki/Luxun-Performance">here</a>, below is a list of test findings:</p>
+
+<!--more-->
+
+
+<blockquote><ol>
+<li>The producing performance is quite good, on single sever grade machine, in one topic case, the average producing throughput can be <strong><em>> 100MBps</em></strong>.</li>
+<li>The consuming performance is also quite good, on single server grade machine, in one topic case, the average consuming throughput can be <strong><em>> 100MBps</em></strong>.</li>
+<li>On single machine case, Luxun performance is only limited by disk IO bandwidth, it&#8217;s recommended to use Luxun with ultra fast disk for better performance.</li>
+<li>In networking case, Luxun performance is only limited by network bandwidth, it&#8217;s very easy for Luxun to saturate a 1Gbps network, it&#8217;s recommended to use Luxun in 10Gbps network.</li>
+<li>Luxun is <strong><em>not sensitive to</em></strong> JVM heap memory setting, our tests show there is not much difference whether additional heap memory is added or not, this is because Luxun queue is based on memory mapped file which does not use JVM heap memory directly, also Luxun uses automatic on-demand paging and swapping algorithm internally for efficient memory usage. However, this is not to say Luxun can work well on machine with very few memory, because memory mapped file will still use much off-heap memory, it&#8217;s recommend to use Luxun broker on machine with at least <strong><em>4GB</em></strong> physical memory, more is better.</li>
+<li>Even on a normal notebook, both producing and consuming throughput of Luxun can be <strong><em>> 50MBps</em></strong>.</li>
+<li>The Luxun performance is similar on both Windows and Linux platforms.</li>
+<li>Async batch producing performance is much better than sync producing, in some case, there is order of magnitude difference. Async batch mode has much less network roundtrip overhead, hence better performance. It&#8217;s recommended to use async batch producing mode whenever possible.</li>
+<li>Flush on broker side has much negative impact on Luxun performance, especially in sync producing case, it&#8217;s recommended to disable flush on broker because of the unique nature of <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped File</a> used internally by Luxun.</li>
+<li>Message size has much impact on Luxun performance, bigger message, better performance, this is apparent since small message has more overhead caused by network roundtrip.</li>
+<li>The one way not confirmed produce interface has much better performance than the two way confirmed produce interface, our tests show there are differences between the three times, so in the Luxun high level producer implementation, we chose one way not confirmed produce interface as underlying produce interface.</li>
+<li>A performance comparison between Luxun and <a href="http://kafka.apache.org/">Apache Kafka</a> shows Luxun has much better performance than Kafka, see detail in <a href="http://bulldog2011.github.io/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/">this post</a>.</li>
+<li>The overall performance of Luxun will not change much when the number of topics increase, the throughput will be shared among different topics.</li>
+<li>Compression, when used appropriately, can improve the overall performance of Luxun a lot, our tests show Snappy is more efficient than GZip, although this depends on particular applications.</li>
+</ol>
+</blockquote>
 </div>
 
 
@@ -129,12 +149,12 @@
   
 
 
-<time datetime="2013-01-23T12:05:00+08:00" pubdate data-updated="true">Jan 23<span>rd</span>, 2013</time>
+<time datetime="2013-04-20T14:41:00+08:00" pubdate data-updated="true">Apr 20<span>th</span>, 2013</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/misc/'>misc</a>
+    <a class='category' href='/blog/categories/luxun/'>luxun</a>
   
 </span>
 
@@ -143,7 +163,7 @@
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/01/23/hello-world/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/01/23/hello-world/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://bulldog2011.github.com/blog/2013/04/20/luxun-performance-test/" data-via="" data-counturl="http://bulldog2011.github.com/blog/2013/04/20/luxun-performance-test/" >Tweet</a>
   
   
   
@@ -152,8 +172,8 @@
     
     <p class="meta">
       
+        <a class="basic-alignment left articlenav" href="/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/" title="Previous Post: Performance Benchmark - Luxun vs Apache Kafka">&laquo; Performance Benchmark - Luxun vs Apache Kafka</a>
       
-        <a class="basic-alignment right articlenav" href="/blog/2013/01/23/big-queue-design/" title="Next Post: The Design of A Big, Fast, and Persistent Queue">The Design of A Big, Fast, and Persistent Queue &raquo;</a>
       
     </p>
   </footer>
@@ -233,8 +253,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/01/23/hello-world/';
-        var disqus_url = 'http://bulldog2011.github.com/blog/2013/01/23/hello-world/';
+        var disqus_identifier = 'http://bulldog2011.github.com/blog/2013/04/20/luxun-performance-test/';
+        var disqus_url = 'http://bulldog2011.github.com/blog/2013/04/20/luxun-performance-test/';
         var disqus_script = 'embed.js';
       
     (function () {

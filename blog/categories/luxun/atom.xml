@@ -4,7 +4,7 @@
   <title><![CDATA[Category: luxun | Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/blog/categories/luxun/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-20T15:52:53+08:00</updated>
+  <updated>2013-04-20T16:00:06+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -18,7 +18,7 @@
     <link href="http://bulldog2011.github.com/blog/2013/04/20/luxun-performance-test/"/>
     <updated>2013-04-20T14:41:00+08:00</updated>
     <id>http://bulldog2011.github.com/blog/2013/04/20/luxun-performance-test</id>
-    <content type="html"><![CDATA[<p><a href="https://github.com/bulldog2011/luxun">Luxun</a> is a high-throughput, persistent, distributed, publish-subscribe messaging system tailored for big data collecting and analytics. I did an intensive performance test to Luxun these days, detailed reports can be found <a href="https://github.com/bulldog2011/luxun/wiki/Luxun-Performance">here</a>, below is a list of test findings:</p>
+    <content type="html"><![CDATA[<p><a href="https://github.com/bulldog2011/luxun">Luxun</a> is a high-throughput, persistent, distributed, publish-subscribe messaging system tailored for big data collecting and analytics. I did an intensive performance test to Luxun these days, detailed reports can be found <a href="https://github.com/bulldog2011/luxun/wiki/Luxun-Performance">here</a>, below is a list of findings:</p>
 
 <!--more-->
 
@@ -27,12 +27,12 @@
 <li>The producing performance is quite good, on single sever grade machine, in one topic case, the average producing throughput can be <strong><em>> 100MBps</em></strong>.</li>
 <li>The consuming performance is also quite good, on single server grade machine, in one topic case, the average consuming throughput can be <strong><em>> 100MBps</em></strong>.</li>
 <li>On single machine case, Luxun performance is only limited by disk IO bandwidth, it's recommended to use Luxun with ultra fast disk for better performance.</li>
-<li>In networking case, Luxun performance is only limited by network bandwidth, it's very easy for Luxun to saturate a 1Gbps network, it's recommended to use Luxun in 10Gbps network.</li>
+<li>In networking case, Luxun performance is only limited by network bandwidth, it's very easy for Luxun to saturate a 1Gbps network, it's recommended to use Luxun in 10Gbps network, or enable compression for better network usage.</li>
 <li>Luxun is <strong><em>not sensitive to</em></strong> JVM heap memory setting, our tests show there is not much difference whether additional heap memory is added or not, this is because Luxun queue is based on memory mapped file which does not use JVM heap memory directly, also Luxun uses automatic on-demand paging and swapping algorithm internally for efficient memory usage. However, this is not to say Luxun can work well on machine with very few memory, because memory mapped file will still use much off-heap memory, it's recommend to use Luxun broker on machine with at least <strong><em>4GB</em></strong> physical memory, more is better.</li>
 <li>Even on a normal notebook, both producing and consuming throughput of Luxun can be <strong><em>> 50MBps</em></strong>.</li>
 <li>The Luxun performance is similar on both Windows and Linux platforms.</li>
 <li>Async batch producing performance is much better than sync producing, in some case, there is order of magnitude difference. Async batch mode has much less network roundtrip overhead, hence better performance. It's recommended to use async batch producing mode whenever possible.</li>
-<li>Flush on broker side has much negative impact on Luxun performance, especially in sync producing case, it's recommended to disable flush on broker because of the unique nature of <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped File</a> used internally by Luxun.</li>
+<li>Flush on broker side has much negative impact on Luxun performance, especially in sync producing case, it's recommended to <strong><em>disable flush</em></strong> on broker because of the unique nature of <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped File</a> used internally by Luxun.</li>
 <li>Message size has much impact on Luxun performance, bigger message, better performance, this is apparent since small message has more overhead caused by network roundtrip.</li>
 <li>The one way not confirmed produce interface has much better performance than the two way confirmed produce interface, our tests show there are differences between the three times, so in the Luxun high level producer implementation, we chose one way not confirmed produce interface as underlying produce interface.</li>
 <li>A performance comparison between Luxun and <a href="http://kafka.apache.org/">Apache Kafka</a> shows Luxun has much better performance than Kafka, see detail in <a href="http://bulldog2011.github.io/blog/2013/04/19/performance-benchmark-luxun-vs-apache-kafka/">this post</a>.</li>

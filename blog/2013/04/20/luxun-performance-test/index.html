@@ -111,12 +111,12 @@
 
 
 <blockquote><ol>
-<li>The producing performance is quite good, on single sever grade machine, in one topic case, the average producing throughput can be <strong><em>> 100MBps</em></strong>.</li>
-<li>The consuming performance is also quite good, on single server grade machine, in one topic case, the average consuming throughput can be <strong><em>> 100MBps</em></strong>.</li>
+<li>The producing performance is quite good, on single sever grade machine, in one topic case, the average producing throughput is <strong><em>> 100MBps</em></strong>.</li>
+<li>The consuming performance is also quite good, on single server grade machine, in one topic case, the average consuming throughput is <strong><em>> 100MBps</em></strong>.</li>
 <li>On single machine case, Luxun performance is only limited by disk IO bandwidth, it&#8217;s recommended to use Luxun with ultra fast disk for better performance.</li>
 <li>In networking case, Luxun performance is only limited by network bandwidth, it&#8217;s very easy for Luxun to saturate a 1Gbps network, it&#8217;s recommended to use Luxun in 10Gbps network, or enable compression for better network usage.</li>
 <li>Luxun is <strong><em>not sensitive to</em></strong> JVM heap memory setting, our tests show there is not much difference whether additional heap memory is added or not, this is because Luxun queue is based on memory mapped file which does not use JVM heap memory directly, also Luxun uses automatic on-demand paging and swapping algorithm internally for efficient memory usage. However, this is not to say Luxun can work well on machine with very few memory, because memory mapped file will still use much off-heap memory, it&#8217;s recommend to use Luxun broker on machine with at least <strong><em>4GB</em></strong> physical memory, more is better.</li>
-<li>Even on a normal notebook, both producing and consuming throughput of Luxun can be <strong><em>> 50MBps</em></strong>.</li>
+<li>Even on a normal notebook, both producing and consuming throughput of Luxun is <strong><em>> 50MBps</em></strong>.</li>
 <li>The Luxun performance is similar on both Windows and Linux platforms.</li>
 <li>Async batch producing performance is much better than sync producing, in some case, there is order of magnitude difference. Async batch mode has much less network roundtrip overhead, hence better performance. It&#8217;s recommended to use async batch producing mode whenever possible.</li>
 <li>Flush on broker side has much negative impact on Luxun performance, especially in sync producing case, it&#8217;s recommended to <strong><em>disable flush</em></strong> on broker because of the unique nature of <a href="http://en.wikipedia.org/wiki/Memory-mapped_file">Memory Mapped File</a> used internally by Luxun.</li>

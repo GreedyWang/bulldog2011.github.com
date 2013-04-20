@@ -4,7 +4,7 @@
   <title><![CDATA[Abstraction Builder]]></title>
   <link href="http://bulldog2011.github.com/atom.xml" rel="self"/>
   <link href="http://bulldog2011.github.com/"/>
-  <updated>2013-04-20T16:03:16+08:00</updated>
+  <updated>2013-04-20T16:40:51+08:00</updated>
   <id>http://bulldog2011.github.com/</id>
   <author>
     <name><![CDATA[Bulldog]]></name>
@@ -8343,6 +8343,10 @@ on client side, we chosen:</li>
 <span class='line-number'>99</span>
 <span class='line-number'>100</span>
 <span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>namespace java com.leansoft.luxun.api.generated
 </span><span class='line'>namespace csharp Leansoft.luxun.Api.Generated
 </span><span class='line'>
@@ -8435,6 +8439,10 @@ on client side, we chosen:</li>
 </span><span class='line'>
 </span><span class='line'>service QueueService {
 </span><span class='line'>    ProduceResponse produce(1: ProduceRequest produceRequest);
+</span><span class='line'>    
+</span><span class='line'>    // The 'oneway' modifier indicates that the client only makes a request and
+</span><span class='line'>    // does not wait for any response at all. Oneway methods MUST be void.
+</span><span class='line'>    oneway void asyncProduce(1: ProduceRequest produceRequest);
 </span><span class='line'>
 </span><span class='line'>    ConsumeResponse consume(1: ConsumeRequest consumeRequest);
 </span><span class='line'>    
@@ -8449,7 +8457,8 @@ on client side, we chosen:</li>
 <p>This is a quite simple and intuitive interface, let&#8217;s elaborate on supported calls one by one:</p>
 
 <blockquote><ol>
-<li>The <strong><em>produce</em></strong> call append binary data into the queue, you need to provide the target topic and the binary data as input, the response will return the operation result and the appended index if the operation is successful.</li>
+<li>The <strong><em>produce</em></strong> call append binary data into the queue, you need to provide the target topic and the binary data as input, the response will return the operation result and the appended index if the operation is successful. The is a confirmed produce call, suitable for use case when strong transactional confirmation is needed.</li>
+<li>The <strong><em>asyncProduce</em></strong> is similar in functionality to the <strong><em>produce</em></strong> call, the difference is that <strong><em>asyncProduce</em></strong> is an one way call, this call does not block to wait for the response, it just fires the request then forgets,  hence it will have better performance, our tests show <strong><em>asychProduce</em></strong> is 3 times faster than <strong><em>produce</em></strong>, this interface is used in Luxun high-level producer implementation for better producing performance.</li>
 <li>The <strong><em>consume</em></strong> call supports to kinds of operation modes,
 
 <ul>
@@ -8815,7 +8824,7 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 
 <h1>Performance</h1>
 
-<p>To be added.</p>
+<p>Intensive tests show the performance of Luxun messaging system is quite good, in single sever grade machine and single topic case, the average throughput of both producing and consuming can be <strong><em>>> 100MBps</em></strong>, this is amazing given that Luxun is a persistent messaging system. See detailed performance analysis and conclusion <a href="http://bulldog2011.github.io/blog/2013/04/20/luxun-performance-test/">here</a>.</p>
 
 <h1>Luxun vs Apache Kafka - the Main Differences</h1>
 
@@ -8854,6 +8863,15 @@ Behind the scene, concrete <code>IStreamFactory</code> implementation will spawn
 </blockquote>
 
 <p>Many thanks to the authors of these open source projects!</p>
+
+<h2>Next Step</h2>
+
+<ol>
+<li>Add a sharding layer to support partition(for distribution and scalability) and replication(for reliability and performance), may leverage <a href="https://github.com/twitter/gizzard">gizzard</a> sharding framework or <a href="http://zookeeper.apache.org/">Zookeeper</a>.</li>
+<li>More clients, like C#, PHP, Ruby, Python, C++.</li>
+<li>Big data applications, like centralized logging, tracing, metrics, realtime events system based on Luxun.</li>
+</ol>
+
 ]]></content>
   </entry>
   

@@ -18,3 +18,6 @@ My dream is to escape the company cube someday, and to work on startups or proje
 to have a leasurely and carefree life style, to have more time with my family and bulldog.
 
 Find me on [LinkedIn](http://www.linkedin.com/profile/view?id=66212589 "linkedin profile")
+
+My [resume](/downloads/resume/resume.doc)
+

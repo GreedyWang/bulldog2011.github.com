@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "the architecture and design of a publish subscribe messaging system tailored for big data collecting and analytics"
+title: "The Architecture and Design of a Publish & Subscribe Messaging System Tailored for Big Data Collecting and Analytics"
 date: 2013-03-27 16:30
 comments: true
 categories: [design, luxun]
@@ -331,6 +331,10 @@ struct GetSizeResponse {
 
 service QueueService {
     ProduceResponse produce(1: ProduceRequest produceRequest);
+    
+    // The 'oneway' modifier indicates that the client only makes a request and
+    // does not wait for any response at all. Oneway methods MUST be void.
+    oneway void asyncProduce(1: ProduceRequest produceRequest);
 
     ConsumeResponse consume(1: ConsumeRequest consumeRequest);
     
@@ -344,15 +348,16 @@ service QueueService {
 {% endcodeblock %}
 
 This is a quite simple and intuitive interface, let's elaborate on supported calls one by one:
->1. The ***produce*** call append binary data into the queue, you need to provide the target topic and the binary data as input, the response will return the operation result and the appended index if the operation is successful.
-2. The ***consume*** call supports to kinds of operation modes,
+>1. The ***produce*** call append binary data into the queue, you need to provide the target topic and the binary data as input, the response will return the operation result and the appended index if the operation is successful. The is a confirmed produce call, suitable for use case when strong transactional confirmation is needed.
+2. The ***asyncProduce*** is similar in functionality to the ***produce*** call, the difference is that ***asyncProduce*** is an one way call, this call does not block to wait for the response, it just fires the request then forgets,  hence it will have better performance, our tests show ***asychProduce*** is 3 times faster than ***produce***, this interface is used in Luxun high-level producer implementation for better producing performance. 
+3. The ***consume*** call supports to kinds of operation modes,
 	* ***consume by fanout id***: this is just the fanout queue semantics support, in such mode, you need to provide target topic, a fanout id and a max fetch size as input, the response will return a list of binary data if the operation is successful.
 	* ***consume by index***: this is a more flexible queue semantics support, in such mode, you need to provide target topic, a start index and a max fetch size as input, the response will return a list of binary data if the operation is successful.      
 Note, if both fanout id and start index are provided, then fanout id will take precedence.
 The max fetch size parameter is required to support batch consuming - one consume operation can fetch data up to the max fetch size, then return the whole batch list of binary data, this can improve consuming throughput a lot. If you just need to consume one item at a time, set max fetch size to <= 0; 
-3. The ***findClosestIndexByTime*** call is useful if you want ***consume by index*** semantics and want to find an index by a specific timestamp. You need to provide a target topic and a timestamp as input, the response will return closest index if the find operation is successful.
-4. The ***deleteTopic*** call is used for deleting any unused topics, you need to provide a target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.
-5. The ***getSize*** call just returns the total number of items remaining in a topic, this is a call for queue status query, if fanout id is provided, then the size of specific fanout queue will be returned, if no fanout id is provided, then the size of underlying queue(big array) will be returned.
+4. The ***findClosestIndexByTime*** call is useful if you want ***consume by index*** semantics and want to find an index by a specific timestamp. You need to provide a target topic and a timestamp as input, the response will return closest index if the find operation is successful.
+5. The ***deleteTopic*** call is used for deleting any unused topics, you need to provide a target topic and a authentication password(set on server side) as input, the response will return operation result, this is a call for queue administration.
+6. The ***getSize*** call just returns the total number of items remaining in a topic, this is a call for queue status query, if fanout id is provided, then the size of specific fanout queue will be returned, if no fanout id is provided, then the size of underlying queue(big array) will be returned.
 
 Simplicity is the ultimate design objective of the Luxun queue IDL, in order to simplify clients implementation and to make the interface understandable by average developer, at the time, future extension is easy because of the flexibility and IDL driven development provided by Thrift.
 
@@ -591,7 +596,7 @@ In current implementation, management functionality is limited, administrator ca
 Luxun relies on [JMX](http://en.wikipedia.org/wiki/Java_Management_Extensions) for system metrics monitoring, a list of monitored metrics will be listed in a separate post for operation reference.
 
 # Performance
-To be added.
+Intensive tests show the performance of Luxun messaging system is quite good, in single sever grade machine and single topic case, the average throughput of both producing and consuming can be ***>> 100MBps***, this is amazing given that Luxun is a persistent messaging system. See detailed performance analysis and conclusion [here](http://bulldog2011.github.io/blog/2013/04/20/luxun-performance-test/).
 
 # Luxun vs Apache Kafka - the Main Differences
 Although Luxun borrowed many design ideas from Apache Kafka, Luxun is not a simple clone of Kafka, it has some obvious differentiating factors:
@@ -618,6 +623,13 @@ Luxun borrowed design ideas and adapted source from following open source projec
 6. [Kestrel](https://github.com/robey/kestrel), a simple, distributed message queue system implemented in Scala, supporting reliable, loosely ordered message queue.
 
 Many thanks to the authors of these open source projects!
+
+##Next Step
+1. Add a sharding layer to support partition(for distribution and scalability) and replication(for reliability and performance), may leverage [gizzard](https://github.com/twitter/gizzard) sharding framework or [Zookeeper](http://zookeeper.apache.org/).
+2. More clients, like C#, PHP, Ruby, Python, C++.
+3. Big data applications, like centralized logging, tracing, metrics, realtime events system based on Luxun.
+
+
 
 
  

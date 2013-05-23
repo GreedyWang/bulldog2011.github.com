@@ -14,7 +14,7 @@ I like to program and write stuff, making things a reality always make me excite
 I love open source and I spend most of spare time studying and contributing to it, 
 my favoriate sites are github, stackoverflow and google.
 
-My dream is to escape the company cube someday, and to work on startups or projects I am interested with,
+My dream is to work in highly skilled and self-motivated team, to work on startups or projects I am interested with,
 to have a leasurely and carefree life style, to have more time with my family and bulldog.
 
 Find me on [LinkedIn](http://www.linkedin.com/profile/view?id=66212589 "linkedin profile")

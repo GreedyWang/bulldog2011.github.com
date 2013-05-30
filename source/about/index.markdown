@@ -12,7 +12,7 @@ I am facinated with simple while elegant programming abstractions to solve real 
 I like to program and write stuff, making things a reality always make me excited.
 
 I love open source and I spend most of spare time studying and contributing to it, 
-my favoriate sites are github, stackoverflow and google.
+my favoriate sites are github, stackoverflow and netflix.github.io.
 
 My dream is to work in highly skilled and self-motivated team, to work on startups or projects I am interested with,
 to have a leasurely and carefree life style, to have more time with my family and bulldog.
